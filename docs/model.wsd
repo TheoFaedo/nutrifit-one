@@ -24,6 +24,7 @@ entity Food {
     #versionId: uuid
     id: uuid
     name: string
+    isPublic: boolean
     createdAt: timestamp
     updatedAt: timestamp
     currentVersion: boolean
@@ -37,6 +38,7 @@ entity Quantity {
 entity Recipe
 entity RecipePart {
     #id: uuid
+    recipeVersionId: uuid
     ratio: number
 }
 
@@ -84,14 +86,23 @@ end note
 
 note right of Recipe
   Une recette possède exactement une Quantity
-  parmi celles associées à Food. Ses
-  NutritionFacts représentent la recette selon
-  cette portion de référence.
+  parmi celles associées à Food. Ses valeurs
+  nutritionnelles sont calculées depuis ses
+  ingrédients pour cette portion de référence.
+end note
+
+note right of Meal
+  Le code-barres est immuable après la création
+  de la fiche. Lorsqu'un résultat Open Food Facts
+  est sélectionné, son code-barres est transmis
+  à la création du Meal.
 end note
 
 note right of RecipePart
+  Chaque RecipePart appartient à une version précise
+  de Recipe. Il référence une version précise de Food.
   La Quantity référencée doit appartenir
-  à la Food référencée.
+  à cette version de Food.
 end note
 
 note bottom of Food

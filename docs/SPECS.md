@@ -8,7 +8,7 @@ Ce document décrit le comportement attendu, indépendamment de l’interface et
 
 ## 2. Périmètre fonctionnel
 
-Le README identifie les capacités suivantes comme souhaitées :
+Le MVP vise à reproduire l’ensemble des capacités de l’application de référence, avec une réalisation plus propre. Les capacités prévues sont :
 
 - connexion avec Google ;
 - onboarding du compte ;
@@ -20,7 +20,7 @@ Le README identifie les capacités suivantes comme souhaitées :
 - consultation du journal pour différents jours ;
 - suivi de l’énergie et des macronutriments.
 
-Le détail ci-dessous rend ces capacités testables. Les règles de partage des données, de recherche externe et de précision nutritionnelle restent à arbitrer (section 8).
+Le détail ci-dessous rend ces capacités testables. Les règles de partage des données, de recherche externe et de précision nutritionnelle sont précisées dans les sections suivantes.
 
 ## 3. Compte et onboarding
 
@@ -34,37 +34,41 @@ Le détail ci-dessous rend ces capacités testables. Les règles de partage des 
 
 - Un compte possède un indicateur `onboarded`.
 - Un compte non onboardé est dirigé vers le parcours d’onboarding ; un compte onboardé peut ouvrir le journal.
-- L’onboarding permet au minimum de renseigner les éléments nécessaires à l’utilisation initiale de l’application. **À décider :** champs obligatoires et possibilité de terminer sans objectif.
+- À l’onboarding, la personne choisit un objectif initial : perdre, maintenir ou gagner. Chaque choix préremplit des cibles nutritionnelles, que la personne peut ensuite ajuster librement.
 
 ## 4. Objectifs nutritionnels
 
 - Un objectif journalier comprend des cibles d’énergie, glucides, lipides et protéines.
 - Les objectifs sont associés à une période de validité. Une modification crée une nouvelle période ; elle ne doit pas réécrire les objectifs qui s’appliquaient aux jours passés.
-- Pour une date donnée, l’application sélectionne l’objectif valide à cette date. **À décider :** autoriser des périodes sans objectif ou qui se chevauchent, et définir les bornes inclusives.
-- Les unités et la convention de calcul énergétique doivent être uniques et affichées de manière cohérente. Proposition à valider : kcal et grammes.
+- Pour une date donnée, l’application sélectionne l’objectif valide à cette date. Les règles de période (absence, chevauchement, bornes) et les valeurs exactes des préréglages seront définies lors de l’implémentation.
+- Les cibles sont exprimées en kcal et grammes.
 
 ## 5. Aliments, portions et recettes
 
 ### 5.1 Aliment
 
 - Un aliment possède un nom, zéro ou plusieurs portions et les valeurs nutritionnelles associées à chaque portion.
-- Un aliment peut porter un code-barres lorsqu’il s’agit d’un produit identifié de cette manière.
+- Un aliment possède une propriété `isPublic` qui indique s’il est visible par tous les utilisateurs. Les aliments privés restent visibles par leur propriétaire.
+- Un aliment peut porter un code-barres comme aide à la recherche ; le code-barres n’est pas nécessairement une clé unique.
+- Le code-barres d’une fiche produit est immuable après sa création.
+- Lorsqu’un résultat Open Food Facts est sélectionné, une fiche `Food` publique est créée avec `isPublic = true` et les caractéristiques disponibles. L’utilisateur qui la crée en est l’auteur et lui seul peut la modifier.
 - Une modification nutritionnelle ou descriptive crée une nouvelle version de l’aliment logique. Les versions précédentes sont conservées si elles sont référencées par le journal.
 - Une seule version est courante pour un aliment logique donné.
-- La propriété d’un aliment et son éventuel partage sont à décider (section 8).
+- Seul l’auteur peut modifier une fiche publique.
 
 ### 5.2 Portions et nutrition
 
-- Une portion représente une quantité et son unité (par exemple `100 g`, `1 pièce` ou `250 ml`).
+- Une portion représente une quantité et une unité saisie librement (par exemple `100 g`, `1 pièce` ou `250 ml`).
 - Une valeur nutritionnelle décrit l’énergie, les glucides, les lipides et les protéines pour la portion concernée.
-- Les valeurs utilisées dans les calculs sont mises à l’échelle linéairement à partir de la portion de référence : valeur consommée = valeur de référence × quantité consommée / quantité de référence. **À valider**, notamment pour les unités non convertibles ou les unités de volume.
-- L’application ne doit pas supposer qu’une portion en pièces peut être convertie en grammes sans donnée de conversion explicite.
+- Les valeurs utilisées dans les calculs sont mises à l’échelle linéairement à partir de la portion de référence : valeur consommée = valeur de référence × quantité consommée / quantité de référence.
+- Les unités sont des libellés libres ; aucune conversion entre unités n’est effectuée ou nécessaire.
 
 ### 5.3 Recette
 
 - Une recette est un aliment composé d’au moins un ingrédient ; un ingrédient référence un aliment et une portion de cet aliment, avec un ratio/une quantité.
-- La recette a elle-même une ou plusieurs portions utilisables au journal. Le modèle courant en impose exactement une portion de référence ; ce point est à confirmer avant de le traiter comme une contrainte produit.
-- Les valeurs nutritionnelles de la recette sont calculées à partir des ingrédients et des quantités. **À décider :** recalcul automatique à la modification d’un ingrédient ou instantané conservé à la création de la recette.
+- La recette a une portion de référence utilisable au journal.
+- Les valeurs nutritionnelles de la recette sont toujours calculées à partir des ingrédients et des quantités ; elles ne sont pas saisies indépendamment.
+- La composition est versionnée avec la recette : chaque version conserve ses ingrédients, leurs versions et les quantités utilisées, de sorte qu’une modification ultérieure ne réécrive pas l’historique.
 - La composition ne doit pas autoriser de cycle (une recette qui se contient, directement ou indirectement).
 
 ## 6. Journal de consommation
@@ -74,30 +78,37 @@ Le détail ci-dessous rend ces capacités testables. Les règles de partage des 
 - Lors de l’ajout, la version sélectionnée est la version courante de l’aliment. L’entrée conserve ensuite sa référence à cette version afin qu’une modification ultérieure du catalogue ne change pas rétroactivement les valeurs affichées pour cette consommation.
 - La personne peut ajouter, modifier et supprimer ses entrées, et consulter les entrées d’une date donnée.
 - Les totaux d’une journée sont la somme des valeurs nutritionnelles des entrées de cette journée, ramenées aux quantités consommées.
-- La date de consommation est une date civile ; la règle de fuseau horaire et la gestion d’un changement de fuseau sont à préciser.
-- **À décider :** autoriser une quantité nulle/négative, les fractions de portion et les entrées datées dans le futur.
+- Le journal d’une journée est présenté en quatre sections, une par catégorie : petit-déjeuner, déjeuner, dîner et collation.
+- Chaque section permet de lancer l’ajout d’une entrée. L’ajout ouvre une boîte de dialogue présentant les aliments disponibles ; la liste peut être triée par récence (du plus récent au moins récent) et par date de création.
+- La sélection d’un aliment affiche ses détails et un sélecteur de quantité. Un bouton permet ensuite de l’ajouter au journal dans la section correspondante.
+- La date de consommation est déterminée selon le fuseau `Europe/Paris`.
+- Une quantité consommée doit être strictement positive et peut être saisie au dixième près. La possibilité de dater une entrée dans le futur reste à préciser lors de l’implémentation.
 
 ## 7. Recherche par code-barres
 
 - La personne peut lancer une lecture ou saisir un code-barres.
-- Si le produit est trouvé, ses informations sont présentées avant ajout au journal ou enregistrement dans les aliments de la personne.
+- La recherche par code-barres consulte Open Food Facts et les `Food` publics du catalogue qui portent ce code-barres.
+- La première ligne est une vue du résultat Open Food Facts ; ce résultat externe n’est pas encore un `Food` du catalogue. Les lignes suivantes sont des vues des `Food` publics déjà créés par des utilisateurs à partir d’Open Food Facts et portant ce code-barres.
+- Sélectionner la ligne Open Food Facts crée une nouvelle fiche produit publique avec le code-barres transmis lors de la création ; l’utilisateur devient son auteur. Sélectionner une ligne du catalogue choisit le `Food` existant. Dans les deux cas, les détails et le sélecteur de quantité permettent de poursuivre l’ajout au journal.
+- Le code-barres sert d’aide à la recherche et ne constitue pas une clé unique.
+- Le code-barres de la fiche est immuable après sa création.
 - Si le produit est inconnu, l’application propose une saisie manuelle.
 - Les données reçues d’une source externe doivent être distinguées des données saisies ou corrigées par la personne.
-- **À décider :** fournisseur de données, politique de cache, attribution des corrections et traitement des doublons.
+- Open Food Facts est la source retenue pour les recherches par code-barres. L’interface est en anglais pour le MVP.
+- Si Open Food Facts est indisponible, seuls les résultats du catalogue de l’application sont affichés. Les réponses Open Food Facts ne sont pas mises en cache.
 
-## 8. Décisions ouvertes
+## 8. Décisions de cadrage et précisions restantes
 
-À résoudre avant de figer l’implémentation et les contraintes de données :
+Les règles ci-dessous sont retenues ; les points explicitement indiqués restent à préciser avant de figer l’implémentation et les contraintes de données :
 
-1. **Catalogue :** aliments et recettes privés, partagés entre comptes, ou combinaison des deux ? Qui peut modifier une entrée partagée ?
-2. **Périmètre de livraison :** les fonctionnalités du README constituent-elles toutes la première version, ou faut-il un MVP ordonné ?
-3. **Code-barres :** quelle source externe utiliser, ou le catalogue doit-il être interne uniquement ?
-4. **Recettes :** la portion de référence est-elle unique ? Les valeurs sont-elles toujours dérivées des ingrédients, ou peut-on les saisir/surcharger ?
-5. **Historique des recettes :** une version de recette fige-t-elle aussi les versions des aliments ingrédients ?
-6. **Unités :** unités prises en charge, conversion entre masse/volume/pièces, arrondis et précision d’affichage.
-7. **Objectifs :** quels champs d’onboarding et cibles sont obligatoires ? Comment traiter les périodes sans objectif ?
-8. **Temps :** fuseau de référence du journal et définition d’une journée lors d’un voyage.
-9. **Langues :** le modèle prévoit FR et EN ; faut-il localiser les libellés d’aliments, unités et catégories, ou seulement l’interface ?
+1. **Catalogue :** `isPublic` distingue les aliments visibles par tous des aliments privés visibles par leur propriétaire. Seul l’auteur peut modifier une fiche publique.
+2. **Périmètre de livraison :** le MVP comprend toutes les fonctionnalités de l’application de référence ; l’ordre de réalisation reste à planifier.
+3. **Code-barres :** afficher d’abord une vue du résultat Open Food Facts (qui n’est pas encore un `Food`), puis les `Food` publics existants avec ce code-barres. La sélection du résultat Open Food Facts crée un `Food` public dont l’utilisateur devient l’auteur. La manière de conserver la provenance Open Food Facts et les corrections ultérieures reste à définir.
+4. **Recettes :** les valeurs nutritionnelles sont dérivées des ingrédients et chaque version de recette historise la composition et les versions des ingrédients. Une recette a une portion de référence.
+5. **Unités :** le libellé est libre et aucune conversion n’est effectuée.
+6. **Objectifs :** l’onboarding propose perdre, maintenir ou gagner, avec des cibles préremplies modifiables. Les valeurs exactes des préréglages et les règles des périodes seront définies lors de l’implémentation.
+7. **Temps :** le fuseau du journal est `Europe/Paris`.
+8. **Langue :** l’interface du MVP est en anglais.
 
 ## 9. Hors périmètre explicite à ce stade
 
