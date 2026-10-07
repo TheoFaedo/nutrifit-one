@@ -1,0 +1,103 @@
+@startuml
+
+entity User {
+    auth.users.id: string
+    pseudo: string
+    onboarded: boolean
+}
+entity DailyGoal {
+    #id: uuid
+    validFrom: date
+    validTo: date
+}
+entity Intake {
+    #id: uuid
+    ratio: number
+    consumed_on: date
+    createdAt: timestamp
+    updatedAt: timestamp
+}
+entity Meal {
+    barcode: string
+}
+entity Food {
+    #versionId: uuid
+    id: uuid
+    name: string
+    createdAt: timestamp
+    updatedAt: timestamp
+    currentVersion: boolean
+}
+entity Quantity {
+    #id: uuid
+    quantityNumber: number
+    quantityUnit: string
+}
+
+entity Recipe
+entity RecipePart {
+    #id: uuid
+    ratio: number
+}
+
+entity NutritionFacts {
+    energy: number
+    carbs: number
+    fats: number
+    proteins: number
+}
+enum Lang {
+    FR
+    EN
+}
+enum MealType {
+    BREAKFAST
+    LUNCH
+    DINNER
+    SNACKS
+}
+
+User "1" o--> "*" Food
+User "1" *--> "*" Intake
+User "1" *--> "*" DailyGoal
+User "*" -> "1" Lang
+
+DailyGoal "1" *--> "1" NutritionFacts
+
+Intake "*" o--> "1" MealType
+Intake "*" o--> "1" Quantity
+
+Food "1" *--> "*" Quantity 
+Quantity "1" *--> "1" NutritionFacts 
+Meal --|> Food
+Recipe --|> Food
+Recipe "1" o--> "1..*" RecipePart
+RecipePart "*" o--> "1" Food
+RecipePart "*" o--> "1" Quantity
+
+note right of Intake
+  La Quantity référencée détermine la Food
+  et sa version. À la création d'un Intake,
+  la Quantity doit appartenir à la version
+  courante de la Food.
+end note
+
+note right of Recipe
+  Une recette possède exactement une Quantity
+  parmi celles associées à Food. Ses
+  NutritionFacts représentent la recette selon
+  cette portion de référence.
+end note
+
+note right of RecipePart
+  La Quantity référencée doit appartenir
+  à la Food référencée.
+end note
+
+note bottom of Food
+  Une seule version courante par Food logique.
+  Les versions référencées par des Intakes
+  restent conservées afin de préserver
+  l'historique nutritionnel du journal.
+end note
+@enduml
