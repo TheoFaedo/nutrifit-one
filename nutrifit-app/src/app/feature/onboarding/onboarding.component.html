@@ -1,0 +1,25 @@
+<main class="setup-shell">
+  <header class="setup-header"><app-brand /><span class="step-note">Your starting point</span></header>
+  <section class="setup-content">
+    <div class="setup-intro"><p class="eyebrow">A good place to begin</p><h1>What feels right<br>for your goals?</h1><p class="muted">Choose a direction. You can make these daily targets your own.</p></div>
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <fieldset class="goal-options"><legend class="sr-only">Choose your goal</legend>
+        @for (goal of goals; track goal.id) {
+          <button type="button" class="goal-option" [class.selected]="selected() === goal.id" [attr.aria-pressed]="selected() === goal.id" (click)="choose(goal.id)">
+            <span class="goal-icon" aria-hidden="true">{{ goal.icon }}</span><span><strong>{{ goal.title }}</strong><small>{{ goal.detail }}</small></span><span class="radio-dot" aria-hidden="true"></span>
+          </button>
+        }
+      </fieldset>
+      <div class="targets-heading"><div><h2>Your daily targets</h2><p>Starting suggestions — adjust any number.</p></div><span class="target-unit">kcal · grams</span></div>
+      <div class="target-grid" formGroupName="nutritionFacts">
+        <label class="target-field energy-field"><span>Energy <small>kcal</small></span><input type="number" formControlName="energy" min="0" max="10000" step="50" inputmode="numeric"></label>
+        <label class="target-field"><span>Protein <small>g</small></span><input type="number" formControlName="protein" min="0" max="1000" step="1" inputmode="numeric"></label>
+        <label class="target-field"><span>Carbohydrates <small>g</small></span><input type="number" formControlName="carbs" min="0" max="1000" step="1" inputmode="numeric"></label>
+        <label class="target-field"><span>Fat <small>g</small></span><input type="number" formControlName="fats" min="0" max="1000" step="1" inputmode="numeric"></label>
+      </div>
+      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+      <button class="primary-button" type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving your targets…' : 'Save and open my journal' }}<span aria-hidden="true">↗</span></button>
+      <p class="form-footnote">These are starting points, not rules. You can change them any time.</p>
+    </form>
+  </section>
+</main>

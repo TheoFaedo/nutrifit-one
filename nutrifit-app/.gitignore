@@ -6,6 +6,10 @@
 /out-tsc
 /bazel-out
 
+# Local Angular environment configuration (copy the tracked examples first)
+/src/environments/environment.ts
+/src/environments/environment.production.ts
+
 # Node
 /node_modules
 npm-debug.log
