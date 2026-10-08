@@ -5,6 +5,7 @@ Elle suppose les schémas `auth` et les rôles `anon`/`authenticated` fournis pa
 
 ## Modèle retenu
 
+- `daily_goals` conserve l’historique des objectifs. `valid_from` et `valid_to` sont inclusifs ; les périodes successives ne se chevauchent pas. `complete_onboarding` calcule le début initial côté serveur dans `Europe/Paris`. `update_daily_goal` ferme la période précédente à la veille du jour parisien courant et crée la nouvelle période. Une nouvelle sauvegarde le même jour met à jour la ligne déjà commencée ce jour-là ; les dates antérieures sont conservées.
 - `foods` porte l’identité logique, l’auteur et la visibilité ; `food_versions` porte les instantanés nommés et typés. La contrainte partielle autorise au plus une version courante. Lors d’une évolution, le client doit désactiver l’ancienne version puis insérer la nouvelle dans la même transaction.
 - `quantities` contient à la fois la portion et ses nutriments. Les clés étrangères composites du journal et des compositions de recettes garantissent que la portion appartient à la version référencée. Les valeurs nutritionnelles nulles permettent de conserver une donnée incomplète ; une recette dont les ingrédients n’ont pas de nutriments complets peut donc produire des totaux nuls/incomplets.
 - `product_details` porte le code-barres sur l’instantané produit. Une mise à jour de cette valeur est refusée. `source` et `source_payload` sont des emplacements de provenance ; leur format n’est pas encore défini.
@@ -22,4 +23,4 @@ Elle suppose les schémas `auth` et les rôles `anon`/`authenticated` fournis pa
 
 ## RLS
 
-Les profils, objectifs et journaux sont limités au propriétaire. Les aliments publics sont lisibles sans session ; les aliments privés sont lisibles par leur auteur. Seul l’auteur peut créer/modifier les entités de catalogue. Le code-barres n’est pas unique. Les tables du catalogue, y compris ses versions et portions, ont RLS activée.
+Les profils, objectifs et journaux sont limités au propriétaire. Les clients lisent les objectifs applicables selon `valid_from <= date` et (`valid_to` est nul ou `valid_to >= date`). Les RPC d’onboarding et de mise à jour s’exécutent avec l’identité appelante et les politiques RLS ; la mise à jour verrouille le profil du propriétaire avant de modifier ses périodes. Les aliments publics sont lisibles sans session ; les aliments privés sont lisibles par leur auteur. Seul l’auteur peut créer/modifier les entités de catalogue. Le code-barres n’est pas unique. Les tables du catalogue, y compris ses versions et portions, ont RLS activée.

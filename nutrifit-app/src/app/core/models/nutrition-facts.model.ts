@@ -34,7 +34,7 @@ export class NutritionFacts {
     const currentEnergy = this.energyFrom(this.carbs, this.fats, this.protein);
     const distribution = currentEnergy > 0
       ? { carbs: this.carbs, fats: this.fats, protein: this.protein }
-      : { carbs: energy * 0.5 / 4, fats: energy * 0.3 / 9, protein: energy * 0.2 / 4 };
+      : { carbs: energy * 0.4 / 4, fats: energy * 0.3 / 9, protein: energy * 0.3 / 4 };
     const scale = currentEnergy > 0 ? energy / currentEnergy : 1;
 
     return new NutritionFacts(

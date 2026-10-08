@@ -1,0 +1,6 @@
+:host { display: contents; }
+.bottom-nav { position: fixed; z-index: 10; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(3, 1fr); width: min(100%, 560px); min-height: 76px; margin-inline: auto; padding: 9px 18px max(9px, env(safe-area-inset-bottom)); border: 1px solid #e4e9e0; border-bottom: 0; border-radius: 20px 20px 0 0; background: rgba(255,255,252,.96); box-shadow: 0 -8px 30px rgba(37, 58, 43, .08); backdrop-filter: blur(16px); }
+.bottom-nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 12px; color: #818a80; font-size: 11px; font-weight: 600; text-decoration: none; transition: color .18s ease, background-color .18s ease; }
+.bottom-nav a.active { color: #345a40; background: #eff3e9; }
+.bottom-nav svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.bottom-nav a:focus-visible { outline: 3px solid #90ad67; outline-offset: 2px; }

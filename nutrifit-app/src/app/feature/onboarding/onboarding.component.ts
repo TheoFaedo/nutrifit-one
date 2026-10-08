@@ -70,7 +70,6 @@ export class OnboardingComponent {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Your session has expired. Sign in again to continue.');
       const { error: saveError } = await supabase.rpc('complete_onboarding', {
-        p_valid_from: new Date().toISOString().slice(0, 10),
         p_energy_kcal: nutritionFacts.energy,
         p_carbs_g: nutritionFacts.carbs,
         p_fats_g: nutritionFacts.fats,
