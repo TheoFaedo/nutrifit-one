@@ -42,6 +42,8 @@ Le détail ci-dessous rend ces capacités testables. Les règles de partage des 
 - Les objectifs sont associés à une période de validité. Une modification crée une nouvelle période ; elle ne doit pas réécrire les objectifs qui s’appliquaient aux jours passés.
 - Pour une date donnée, l’application sélectionne l’objectif valide à cette date. Les règles de période (absence, chevauchement, bornes) et les valeurs exactes des préréglages seront définies lors de l’implémentation.
 - Les cibles sont exprimées en kcal et grammes.
+- À l’onboarding, modifier un macronutriment recalcule l’énergie avec les facteurs 4 kcal/g pour les glucides et protéines et 9 kcal/g pour les lipides.
+- Modifier directement l’énergie redimensionne les trois macronutriments en conservant leurs proportions. Si aucune proportion n’existe encore, la répartition initiale est de 50 % glucides, 30 % lipides et 20 % protéines en énergie.
 
 ## 5. Aliments, portions et recettes
 
