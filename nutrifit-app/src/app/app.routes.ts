@@ -14,6 +14,16 @@ export const routes: Routes = [
     loadComponent: () => import('./feature/journal/journal.component').then((feature) => feature.JournalComponent),
     canActivate: [journalGuard],
   },
+  {
+    path: 'profile',
+    loadComponent: () => import('./feature/profile/profile.component').then((feature) => feature.ProfileComponent),
+    canActivate: [journalGuard],
+  },
+  {
+    path: 'meal',
+    loadComponent: () => import('./feature/meal/meal.component').then((feature) => feature.MealComponent),
+    canActivate: [journalGuard],
+  },
   { path: '', pathMatch: 'full', redirectTo: 'journal' },
   { path: '**', redirectTo: 'journal' },
 ];
