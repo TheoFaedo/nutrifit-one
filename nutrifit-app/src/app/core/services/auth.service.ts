@@ -37,9 +37,10 @@ export class AuthService {
   }
 
   async signInWithGoogle(): Promise<void> {
+    const redirectTo = new URL('auth/callback', document.baseURI).toString();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo },
     });
     if (error) {
       throw error;
