@@ -1,0 +1,133 @@
+.daily-summary {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #fffefa;
+  box-shadow: 0 12px 32px rgba(41, 60, 43, 0.055);
+}
+.daily-summary-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.daily-summary .eyebrow {
+  margin: 0 0 7px;
+}
+.daily-summary h2 {
+  margin: 0;
+  font:
+    650 17px 'Avenir Next',
+    Avenir,
+    'Segoe UI',
+    sans-serif;
+}
+.daily-energy,
+.daily-macro {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #eceee7;
+  border-radius: 14px;
+  background: #fff;
+}
+.daily-energy {
+  margin-top: 18px;
+  border-color: #dfe9f1;
+  color: #2e4863;
+}
+.daily-macros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 10px;
+}
+.macro-values {
+  display: grid;
+  gap: 7px;
+}
+.macro-values > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #68766a;
+  font-size: 12px;
+  font-weight: 650;
+}
+.macro-values i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #729168;
+}
+.energy-values > span {
+  color: #58728b;
+}
+.energy-values i,
+.energy-track > span {
+  background: #4b7ea8;
+}
+.daily-macro.carbs .macro-values i,
+.daily-macro.carbs .progress-track > span {
+  background: #c49a55;
+}
+.daily-macro.fats .macro-values i,
+.daily-macro.fats .progress-track > span {
+  background: #b17a62;
+}
+.macro-ratio {
+  display: grid;
+  gap: 2px;
+}
+.daily-macro strong {
+  overflow: hidden;
+  color: #2b4432;
+  font-size: 21px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.daily-macro small {
+  margin-left: 4px;
+  color: #829083;
+  font-size: 11px;
+  font-weight: 400;
+}
+.macro-ratio > span {
+  color: #829083;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.progress-track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8ede3;
+}
+.progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #729168;
+  transition:
+    width 180ms ease,
+    background-color 180ms ease;
+}
+.energy-track {
+  margin-top: 2px;
+}
+.daily-macro .progress-track {
+  margin-top: 10px;
+}
+.progress-track.over-goal > span {
+  background: #c84e46;
+}
+.daily-macro.protein .progress-track > span {
+  background: #729168;
+}
+@media (max-width: 680px) {
+  .daily-macros {
+    grid-template-columns: 1fr;
+  }
+}

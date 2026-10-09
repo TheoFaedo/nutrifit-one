@@ -2,15 +2,169 @@
   <header class="setup-header">
     <app-brand /><button class="text-button" type="button" (click)="signOut()">Sign out</button>
   </header>
-  <section class="journal-welcome">
+  <section class="journal-content" aria-labelledby="journal-title">
     <p class="eyebrow">Your space</p>
-    <h1>Your journal<br />starts here.</h1>
-    <p class="muted">A calmer way to notice what nourishes you.</p>
-    <div class="journal-empty">
-      <span aria-hidden="true">✳</span>
-      <h2>Your day is a blank page.</h2>
-      <p>Food and meal tracking will be ready here soon.</p>
+    <h1 id="journal-title">Food journal</h1>
+    <div class="day-navigation">
+      <button
+        class="secondary-button"
+        type="button"
+        aria-label="Previous day"
+        (click)="changeDate(-1)"
+      >
+        ←
+      </button>
+      <label
+        ><span class="visually-hidden">Journal date</span
+        ><input type="date" [value]="date()" (change)="setDate($any($event.target).value)"
+      /></label>
+      <button class="secondary-button" type="button" aria-label="Next day" (click)="changeDate(1)">
+        →
+      </button>
+      <span class="date-label">{{ formatDate(date()) }}</span>
     </div>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+    @if (loading()) {
+      <p class="muted" role="status">Loading your journal…</p>
+    }
+    <app-daily-summary [totals]="dailyTotals()" [goal]="dailyGoal()" />
+    <section class="meal-sections" aria-label="Meals">
+      @for (meal of groupedMeals(); track meal.type) {
+        <section class="meal-section" [attr.aria-labelledby]="'meal-' + meal.type">
+          <header>
+            <div>
+              <h2 [id]="'meal-' + meal.type">{{ meal.label }}</h2>
+              <p>{{ meal.entries.length }} {{ meal.entries.length === 1 ? 'entry' : 'entries' }}</p>
+            </div>
+            <button class="secondary-button" type="button" (click)="startAdd(meal.type)">
+              Add food <span aria-hidden="true">＋</span>
+            </button>
+          </header>
+          @if (meal.entries.length) {
+            <ul class="entry-list">
+              @for (entry of meal.entries; track entry.id) {
+                <li>
+                  <div class="entry-name">
+                    <strong>{{ entry.food_name }}</strong
+                    ><span
+                      >{{ entry.ratio }} × {{ portionLabel(entry.portion) }} ·
+                      {{ entry.kind === 'RECIPE' ? 'Recipe' : 'Food' }}</span
+                    >
+                  </div>
+                  <div class="entry-energy">
+                    {{
+                      entry.portion.energy_kcal === null
+                        ? '—'
+                        : (entry.portion.energy_kcal * entry.ratio | number: '1.0-1')
+                    }}
+                    kcal
+                  </div>
+                  <div class="entry-actions">
+                    <button class="link-button" type="button" (click)="edit(entry)">Edit</button
+                    ><button class="link-button" type="button" (click)="remove(entry)">
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="empty-meal">Nothing logged yet.</p>
+          }
+        </section>
+      }
+    </section>
   </section>
 </main>
+@if (dialogOpen()) {
+  <div
+    class="dialog-backdrop"
+    (click)="$event.target === $event.currentTarget && dialogOpen.set(false)"
+  >
+    <section
+      class="entry-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="entry-dialog-title"
+    >
+      <button class="dialog-close" type="button" aria-label="Close" (click)="dialogOpen.set(false)">
+        ×
+      </button>
+      @if (dialogView() === 'search') {
+        <p class="eyebrow">{{ editingId() ? 'Change food' : 'Add to your journal' }}</p>
+        <h2 id="entry-dialog-title">Choose a food</h2>
+        <label class="field"
+          ><span>Search foods and recipes</span
+          ><input
+            type="search"
+            [value]="query()"
+            (input)="query.set($any($event.target).value)"
+            placeholder="Start typing a name"
+        /></label>
+        <div class="food-options" role="listbox" aria-label="Foods and recipes">
+          @for (food of matchingFoods(); track food.version_id) {
+            <button type="button" role="option" (click)="chooseFood(food)">
+              <span>{{ food.name }}</span>
+              <small>{{ food.kind === 'RECIPE' ? 'Recipe' : 'Food' }}</small>
+            </button>
+          } @empty {
+            <p>No matching foods found. Add foods in the Meal catalogue.</p>
+          }
+        </div>
+      } @else if (selectedFood(); as food) {
+        <div class="detail-heading">
+          <button class="back-button" type="button" (click)="backToFoods()">
+            <span aria-hidden="true">←</span> Foods
+          </button>
+          <p class="eyebrow">{{ food.kind === 'RECIPE' ? 'Recipe' : 'Food' }}</p>
+          <h2 id="entry-dialog-title">{{ food.name }}</h2>
+        </div>
+        <label class="field"
+          ><span>Portion</span
+          ><select
+            [value]="selectedPortionId()"
+            (change)="selectedPortionId.set($any($event.target).value)"
+          >
+            @for (portion of selectedPortions(); track portion.id) {
+              <option [value]="portion.id">{{ portionLabel(portion) }}</option>
+            }
+          </select></label
+        >
+        <label class="field amount-field"
+          ><span>Portion ratio</span
+          ><input
+            type="number"
+            min="0.1"
+            step="0.1"
+            [value]="amount()"
+            (input)="amount.set(+$any($event.target).value)"
+        /></label>
+        <section class="nutrition-preview" aria-label="Nutrition for selected amount">
+          <h3>Nutrition</h3>
+          <app-nutrition-summary [values]="selectedNutrition()" />
+        </section>
+      }
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+      @if (dialogView() === 'details') {
+        <div class="dialog-actions detail-actions">
+          <button class="secondary-button" type="button" (click)="dialogOpen.set(false)">
+            Cancel
+          </button>
+          <button
+            class="primary-button"
+            type="button"
+            [disabled]="saving() || !selectedFood()"
+            (click)="saveEntry()"
+          >
+            {{ saving() ? 'Saving…' : editingId() ? 'Save changes' : 'Add food' }}
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+}
 <app-bottom-nav active="journal" />
