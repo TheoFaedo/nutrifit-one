@@ -26,6 +26,10 @@ export interface FoodRecord {
   parts: RecipePart[];
 }
 
+export type FoodCatalogueSort = 'recent' | 'newest' | 'asc' | 'desc';
+const foodSelect =
+  'id,author_id,is_public,food_versions!inner(id,version_number,name,kind,product_details(barcode,source),quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g),recipe_parts!recipe_parts_recipe_version_id_fkey(id,ingredient_version_id,quantity_id,ratio,ingredient:food_versions!recipe_parts_ingredient_version_id_fkey(id,name,kind,quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))))';
+
 export interface RecipePart {
   ingredient_version_id: string;
   quantity_id: string;
@@ -70,23 +74,72 @@ export interface FoodInput {
 
 @Injectable({ providedIn: 'root' })
 export class FoodCatalogueService {
-  async search(term: string): Promise<FoodRecord[]> {
-    let query = supabase
-      .from('foods')
-      .select(
-        'id,author_id,is_public,food_versions!inner(id,version_number,name,kind,product_details(barcode,source),quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g),recipe_parts!recipe_parts_recipe_version_id_fkey(id,ingredient_version_id,quantity_id,ratio,ingredient:food_versions!recipe_parts_ingredient_version_id_fkey(id,name,kind,quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))))',
-      )
-      .eq('food_versions.is_current', true)
-      .order('name', { referencedTable: 'food_versions' })
-      .limit(60);
-    if (term.trim()) {
-      query = query.ilike('food_versions.name', `%${term.trim().replaceAll('%', '\\%')}%`);
+  async search(term: string, sort: FoodCatalogueSort = 'asc'): Promise<FoodRecord[]> {
+    return this.journalPage(term, sort, 0, 100);
+  }
+
+  async journalPage(
+    term: string,
+    sort: FoodCatalogueSort,
+    offset: number,
+    limit = 20,
+    barcode: string | null = null,
+  ): Promise<FoodRecord[]> {
+    const { data: ids, error: idsError } = await supabase.rpc('journal_food_ids', {
+      p_term: term,
+      p_sort: sort,
+      p_offset: offset,
+      p_limit: limit,
+      p_barcode: barcode,
+    });
+    if (idsError) {
+      throw idsError;
     }
-    const { data, error } = await query;
+    const orderedIds = (ids ?? []).map((row: { food_id: string }) => row.food_id);
+    if (!orderedIds.length) {
+      return [];
+    }
+    const { data, error } = await supabase
+      .from('foods')
+      .select(foodSelect)
+      .in('id', orderedIds)
+      .eq('food_versions.is_current', true);
     if (error) {
       throw error;
     }
-    return (data ?? []).map((row: Record<string, unknown>) => {
+    const byId = new Map(this.mapFoods(data ?? []).map((food) => [food.id, food]));
+    return orderedIds
+      .map((id: string) => byId.get(id))
+      .filter((food: FoodRecord | undefined): food is FoodRecord => Boolean(food));
+  }
+
+  async version(versionId: string): Promise<FoodRecord | null> {
+    const { data, error } = await supabase
+      .from('foods')
+      .select(foodSelect)
+      .eq('food_versions.id', versionId)
+      .limit(1);
+    if (error) {
+      throw error;
+    }
+    return this.mapFoods(data ?? [])[0] ?? null;
+  }
+
+  async current(foodId: string): Promise<FoodRecord | null> {
+    const { data, error } = await supabase
+      .from('foods')
+      .select(foodSelect)
+      .eq('id', foodId)
+      .eq('food_versions.is_current', true)
+      .limit(1);
+    if (error) {
+      throw error;
+    }
+    return this.mapFoods(data ?? [])[0] ?? null;
+  }
+
+  private mapFoods(rows: Record<string, unknown>[]): FoodRecord[] {
+    return rows.map((row: Record<string, unknown>) => {
       const versions = row['food_versions'] as Record<string, unknown>[];
       const version = versions[0];
       const details = (version['product_details'] as Record<string, unknown>[] | null)?.[0];
@@ -118,8 +171,8 @@ export class FoodCatalogueService {
     });
   }
 
-  async save(input: FoodInput): Promise<void> {
-    const { error } = await supabase.rpc('save_food_snapshot', {
+  async save(input: FoodInput): Promise<string> {
+    const { data, error } = await supabase.rpc('save_food_snapshot', {
       p_name: input.name,
       p_is_public: input.isPublic,
       p_quantities: input.portions,
@@ -131,10 +184,11 @@ export class FoodCatalogueService {
     if (error) {
       throw error;
     }
+    return String(data);
   }
 
-  async saveRecipe(input: RecipeInput): Promise<void> {
-    const { error } = await supabase.rpc('save_recipe_snapshot', {
+  async saveRecipe(input: RecipeInput): Promise<string> {
+    const { data, error } = await supabase.rpc('save_recipe_snapshot', {
       p_name: input.name,
       p_is_public: input.isPublic,
       p_reference_quantity: input.referenceQuantity,
@@ -145,6 +199,7 @@ export class FoodCatalogueService {
     if (error) {
       throw error;
     }
+    return String(data);
   }
 
   async lookupBarcode(

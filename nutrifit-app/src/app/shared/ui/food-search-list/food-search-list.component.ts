@@ -4,15 +4,17 @@ import { FoodRecord } from '../../../core/services/food-catalogue.service';
 @Component({
   selector: 'app-food-search-list',
   template: `
-    <label class="search"
-      ><span>{{ searchLabel() }}</span
-      ><input
-        type="search"
-        [value]="query()"
-        (input)="query.set($any($event.target).value)"
-        placeholder="Search foods and recipes"
-        autofocus
-    /></label>
+    @if (showSearch()) {
+      <label class="search"
+        ><span>{{ searchLabel() }}</span
+        ><input
+          type="search"
+          [value]="query()"
+          (input)="query.set($any($event.target).value)"
+          placeholder="Search foods and recipes"
+          autofocus
+      /></label>
+    }
     <section class="results" aria-label="Food search results">
       @if (loading()) {
         <p class="muted" aria-live="polite">Loading foods…</p>
@@ -109,6 +111,7 @@ export class FoodSearchListComponent {
   readonly loading = input(false);
   readonly selectedId = input<string | null>(null);
   readonly searchLabel = input('Search foods');
+  readonly showSearch = input(true);
   readonly foodSelected = output<FoodRecord>();
   readonly query = signal('');
   readonly matches = computed(() => {

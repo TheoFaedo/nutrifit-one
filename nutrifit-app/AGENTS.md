@@ -9,6 +9,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 ## Design Principles
 
 - Follow the Single Responsibility Principle (SRP): give each component, service, and class one clear responsibility, and split unrelated behavior into focused units.
+- Prefer CSS `gap` for spacing between sibling elements instead of applying `margin` to individual elements.
 
 ## Angular Best Practices
 

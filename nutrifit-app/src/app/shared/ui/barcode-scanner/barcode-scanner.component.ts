@@ -12,7 +12,7 @@ import { Component, ElementRef, OnDestroy, output, signal, viewChild } from '@an
         <path d="M3 6.5h3l1.2-2h5.6l1.2 2h3v9H3v-9Z" />
         <circle cx="10" cy="11" r="3" />
       </svg>
-      Scan with camera
+      Scan a barcode
     </button>
     @if (modalOpen()) {
       <div class="camera-backdrop" (click)="$event.target === $event.currentTarget && stop()">

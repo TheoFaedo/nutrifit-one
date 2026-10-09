@@ -24,135 +24,161 @@
     </div>
     @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
+      <button class="secondary-button" type="button" (click)="load()">Try again</button>
     }
     @if (loading()) {
       <p class="muted" role="status">Loading your journal…</p>
-    }
-    <app-daily-summary [totals]="dailyTotals()" [goal]="dailyGoal()" />
-    <section class="meal-sections" aria-label="Meals">
-      @for (meal of groupedMeals(); track meal.type) {
-        <section class="meal-section" [attr.aria-labelledby]="'meal-' + meal.type">
-          <header>
-            <div>
-              <h2 [id]="'meal-' + meal.type">{{ meal.label }}</h2>
-              <p>{{ meal.entries.length }} {{ meal.entries.length === 1 ? 'entry' : 'entries' }}</p>
-            </div>
-            <button class="secondary-button" type="button" (click)="startAdd(meal.type)">
-              Add food <span aria-hidden="true">＋</span>
-            </button>
-          </header>
-          @if (meal.entries.length) {
-            <ul class="entry-list">
-              @for (entry of meal.entries; track entry.id) {
-                <li>
-                  <div class="entry-name">
-                    <strong>{{ entry.food_name }}</strong
-                    ><span
-                      >{{ entry.ratio }} × {{ portionLabel(entry.portion) }} ·
-                      {{ entry.kind === 'RECIPE' ? 'Recipe' : 'Food' }}</span
-                    >
-                  </div>
-                  <div class="entry-energy">
-                    {{
-                      entry.portion.energy_kcal === null
-                        ? '—'
-                        : (entry.portion.energy_kcal * entry.ratio | number: '1.0-1')
-                    }}
-                    kcal
-                  </div>
-                  <div class="entry-actions">
-                    <button class="link-button" type="button" (click)="edit(entry)">Edit</button
-                    ><button class="link-button" type="button" (click)="remove(entry)">
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              }
-            </ul>
-          } @else {
-            <p class="empty-meal">Nothing logged yet.</p>
-          }
-        </section>
+    } @else if (!error()) {
+      @if (!entries().length) {
+        <p class="muted" role="status">No entries for this day yet.</p>
       }
-    </section>
+      <app-daily-summary [totals]="dailyTotals()" [goal]="dailyGoal()" />
+      <section class="meal-sections" aria-label="Meals">
+        @for (meal of groupedMeals(); track meal.type) {
+          <section class="meal-section" [attr.aria-labelledby]="'meal-' + meal.type">
+            <header>
+              <div>
+                <h2 [id]="'meal-' + meal.type">{{ meal.label }}</h2>
+                <p>
+                  {{ meal.entries.length }} {{ meal.entries.length === 1 ? 'entry' : 'entries' }}
+                </p>
+              </div>
+              <button class="secondary-button" type="button" (click)="startAdd(meal.type)">
+                Add food <span aria-hidden="true">＋</span>
+              </button>
+            </header>
+            @if (meal.entries.length) {
+              <ul class="entry-list">
+                @for (entry of meal.entries; track entry.id) {
+                  <li>
+                    <div class="entry-name">
+                      <strong>{{ entry.food_name }}</strong
+                      ><span
+                        >{{ formatNutrition(entry.ratio) }} × {{ portionLabel(entry.portion) }} ·
+                        {{ entry.kind === 'RECIPE' ? 'Recipe' : 'Food' }}</span
+                      >
+                    </div>
+                    <div class="entry-energy">
+                      {{
+                        formatNutrition(
+                          entry.portion.energy_kcal === null
+                            ? null
+                            : entry.portion.energy_kcal * entry.ratio
+                        )
+                      }}
+                      kcal
+                    </div>
+                    <div class="entry-actions">
+                      <button class="link-button" type="button" (click)="edit(entry)">Edit</button
+                      ><button class="link-button" type="button" (click)="remove(entry)">
+                        Delete
+                      </button>
+                    </div>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="empty-meal">Nothing logged yet.</p>
+            }
+          </section>
+        }
+      </section>
+    }
   </section>
 </main>
 @if (dialogOpen()) {
-  <div
-    class="dialog-backdrop"
-    (click)="$event.target === $event.currentTarget && closeDialog()"
-  >
+  <div class="dialog-backdrop" (click)="$event.target === $event.currentTarget && closeDialog()">
     <section
       class="entry-dialog"
       role="dialog"
       aria-modal="true"
       aria-labelledby="entry-dialog-title"
+      (keydown)="dialogKeydown($event)"
     >
       <button class="dialog-close" type="button" aria-label="Close" (click)="closeDialog()">
         ×
       </button>
       @if (dialogView() === 'search') {
-        <p class="eyebrow">{{ editingId() ? 'Change food' : 'Add to your journal' }}</p>
-        <h2 id="entry-dialog-title">Choose a food</h2>
-        <label class="field"
-          ><span>Search foods, recipes, or barcode</span
-          ><input
-            type="search"
-            [value]="query()"
-            (input)="query.set($any($event.target).value)"
-            (keyup.enter)="searchJournal()"
-            placeholder="Enter a name or barcode"
-        /></label>
-        <div class="search-actions">
-          <button
-            class="secondary-button"
-            type="button"
-            [disabled]="barcodeSearching()"
-            (click)="searchJournal()"
-          >
-            {{ barcodeSearching() ? 'Searching…' : 'Search' }}
+        @if (creatingFood()) {
+          <app-food-editor
+            [initialKind]="'FOOD'"
+            (saved)="createdFood($event)"
+            (dismissed)="cancelCreateFood()"
+          />
+        } @else {
+          <p class="eyebrow">{{ editingId() ? 'Change food' : 'Add to your journal' }}</p>
+          <h2 id="entry-dialog-title">Choose a food</h2>
+          <button class="secondary-button" type="button" (click)="startCreateFood()">
+            Create new food
           </button>
-          <app-barcode-scanner (detected)="scannedBarcode($event)" />
-        </div>
-        @if (barcodeError()) {
-          <p class="error" role="status">{{ barcodeError() }}</p>
-        }
-        @if (offProduct(); as product) {
-          <button
-            class="barcode-result"
-            type="button"
-            (click)="chooseOffProduct()"
-            [disabled]="saving()"
-          >
-            <span
-              ><strong>{{ product.name }}</strong
-              ><small>Open Food Facts · external product data · not verified</small></span
-            ><span>Use product</span>
-          </button>
-        }
-        @for (food of barcodeFoods(); track food.version_id) {
-          <button class="barcode-result" type="button" (click)="chooseFood(food)">
-            <span
-              ><strong>{{ food.name }}</strong
-              ><small
-                >Public catalogue food ·
-                {{
-                  food.version_number === 1 ? 'version 1' : 'version ' + food.version_number
-                }}</small
-              ></span
-            ><span>Choose</span>
-          </button>
-        }
-        <div class="food-options" role="listbox" aria-label="Foods and recipes">
-          @for (food of matchingFoods(); track food.version_id) {
-            <button type="button" role="option" (click)="chooseFood(food)">
-              <span>{{ food.name }}</span>
-              <small>{{ food.kind === 'RECIPE' ? 'Recipe' : 'Food' }}</small>
-            </button>
-          } @empty {
-            <p>No matching foods found. Add foods in the Meal catalogue.</p>
+          <app-food-catalogue-search
+            [query]="query()"
+            [sort]="foodSort()"
+            [sortOptions]="sortOptions"
+            [searching]="barcodeSearching()"
+            (queryChanged)="searchChanged($event)"
+            (sortChanged)="setFoodSort($event)"
+            (searchRequested)="searchJournal()"
+            (barcodeDetected)="scannedBarcode($event)"
+          />
+          @if (barcodeError()) {
+            <p class="error" role="status">{{ barcodeError() }}</p>
           }
-        </div>
+          @if (offProduct(); as product) {
+            <button
+              class="barcode-result"
+              type="button"
+              (click)="chooseOffProduct()"
+              [disabled]="saving()"
+            >
+              <span
+                ><strong>{{ product.name }}</strong
+                ><small>Open Food Facts · external product data · not verified</small></span
+              ><span>Use product</span>
+            </button>
+          }
+          @for (food of barcodeFoods(); track food.version_id) {
+            <button class="barcode-result" type="button" (click)="chooseFood(food)">
+              <span
+                ><strong>{{ food.name }}</strong
+                ><small
+                  >Public catalogue food ·
+                  {{
+                    food.version_number === 1 ? 'version 1' : 'version ' + food.version_number
+                  }}</small
+                ></span
+              ><span>Choose</span>
+            </button>
+          }
+          @if (foodError()) {
+            <p class="error" role="alert">
+              {{ foodError() }} <button type="button" (click)="loadFoods()">Try again</button>
+            </p>
+          }
+          @if (foodsLoading() && !foods().length) {
+            <p role="status">Loading foods…</p>
+          }
+          <div class="food-options" aria-label="Foods and recipes">
+            @for (food of foods(); track food.version_id) {
+              <button type="button" (click)="chooseFood(food)">
+                <span>{{ food.name }}</span>
+                <small>{{ food.kind === 'RECIPE' ? 'Recipe' : 'Food' }}</small>
+              </button>
+            } @empty {
+              <p>No matching foods found. Add foods in the Meal catalogue.</p>
+            }
+          </div>
+          @if (foodsMore()) {
+            <button
+              class="secondary-button"
+              type="button"
+              [disabled]="foodsLoading()"
+              (click)="loadFoods(true)"
+            >
+              {{ foodsLoading() ? 'Loading…' : 'Load more foods' }}
+            </button>
+          }
+        }
       } @else if (selectedFood(); as food) {
         <div class="detail-heading">
           <button class="back-button" type="button" (click)="backToFoods()">
@@ -163,15 +189,11 @@
         </div>
         <label class="field"
           ><span>Portion</span
-          ><select
-            [value]="selectedPortionId()"
-            (change)="selectedPortionId.set($any($event.target).value)"
-          >
-            @for (portion of selectedPortions(); track portion.id) {
-              <option [value]="portion.id">{{ portionLabel(portion) }}</option>
-            }
-          </select></label
-        >
+          ><app-portion-selector
+            [portions]="selectedPortions()"
+            [selection]="selectedPortionId()"
+            (selectionChange)="selectPortion($event)"
+        /></label>
         <label class="field amount-field"
           ><span>Portion ratio</span
           ><input
@@ -186,14 +208,12 @@
           <app-nutrition-summary [values]="selectedNutrition()" />
         </section>
       }
-      @if (error()) {
-        <p class="error" role="alert">{{ error() }}</p>
+      @if (dialogError()) {
+        <p class="error" role="alert">{{ dialogError() }}</p>
       }
       @if (dialogView() === 'details') {
         <div class="dialog-actions detail-actions">
-          <button class="secondary-button" type="button" (click)="closeDialog()">
-            Cancel
-          </button>
+          <button class="secondary-button" type="button" (click)="closeDialog()">Cancel</button>
           <button
             class="primary-button"
             type="button"
