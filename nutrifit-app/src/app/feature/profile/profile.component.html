@@ -1,5 +1,5 @@
 <main class="setup-shell">
-  <header class="setup-header"><app-brand /><span class="profile-mark">Your space</span></header>
+  <header class="setup-header"><app-brand /></header>
   <section class="profile-content">
     <p class="eyebrow">Your account</p>
     <h1>Your profile</h1>
@@ -9,7 +9,14 @@
       }
       <div>
         <h2>{{ name() || 'Nutrifit member' }}</h2>
-        <p>Daily nutrition targets</p>
+        <button
+          class="sign-out-button"
+          type="button"
+          [disabled]="signingOut()"
+          (click)="signOut()"
+        >
+          {{ signingOut() ? 'Signing out…' : 'Sign out' }}
+        </button>
       </div>
     </div>
     @if (loading()) {

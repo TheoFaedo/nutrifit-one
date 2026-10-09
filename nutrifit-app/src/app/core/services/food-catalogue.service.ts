@@ -153,6 +153,11 @@ export class FoodCatalogueService {
     const response = await fetch(
       `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,product_name_en,nutriments,serving_size,serving_quantity,product_quantity,product_quantity_unit`,
     );
+    // Open Food Facts returns 404 when a barcode has no matching product.
+    // Treat that as an empty result; reserve the error for actual service failures.
+    if (response.status === 404) {
+      return null;
+    }
     if (!response.ok) {
       throw new Error('Open Food Facts is temporarily unavailable. Local matches are still shown.');
     }

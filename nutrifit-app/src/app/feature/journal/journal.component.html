@@ -1,9 +1,8 @@
 <main class="journal-shell">
   <header class="setup-header">
-    <app-brand /><button class="text-button" type="button" (click)="signOut()">Sign out</button>
+    <app-brand />
   </header>
   <section class="journal-content" aria-labelledby="journal-title">
-    <p class="eyebrow">Your space</p>
     <h1 id="journal-title">Food journal</h1>
     <div class="day-navigation">
       <button
@@ -81,7 +80,7 @@
 @if (dialogOpen()) {
   <div
     class="dialog-backdrop"
-    (click)="$event.target === $event.currentTarget && dialogOpen.set(false)"
+    (click)="$event.target === $event.currentTarget && closeDialog()"
   >
     <section
       class="entry-dialog"
@@ -89,20 +88,61 @@
       aria-modal="true"
       aria-labelledby="entry-dialog-title"
     >
-      <button class="dialog-close" type="button" aria-label="Close" (click)="dialogOpen.set(false)">
+      <button class="dialog-close" type="button" aria-label="Close" (click)="closeDialog()">
         ×
       </button>
       @if (dialogView() === 'search') {
         <p class="eyebrow">{{ editingId() ? 'Change food' : 'Add to your journal' }}</p>
         <h2 id="entry-dialog-title">Choose a food</h2>
         <label class="field"
-          ><span>Search foods and recipes</span
+          ><span>Search foods, recipes, or barcode</span
           ><input
             type="search"
             [value]="query()"
             (input)="query.set($any($event.target).value)"
-            placeholder="Start typing a name"
+            (keyup.enter)="searchJournal()"
+            placeholder="Enter a name or barcode"
         /></label>
+        <div class="search-actions">
+          <button
+            class="secondary-button"
+            type="button"
+            [disabled]="barcodeSearching()"
+            (click)="searchJournal()"
+          >
+            {{ barcodeSearching() ? 'Searching…' : 'Search' }}
+          </button>
+          <app-barcode-scanner (detected)="scannedBarcode($event)" />
+        </div>
+        @if (barcodeError()) {
+          <p class="error" role="status">{{ barcodeError() }}</p>
+        }
+        @if (offProduct(); as product) {
+          <button
+            class="barcode-result"
+            type="button"
+            (click)="chooseOffProduct()"
+            [disabled]="saving()"
+          >
+            <span
+              ><strong>{{ product.name }}</strong
+              ><small>Open Food Facts · external product data · not verified</small></span
+            ><span>Use product</span>
+          </button>
+        }
+        @for (food of barcodeFoods(); track food.version_id) {
+          <button class="barcode-result" type="button" (click)="chooseFood(food)">
+            <span
+              ><strong>{{ food.name }}</strong
+              ><small
+                >Public catalogue food ·
+                {{
+                  food.version_number === 1 ? 'version 1' : 'version ' + food.version_number
+                }}</small
+              ></span
+            ><span>Choose</span>
+          </button>
+        }
         <div class="food-options" role="listbox" aria-label="Foods and recipes">
           @for (food of matchingFoods(); track food.version_id) {
             <button type="button" role="option" (click)="chooseFood(food)">
@@ -151,7 +191,7 @@
       }
       @if (dialogView() === 'details') {
         <div class="dialog-actions detail-actions">
-          <button class="secondary-button" type="button" (click)="dialogOpen.set(false)">
+          <button class="secondary-button" type="button" (click)="closeDialog()">
             Cancel
           </button>
           <button

@@ -15,6 +15,7 @@ import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.compon
 import { FoodSearchListComponent } from '../../shared/ui/food-search-list/food-search-list.component';
 import { FoodDetailsComponent } from '../../shared/ui/food-details/food-details.component';
 import { FoodPickerComponent } from '../../shared/ui/food-picker/food-picker.component';
+import { BarcodeScannerComponent } from '../../shared/ui/barcode-scanner/barcode-scanner.component';
 import {
   NutritionSummaryComponent,
   NutritionSummaryValues,
@@ -30,6 +31,7 @@ import {
     FoodDetailsComponent,
     FoodPickerComponent,
     NutritionSummaryComponent,
+    BarcodeScannerComponent,
   ],
   templateUrl: './meal.component.html',
   styleUrl: './meal.component.less',
@@ -53,10 +55,12 @@ export class MealComponent {
   readonly recipeMode = signal(false);
   readonly searchResults = computed(() => {
     const value = this.query().trim().toLocaleLowerCase();
+    if (this.barcode().trim()) {
+      return this.foods().filter((food) => food.barcode === this.barcode().trim());
+    }
     return this.foods().filter(
       (food) =>
-        (!value || food.name.toLocaleLowerCase().includes(value)) &&
-        (!this.barcode().trim() || food.barcode === this.barcode().trim()),
+        !value || food.name.toLocaleLowerCase().includes(value),
     );
   });
   readonly form = new FormGroup({
@@ -106,7 +110,17 @@ export class MealComponent {
   }
 
   async search(): Promise<void> {
+    if (/^\d{8,14}$/.test(this.query().trim())) {
+      await this.lookupBarcode();
+      return;
+    }
+    this.barcode.set('');
+    this.offProduct.set(null);
     await this.load();
+  }
+  async scannedBarcode(code: string): Promise<void> {
+    this.query.set(code);
+    await this.lookupBarcode();
   }
   select(food: FoodRecord): void {
     this.selected.set(food);
@@ -318,16 +332,19 @@ export class MealComponent {
   async lookupBarcode(): Promise<void> {
     this.error.set('');
     this.offProduct.set(null);
-    const code = this.barcode().trim();
+    const code = this.query().trim();
     if (!code) {
       this.error.set('Enter a barcode first.');
       return;
     }
+    this.barcode.set(code);
+    try {
+      this.foods.set(await this.catalogue.search(''));
+    } catch {
+      // The external lookup can still be useful if local search is unavailable.
+    }
     try {
       this.offProduct.set(await this.catalogue.lookupBarcode(code));
-      if (!this.offProduct()) {
-        this.error.set('No Open Food Facts product was found.');
-      }
     } catch (error) {
       this.error.set(
         this.message(error, 'Open Food Facts is unavailable. Local matches remain available.'),

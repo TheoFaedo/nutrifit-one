@@ -6,6 +6,7 @@ import { DailyGoal, DailyGoalsService } from '../../core/services/daily-goals.se
 import {
   FoodCatalogueService,
   FoodPortion,
+  PortionInput,
   FoodRecord,
 } from '../../core/services/food-catalogue.service';
 import {
@@ -17,6 +18,7 @@ import {
 import { BrandComponent } from '../../shared/ui/brand/brand.component';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
 import { DailySummaryComponent } from './daily-summary.component';
+import { BarcodeScannerComponent } from '../../shared/ui/barcode-scanner/barcode-scanner.component';
 import {
   NutritionSummaryComponent,
   NutritionSummaryValues,
@@ -60,6 +62,7 @@ const parisInstant = (date: string): string => {
     BottomNavComponent,
     DailySummaryComponent,
     NutritionSummaryComponent,
+    BarcodeScannerComponent,
   ],
   templateUrl: './journal.component.html',
   styleUrl: './journal.component.less',
@@ -80,6 +83,12 @@ export class JournalComponent {
   readonly dialogView = signal<'search' | 'details'>('search');
   readonly editingId = signal<string | null>(null);
   readonly query = signal('');
+  readonly barcode = signal('');
+  readonly barcodeSearching = signal(false);
+  readonly barcodeError = signal('');
+  readonly offProduct = signal<{ name: string; portions: PortionInput[]; payload: unknown } | null>(
+    null,
+  );
   readonly selectedFoodId = signal('');
   readonly selectedPortionId = signal('');
   readonly amount = signal(1);
@@ -103,6 +112,10 @@ export class JournalComponent {
   readonly matchingFoods = computed(() => {
     const term = this.query().trim().toLocaleLowerCase();
     return this.foods().filter((food) => !term || food.name.toLocaleLowerCase().includes(term));
+  });
+  readonly barcodeFoods = computed(() => {
+    const code = this.barcode().trim();
+    return code ? this.foods().filter((food) => food.barcode === code && food.is_public) : [];
   });
   readonly groupedMeals = computed(() =>
     meals.map((meal) => ({
@@ -152,6 +165,9 @@ export class JournalComponent {
     this.mealType.set(type);
     this.amount.set(1);
     this.query.set('');
+    this.barcode.set('');
+    this.barcodeError.set('');
+    this.offProduct.set(null);
     this.selectedFoodId.set('');
     this.selectedPortionId.set('');
     this.error.set('');
@@ -174,6 +190,72 @@ export class JournalComponent {
     this.amount.set(1);
     this.dialogView.set('details');
     this.error.set('');
+  }
+  async lookupBarcode(): Promise<void> {
+    const code = this.barcode().trim();
+    this.barcodeError.set('');
+    this.offProduct.set(null);
+    if (!code) {
+      this.barcodeError.set('Enter a barcode first.');
+      return;
+    }
+    this.barcodeSearching.set(true);
+    try {
+      this.offProduct.set(await this.catalogue.lookupBarcode(code));
+    } catch (error) {
+      this.barcodeError.set(
+        this.message(error, 'Open Food Facts is unavailable. Local matches are still shown.'),
+      );
+    } finally {
+      this.barcodeSearching.set(false);
+    }
+  }
+  async searchJournal(): Promise<void> {
+    const term = this.query().trim();
+    if (/^\d{8,14}$/.test(term)) {
+      this.barcode.set(term);
+      await this.lookupBarcode();
+      return;
+    }
+    this.barcode.set('');
+    this.offProduct.set(null);
+    this.barcodeError.set('');
+  }
+  async scannedBarcode(code: string): Promise<void> {
+    this.query.set(code);
+    this.barcode.set(code);
+    await this.lookupBarcode();
+  }
+  closeDialog(): void {
+    this.dialogOpen.set(false);
+  }
+  async chooseOffProduct(): Promise<void> {
+    const product = this.offProduct();
+    if (!product) {return;}
+    this.saving.set(true);
+    this.error.set('');
+    try {
+      await this.catalogue.save({
+        name: product.name,
+        isPublic: true,
+        barcode: this.barcode().trim(),
+        portions: product.portions,
+        source: 'Open Food Facts',
+        sourcePayload: product.payload,
+      });
+      const foods = await this.catalogue.search('');
+      this.foods.set(foods);
+      const food = foods.find(
+        (item) => item.barcode === this.barcode().trim() && item.name === product.name,
+      );
+      if (!food) {throw new Error('The imported product could not be loaded.');}
+      this.chooseFood(food);
+      this.offProduct.set(null);
+    } catch (error) {
+      this.error.set(this.message(error, 'The product could not be imported.'));
+    } finally {
+      this.saving.set(false);
+    }
   }
   backToFoods(): void {
     this.dialogView.set('search');
