@@ -36,9 +36,27 @@ jobs:
 
       - name: Build Angular app
         working-directory: nutrifit-app
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           cp src/environments/environment.example.ts src/environments/environment.ts
-          cp src/environments/environment.production.example.ts src/environments/environment.production.ts
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Set the SUPABASE_URL Actions variable and SUPABASE_ANON_KEY Actions secret."
+            exit 1
+          fi
+          node --input-type=module -e '
+            import { writeFileSync } from "node:fs";
+            const environment = {
+              production: true,
+              supabaseUrl: process.env.SUPABASE_URL,
+              supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+            };
+            writeFileSync(
+              "src/environments/environment.production.ts",
+              `export const environment = ${JSON.stringify(environment, null, 2)};\n`,
+            );
+          '
           bun run build --base-href "/${{ github.event.repository.name }}/"
           cp dist/nutrifit-app/browser/index.html dist/nutrifit-app/browser/404.html
 
