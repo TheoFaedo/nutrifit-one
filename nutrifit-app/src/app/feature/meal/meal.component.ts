@@ -1,9 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { NutritionFacts } from '../../core/models/nutrition-facts.model';
 import {
   FoodCatalogueService,
+  FoodCatalogueSort,
   FoodInput,
   FoodPortion,
   FoodRecord,
@@ -14,12 +16,12 @@ import { BrandComponent } from '../../shared/ui/brand/brand.component';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
 import { FoodSearchListComponent } from '../../shared/ui/food-search-list/food-search-list.component';
 import { FoodDetailsComponent } from '../../shared/ui/food-details/food-details.component';
-import { FoodPickerComponent } from '../../shared/ui/food-picker/food-picker.component';
-import { BarcodeScannerComponent } from '../../shared/ui/barcode-scanner/barcode-scanner.component';
 import {
-  NutritionSummaryComponent,
-  NutritionSummaryValues,
-} from '../../shared/ui/nutrition-summary/nutrition-summary.component';
+  FOOD_CATALOGUE_SORT_OPTIONS,
+  FoodCatalogueSearchComponent,
+} from '../../shared/ui/food-catalogue-search/food-catalogue-search.component';
+import { NutritionSummaryValues } from '../../shared/ui/nutrition-summary/nutrition-summary.component';
+import { FoodEditorComponent } from '../../shared/ui/food-editor/food-editor.component';
 
 @Component({
   selector: 'app-meal-page',
@@ -29,9 +31,8 @@ import {
     BottomNavComponent,
     FoodSearchListComponent,
     FoodDetailsComponent,
-    FoodPickerComponent,
-    NutritionSummaryComponent,
-    BarcodeScannerComponent,
+    FoodCatalogueSearchComponent,
+    FoodEditorComponent,
   ],
   templateUrl: './meal.component.html',
   styleUrl: './meal.component.less',
@@ -39,6 +40,8 @@ import {
 export class MealComponent {
   private readonly catalogue = inject(FoodCatalogueService);
   private readonly auth = inject(AuthService);
+  private readonly document = inject(DOCUMENT);
+  private returnFocus: HTMLElement | null = null;
   readonly foods = signal<FoodRecord[]>([]);
   readonly selected = signal<FoodRecord | null>(null);
   readonly currentUserId = signal('');
@@ -46,6 +49,8 @@ export class MealComponent {
   readonly saving = signal(false);
   readonly error = signal('');
   readonly query = signal('');
+  readonly sortOptions = FOOD_CATALOGUE_SORT_OPTIONS;
+  readonly sortOrder = signal<FoodCatalogueSort>('asc');
   readonly barcode = signal('');
   readonly offProduct = signal<{ name: string; portions: PortionInput[]; payload: unknown } | null>(
     null,
@@ -53,16 +58,25 @@ export class MealComponent {
   readonly quantity = signal(1);
   readonly editing = signal(false);
   readonly recipeMode = signal(false);
+  readonly editorKind = signal<'FOOD' | 'RECIPE'>('FOOD');
   readonly searchResults = computed(() => {
     const value = this.query().trim().toLocaleLowerCase();
-    if (this.barcode().trim()) {
-      return this.foods().filter((food) => food.barcode === this.barcode().trim());
-    }
-    return this.foods().filter(
-      (food) =>
-        !value || food.name.toLocaleLowerCase().includes(value),
+    const barcode = this.barcode().trim();
+    const matches = this.foods().filter((food) =>
+      barcode ? food.barcode === barcode : !value || food.name.toLocaleLowerCase().includes(value),
     );
+    const direction = this.sortOrder() === 'desc' ? -1 : 1;
+    return this.sortOrder() === 'asc' || this.sortOrder() === 'desc'
+      ? matches.sort((left, right) => direction * left.name.localeCompare(right.name))
+      : matches;
   });
+  setSortOrder(value: string): void {
+    const sort: FoodCatalogueSort = ['recent', 'newest', 'asc', 'desc'].includes(value)
+      ? (value as FoodCatalogueSort)
+      : 'recent';
+    this.sortOrder.set(sort);
+    void this.load();
+  }
   readonly form = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
@@ -101,7 +115,7 @@ export class MealComponent {
     this.loading.set(true);
     this.error.set('');
     try {
-      this.foods.set(await this.catalogue.search(this.query()));
+      this.foods.set(await this.catalogue.search(this.query(), this.sortOrder()));
     } catch (error) {
       this.error.set(this.message(error, 'Foods could not be loaded.'));
     } finally {
@@ -143,7 +157,10 @@ export class MealComponent {
   newFood(): void {
     this.recipeMode.set(false);
     this.selected.set(null);
+    this.editorKind.set('FOOD');
     this.editing.set(true);
+    this.rememberFocus();
+    this.focusEditor();
     this.error.set('');
     this.form.reset({ name: '', isPublic: false, barcode: '' });
     this.portions.clear();
@@ -153,7 +170,10 @@ export class MealComponent {
   newRecipe(): void {
     this.recipeMode.set(true);
     this.selected.set(null);
+    this.editorKind.set('RECIPE');
     this.editing.set(true);
+    this.rememberFocus();
+    this.focusEditor();
     this.error.set('');
     this.recipeForm.reset({
       name: '',
@@ -169,6 +189,8 @@ export class MealComponent {
     this.recipeMode.set(true);
     this.selected.set(food);
     this.editing.set(true);
+    this.rememberFocus();
+    this.focusEditor();
     this.error.set('');
     const reference = food.portions.find((portion) => portion.is_reference) ?? food.portions[0];
     this.recipeForm.reset({
@@ -186,6 +208,60 @@ export class MealComponent {
     if (!food.parts.length) {
       this.recipeParts.push(this.partGroup());
     }
+  }
+
+  editorSaved(food: FoodRecord): void {
+    const wasEditing = Boolean(this.selected());
+    this.closeEditor();
+    void this.load().then(() => {
+      if (wasEditing) {
+        const fresh = this.foods().find((item) => item.id === food.id) ?? food;
+        this.select(fresh);
+      } else {
+        this.selected.set(null);
+      }
+    });
+  }
+
+  closeEditor(): void {
+    this.editing.set(false);
+    this.returnFocus?.focus();
+  }
+
+  editorKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeEditor();
+      return;
+    }
+    if (event.key !== 'Tab') {
+      return;
+    }
+    const dialog = this.document.querySelector('.editor-dialog');
+    const focusable = Array.from(
+      dialog?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled])',
+      ) ?? [],
+    );
+    if (!focusable.length) {
+      return;
+    }
+    if (event.shiftKey && this.document.activeElement === focusable[0]) {
+      event.preventDefault();
+      focusable.at(-1)?.focus();
+    } else if (!event.shiftKey && this.document.activeElement === focusable.at(-1)) {
+      event.preventDefault();
+      focusable[0].focus();
+    }
+  }
+
+  private rememberFocus(): void {
+    this.returnFocus =
+      this.document.activeElement instanceof HTMLElement ? this.document.activeElement : null;
+  }
+
+  private focusEditor(): void {
+    setTimeout(() => this.document.querySelector<HTMLElement>('.editor-dialog input')?.focus());
   }
 
   addRecipePart(): void {
@@ -278,6 +354,8 @@ export class MealComponent {
   edit(food: FoodRecord): void {
     this.selected.set(food);
     this.editing.set(true);
+    this.rememberFocus();
+    this.focusEditor();
     this.error.set('');
     this.form.reset({ name: food.name, isPublic: food.is_public, barcode: food.barcode ?? '' });
     this.portions.clear();
@@ -339,7 +417,7 @@ export class MealComponent {
     }
     this.barcode.set(code);
     try {
-      this.foods.set(await this.catalogue.search(''));
+      this.foods.set(await this.catalogue.search('', this.sortOrder()));
     } catch {
       // The external lookup can still be useful if local search is unavailable.
     }

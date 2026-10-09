@@ -1,10 +1,11 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { FoodPortion, FoodRecord, RecipePart } from '../../../core/services/food-catalogue.service';
 import { NutritionSummaryComponent } from '../nutrition-summary/nutrition-summary.component';
+import { PortionSelectorComponent } from '../portion-selector/portion-selector.component';
 
 @Component({
   selector: 'app-food-details',
-  imports: [NutritionSummaryComponent],
+  imports: [NutritionSummaryComponent, PortionSelectorComponent],
   template: `
     <section class="detail" aria-labelledby="food-title">
       <div class="heading">
@@ -26,20 +27,11 @@ import { NutritionSummaryComponent } from '../nutrition-summary/nutrition-summar
       <div class="amount-controls">
         <label class="amount"
           ><span>Calculate per</span
-          ><select [value]="selection()" (change)="selectBasis($any($event.target).value)">
-            @for (portion of food().portions; track portion.id) {
-              <option [value]="portion.id + '|portion'">
-                {{
-                  portion.quantity_number === 1
-                    ? portion.quantity_unit
-                    : portion.quantity_number + ' ' + portion.quantity_unit
-                }}
-              </option>
-              @if (portion.quantity_number !== 1) {
-                <option [value]="portion.id + '|unit'">{{ portion.quantity_unit }}</option>
-              }
-            }
-          </select></label
+          ><app-portion-selector
+            [portions]="food().portions"
+            [selection]="selection()"
+            (selectionChange)="selectPortion($event)"
+          /></label
         >
         <label class="amount"
           ><span>Ratio</span
@@ -178,18 +170,14 @@ export class FoodDetailsComponent {
   readonly currentUserId = input('');
   readonly edit = output<FoodRecord>();
   readonly selectedPortionId = signal('');
-  readonly basis = signal<'portion' | 'unit'>('portion');
   readonly ratio = signal(1);
-  readonly baseQuantity = computed(() =>
-    this.basis() === 'unit' ? 1 : this.selectedPortion().quantity_number,
-  );
+  readonly baseQuantity = computed(() => this.selectedPortion().quantity_number);
   readonly effectiveQuantity = computed(() => this.baseQuantity() * this.ratio());
-  readonly selection = computed(() => `${this.selectedPortion().id}|${this.basis()}`);
+  readonly selection = computed(() => this.selectedPortion().id);
   constructor() {
     effect(() => {
       const portion = this.referencePortion();
       this.selectedPortionId.set(portion.id);
-      this.basis.set('portion');
     });
   }
   referencePortion(): FoodPortion {
@@ -214,14 +202,12 @@ export class FoodDetailsComponent {
       portions.find((portion) => portion.id === this.selectedPortionId()) ?? this.referencePortion()
     );
   }
-  selectBasis(value: string): void {
-    const [id, basis] = value.split('|');
+  selectPortion(id: string): void {
     const portion = this.food().portions.find((item) => item.id === id);
     if (!portion) {
       return;
     }
     this.selectedPortionId.set(portion.id);
-    this.basis.set(basis === 'unit' ? 'unit' : 'portion');
     this.ratio.set(1);
   }
   scaledNutrition(portion: FoodPortion): {

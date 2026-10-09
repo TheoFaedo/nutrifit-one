@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { formatNutrition } from './nutrition-format';
 
 export interface NutritionSummaryValues {
   energy: number | null;
@@ -59,7 +60,5 @@ export interface NutritionSummaryValues {
 })
 export class NutritionSummaryComponent {
   readonly values = input.required<NutritionSummaryValues>();
-  format(value: number | null): string {
-    return value === null ? '—' : value.toFixed(1).replace(/\.0$/, '');
-  }
+  readonly format = formatNutrition;
 }
