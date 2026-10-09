@@ -1,11 +1,33 @@
 <nav class="bottom-nav" aria-label="Main navigation">
-  <a routerLink="/journal" routerLinkActive="active" [class.active]="active() === 'journal'" [attr.aria-current]="active() === 'journal' ? 'page' : null">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v15H4zM8 3.5v4M16 3.5v4M4 10h16M8 14h3m2 0h3M8 17h3" /></svg><span>Journal</span>
+  <a
+    routerLink="/journal"
+    routerLinkActive="active"
+    [class.active]="active() === 'journal'"
+    [attr.aria-current]="active() === 'journal' ? 'page' : null"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 5.5h16v15H4zM8 3.5v4M16 3.5v4M4 10h16M8 14h3m2 0h3M8 17h3" /></svg
+    ><span>Journal</span>
   </a>
-  <a routerLink="/meal" routerLinkActive="active" [class.active]="active() === 'meal'" [attr.aria-current]="active() === 'meal' ? 'page' : null">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v7m3-7v7M5 7h3M7 10v11M17 3v18m0-18c2 2 3 5 3 8h-3" /></svg><span>Meal</span>
+  <a
+    routerLink="/meal"
+    routerLinkActive="active"
+    [class.active]="active() === 'meal'"
+    [attr.aria-current]="active() === 'meal' ? 'page' : null"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 3v7m3-7v7M5 7h3M7 10v11M17 3v18m0-18c2 2 3 5 3 8h-3" /></svg
+    ><span>Meal</span>
   </a>
-  <a routerLink="/profile" routerLinkActive="active" [class.active]="active() === 'profile'" [attr.aria-current]="active() === 'profile' ? 'page' : null">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg><span>Profile</span>
+  <a
+    routerLink="/profile"
+    routerLinkActive="active"
+    [class.active]="active() === 'profile'"
+    [attr.aria-current]="active() === 'profile' ? 'page' : null"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg
+    ><span>Profile</span>
   </a>
 </nav>

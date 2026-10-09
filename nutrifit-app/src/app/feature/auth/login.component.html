@@ -1,19 +1,56 @@
 <main class="entry-shell">
   <section class="entry-art" aria-label="A balanced meal with grains, greens and fruit">
     <app-brand />
-    <div class="art-copy"><p class="art-kicker">A little more in tune</p><h1>Eat well.<br>Feel like you.</h1><p>Build a rhythm that fits your life, one meal at a time.</p></div>
-    <div class="plate" aria-hidden="true"><span class="leaf leaf-a"></span><span class="leaf leaf-b"></span><span class="tomato"></span><span class="grain"></span><span class="berry"></span></div>
+    <div class="art-copy">
+      <p class="art-kicker">A little more in tune</p>
+      <h1>Eat well.<br />Feel like you.</h1>
+      <p>Build a rhythm that fits your life, one meal at a time.</p>
+    </div>
+    <div class="plate" aria-hidden="true">
+      <span class="leaf leaf-a"></span><span class="leaf leaf-b"></span><span class="tomato"></span
+      ><span class="grain"></span><span class="berry"></span>
+    </div>
     <p class="art-note">Good habits grow gently.</p>
   </section>
   <section class="entry-panel">
     <div class="mobile-brand"><app-brand /></div>
     <div class="login-card">
-      <p class="eyebrow">Your food, your pace</p><h2>Make space for better.</h2>
+      <p class="eyebrow">Your food, your pace</p>
+      <h2>Make space for better.</h2>
       <p class="muted">Sign in to start a food journal that feels like yours.</p>
-      @if (!configured()) { <p class="notice" role="status">Copy the Supabase example settings into <code>src/environments/environment.ts</code> to enable sign in.</p> }
-      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
-      <button class="google-button" type="button" [disabled]="!configured() || busy()" (click)="signIn()">
-        <svg aria-hidden="true" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.09-1.92 3.27-4.75 3.27-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.28-1.93-6.15-4.53H2.16v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.85 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.16a11 11 0 0 0 0 9.9l3.69-2.84Z"/><path fill="#EA4335" d="M12 5.36c1.62 0 3.07.56 4.21 1.64l3.16-3.16C17.45 2.07 14.97 1 12 1a11 11 0 0 0-9.84 6.05l3.69 2.84C6.72 7.29 9.14 5.36 12 5.36Z"/></svg>
+      @if (!configured()) {
+        <p class="notice" role="status">
+          Copy the Supabase example settings into <code>src/environments/environment.ts</code> to
+          enable sign in.
+        </p>
+      }
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+      <button
+        class="google-button"
+        type="button"
+        [disabled]="!configured() || busy()"
+        (click)="signIn()"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path
+            fill="#4285F4"
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.09-1.92 3.27-4.75 3.27-8.1Z"
+          />
+          <path
+            fill="#34A853"
+            d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.28-1.93-6.15-4.53H2.16v2.84A11 11 0 0 0 12 23Z"
+          />
+          <path
+            fill="#FBBC05"
+            d="M5.85 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.16a11 11 0 0 0 0 9.9l3.69-2.84Z"
+          />
+          <path
+            fill="#EA4335"
+            d="M12 5.36c1.62 0 3.07.56 4.21 1.64l3.16-3.16C17.45 2.07 14.97 1 12 1a11 11 0 0 0-9.84 6.05l3.69 2.84C6.72 7.29 9.14 5.36 12 5.36Z"
+          />
+        </svg>
         {{ busy() ? 'Connecting…' : 'Continue with Google' }}
       </button>
       <p class="privacy">Your journal is private to you.</p>

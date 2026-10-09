@@ -26,9 +26,13 @@ export class AuthService {
 
   async user(): Promise<User | null> {
     const session = await this.initialize();
-    if (!session) return null;
+    if (!session) {
+      return null;
+    }
     const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
     return data.user;
   }
 
@@ -37,12 +41,16 @@ export class AuthService {
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
   }
 
   async signOut(): Promise<void> {
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
     await this.router.navigateByUrl('/login');
   }
 }

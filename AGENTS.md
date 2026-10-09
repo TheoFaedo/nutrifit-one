@@ -13,6 +13,7 @@ Run commands from `nutrifit-app/` using Bun, as declared by `package.json`:
 - `bun run build` builds the production application.
 - `bun run watch` continuously builds with development settings.
 - `bun run test` runs the Angular test suite (Vitest).
+- `bun run lint` runs ESLint on TypeScript and Angular templates. Run it at the end of each coding turn.
 
 ## Coding Style & Naming Conventions
 

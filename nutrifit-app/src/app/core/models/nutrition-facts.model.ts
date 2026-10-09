@@ -19,22 +19,38 @@ export class NutritionFacts {
   }
 
   withCarbs(carbs: number): NutritionFacts {
-    return new NutritionFacts(this.energyFrom(carbs, this.fats, this.protein), carbs, this.fats, this.protein);
+    return new NutritionFacts(
+      this.energyFrom(carbs, this.fats, this.protein),
+      carbs,
+      this.fats,
+      this.protein,
+    );
   }
 
   withFats(fats: number): NutritionFacts {
-    return new NutritionFacts(this.energyFrom(this.carbs, fats, this.protein), this.carbs, fats, this.protein);
+    return new NutritionFacts(
+      this.energyFrom(this.carbs, fats, this.protein),
+      this.carbs,
+      fats,
+      this.protein,
+    );
   }
 
   withProtein(protein: number): NutritionFacts {
-    return new NutritionFacts(this.energyFrom(this.carbs, this.fats, protein), this.carbs, this.fats, protein);
+    return new NutritionFacts(
+      this.energyFrom(this.carbs, this.fats, protein),
+      this.carbs,
+      this.fats,
+      protein,
+    );
   }
 
   withEnergy(energy: number): NutritionFacts {
     const currentEnergy = this.energyFrom(this.carbs, this.fats, this.protein);
-    const distribution = currentEnergy > 0
-      ? { carbs: this.carbs, fats: this.fats, protein: this.protein }
-      : { carbs: energy * 0.4 / 4, fats: energy * 0.3 / 9, protein: energy * 0.3 / 4 };
+    const distribution =
+      currentEnergy > 0
+        ? { carbs: this.carbs, fats: this.fats, protein: this.protein }
+        : { carbs: (energy * 0.4) / 4, fats: (energy * 0.3) / 9, protein: (energy * 0.3) / 4 };
     const scale = currentEnergy > 0 ? energy / currentEnergy : 1;
 
     return new NutritionFacts(
