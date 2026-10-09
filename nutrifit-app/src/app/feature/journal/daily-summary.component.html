@@ -1,0 +1,82 @@
+<section class="daily-summary" aria-labelledby="daily-summary-title">
+  <div class="daily-summary-heading">
+    <div>
+      <p class="eyebrow">Daily intake</p>
+      <h2 id="daily-summary-title">Calories today</h2>
+    </div>
+  </div>
+  <div class="daily-energy">
+    <div class="macro-values energy-values">
+      <span><i aria-hidden="true"></i>Energy</span>
+      <div class="macro-ratio">
+        <strong>{{ formatValue(totals().energy) }}<small>kcal</small></strong
+        ><span>/ {{ formatValue(goal()?.energy_kcal ?? null) }} kcal</span>
+      </div>
+    </div>
+    <div
+      class="progress-track energy-track"
+      [class.over-goal]="exceedsGoal(totals().energy, goal()?.energy_kcal ?? null)"
+      role="progressbar"
+      aria-label="Calories consumed toward daily goal"
+      [attr.aria-valuenow]="totals().energy ?? 0"
+      [attr.aria-valuemax]="goal()?.energy_kcal ?? null"
+    >
+      <span [style.width.%]="progressWidth(totals().energy, goal()?.energy_kcal ?? null)"></span>
+    </div>
+  </div>
+  <div class="daily-macros" aria-label="Daily macronutrients">
+    @for (
+      macro of [
+        {
+          key: 'protein',
+          label: 'Protein',
+          value: totals().protein,
+          target: goal()?.proteins_g ?? null,
+          unit: 'g',
+          class: 'protein',
+          aria: 'Protein consumed toward daily goal',
+        },
+        {
+          key: 'carbs',
+          label: 'Carbs',
+          value: totals().carbs,
+          target: goal()?.carbs_g ?? null,
+          unit: 'g',
+          class: 'carbs',
+          aria: 'Carbohydrates consumed toward daily goal',
+        },
+        {
+          key: 'fats',
+          label: 'Fat',
+          value: totals().fats,
+          target: goal()?.fats_g ?? null,
+          unit: 'g',
+          class: 'fats',
+          aria: 'Fat consumed toward daily goal',
+        },
+      ];
+      track macro.key
+    ) {
+      <div class="daily-macro" [class]="'daily-macro ' + macro.class">
+        <div class="macro-values">
+          <span><i aria-hidden="true"></i>{{ macro.label }}</span>
+          <div class="macro-ratio">
+            <strong
+              >{{ formatValue(macro.value) }}<small>{{ macro.unit }}</small></strong
+            ><span>/ {{ formatValue(macro.target) }} {{ macro.unit }}</span>
+          </div>
+        </div>
+        <div
+          class="progress-track"
+          [class.over-goal]="exceedsGoal(macro.value, macro.target)"
+          role="progressbar"
+          [attr.aria-label]="macro.aria"
+          [attr.aria-valuenow]="macro.value ?? 0"
+          [attr.aria-valuemax]="macro.target"
+        >
+          <span [style.width.%]="progressWidth(macro.value, macro.target)"></span>
+        </div>
+      </div>
+    }
+  </div>
+</section>

@@ -16,6 +16,7 @@ import {
 } from '../../core/services/intake-journal.service';
 import { BrandComponent } from '../../shared/ui/brand/brand.component';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
+import { DailySummaryComponent } from './daily-summary.component';
 import {
   NutritionSummaryComponent,
   NutritionSummaryValues,
@@ -57,6 +58,7 @@ const parisInstant = (date: string): string => {
     DecimalPipe,
     BrandComponent,
     BottomNavComponent,
+    DailySummaryComponent,
     NutritionSummaryComponent,
   ],
   templateUrl: './journal.component.html',
@@ -236,15 +238,6 @@ export class JournalComponent {
   }
   formatValue(value: number | null): string {
     return value === null ? '—' : value.toFixed(1).replace(/\.0$/, '');
-  }
-  progressWidth(consumed: number | null, target: number | null): number {
-    if (consumed === null || target === null || target <= 0) {
-      return 0;
-    }
-    return Math.min(100, (consumed / target) * 100);
-  }
-  exceedsGoal(consumed: number | null, target: number | null): boolean {
-    return consumed !== null && target !== null && consumed > target;
   }
   totals(entries: IntakeRecord[]): NutritionSummaryValues {
     const total = (
