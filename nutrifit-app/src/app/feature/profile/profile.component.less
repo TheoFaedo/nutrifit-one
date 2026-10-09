@@ -1,42 +1,221 @@
-.profile-content { width: min(100%, 520px); margin: 48px auto 34px; }
-.profile-content h1 { margin: 0 0 25px; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(40px, 6vw, 52px); font-weight: 400; letter-spacing: -.05em; }
-.identity { display: flex; align-items: center; gap: 15px; margin-bottom: 32px; padding: 16px; border: 1px solid #e6eadf; border-radius: 18px; background: rgba(255,255,255,.76); }
-.identity img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; }
-.identity h2, .identity p { margin: 0; }
-.identity h2 { font-size: 17px; font-weight: 600; }
-.identity p { margin-top: 5px; color: var(--muted); font-size: 13px; }
-.profile-content form { padding: 22px; border: 1px solid #e6eadf; border-radius: 20px; background: #fffefa; box-shadow: 0 12px 32px rgba(41, 60, 43, .055); }
-.targets-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.targets-heading h2 { margin: 0; font-size: 17px; font-weight: 650; }
-.targets-heading p { margin: 6px 0 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
-.restore-button { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; margin: -5px -5px 0 0; border: 1px solid #e6eadf; border-radius: 11px; background: #fff; color: #536d56; }
-.restore-button:hover:not(:disabled) { border-color: #b9c9ae; background: #f2f5ee; }
-.restore-button:disabled { cursor: default; opacity: .42; }
-.restore-button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.goal-editor { display: grid; gap: 12px; }
-.goal-energy { display: grid; gap: 10px; padding: 16px 18px; border-radius: 15px; background: #eef3e8; }
-.field-title { color: #68766a; font-size: 12px; font-weight: 650; }
-.energy-entry, .macro-entry { display: flex; align-items: baseline; gap: 8px; }
-.energy-entry input, .macro-entry input { min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: #2b4432; font-variant-numeric: tabular-nums; }
-.energy-entry input { width: 100%; font-family: Georgia, serif; font-size: 40px; letter-spacing: -.045em; }
-.energy-entry span { color: #6b7a6b; font-size: 13px; }
-.macro-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
-.macro-field { display: grid; min-width: 0; gap: 7px; padding: 13px 12px 12px; border: 1px solid #eceee7; border-radius: 14px; background: #fff; }
-.macro-dot { width: 7px; height: 7px; border-radius: 50%; background: #729168; }
-.macro-field.carbs .macro-dot { background: #c49a55; }
-.macro-field.fats .macro-dot { background: #b17a62; }
-.macro-entry { gap: 4px; }
-.macro-entry input { width: 100%; font-size: 20px; font-weight: 650; }
-.macro-entry span { color: #829083; font-size: 11px; }
-.goal-editor input:focus-visible { outline: 2px solid #78966a; outline-offset: 3px; border-radius: 3px; }
-.profile-content .primary-button { display: flex; width: 100%; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; padding: 14px 18px; border: 0; border-radius: 12px; background: #416b51; color: white; font-size: 14px; font-weight: 650; }
-.profile-content .primary-button:hover:not(:disabled) { background: #30533d; }
-.profile-content .primary-button:disabled { cursor: wait; opacity: .7; }
-.success { color: #456f3b; }
-.profile-mark { color: var(--muted); font-size: 12px; }
+.profile-content {
+  width: min(100%, 520px);
+  margin: 48px auto 34px;
+}
+.profile-content h1 {
+  margin: 0 0 25px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(40px, 6vw, 52px);
+  font-weight: 400;
+  letter-spacing: -0.05em;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 32px;
+  padding: 16px;
+  border: 1px solid #e6eadf;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+}
+.identity img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.identity h2,
+.identity p {
+  margin: 0;
+}
+.identity h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+.identity p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.profile-content form {
+  padding: 22px;
+  border: 1px solid #e6eadf;
+  border-radius: 20px;
+  background: #fffefa;
+  box-shadow: 0 12px 32px rgba(41, 60, 43, 0.055);
+}
+.targets-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.targets-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+}
+.targets-heading p {
+  margin: 6px 0 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.restore-button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  margin: -5px -5px 0 0;
+  border: 1px solid #e6eadf;
+  border-radius: 11px;
+  background: #fff;
+  color: #536d56;
+}
+.restore-button:hover:not(:disabled) {
+  border-color: #b9c9ae;
+  background: #f2f5ee;
+}
+.restore-button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+.restore-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.goal-editor {
+  display: grid;
+  gap: 12px;
+}
+.goal-energy {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 15px;
+  background: #eef3e8;
+}
+.field-title {
+  color: #68766a;
+  font-size: 12px;
+  font-weight: 650;
+}
+.energy-entry,
+.macro-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.energy-entry input,
+.macro-entry input {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #2b4432;
+  font-variant-numeric: tabular-nums;
+}
+.energy-entry input {
+  width: 100%;
+  font-family: Georgia, serif;
+  font-size: 40px;
+  letter-spacing: -0.045em;
+}
+.energy-entry span {
+  color: #6b7a6b;
+  font-size: 13px;
+}
+.macro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+.macro-field {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+  padding: 13px 12px 12px;
+  border: 1px solid #eceee7;
+  border-radius: 14px;
+  background: #fff;
+}
+.macro-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #729168;
+}
+.macro-field.carbs .macro-dot {
+  background: #c49a55;
+}
+.macro-field.fats .macro-dot {
+  background: #b17a62;
+}
+.macro-entry {
+  gap: 4px;
+}
+.macro-entry input {
+  width: 100%;
+  font-size: 20px;
+  font-weight: 650;
+}
+.macro-entry span {
+  color: #829083;
+  font-size: 11px;
+}
+.goal-editor input:focus-visible {
+  outline: 2px solid #78966a;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+.profile-content .primary-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #416b51;
+  color: white;
+  font-size: 14px;
+  font-weight: 650;
+}
+.profile-content .primary-button:hover:not(:disabled) {
+  background: #30533d;
+}
+.profile-content .primary-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.success {
+  color: #456f3b;
+}
+.profile-mark {
+  color: var(--muted);
+  font-size: 12px;
+}
 @media (max-width: 560px) {
-  .profile-content { margin: 34px auto 24px; }
-  .profile-content form { padding: 17px; }
-  .macro-grid { gap: 7px; }
-  .macro-field { padding-inline: 9px; }
+  .profile-content {
+    margin: 34px auto 24px;
+  }
+  .profile-content form {
+    padding: 17px;
+  }
+  .macro-grid {
+    gap: 7px;
+  }
+  .macro-field {
+    padding-inline: 9px;
+  }
 }

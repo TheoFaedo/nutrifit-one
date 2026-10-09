@@ -6,6 +6,10 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Prefer type inference when the type is obvious
 - Avoid the `any` type; use `unknown` when type is uncertain
 
+## Design Principles
+
+- Follow the Single Responsibility Principle (SRP): give each component, service, and class one clear responsibility, and split unrelated behavior into focused units.
+
 ## Angular Best Practices
 
 - Always use standalone components over NgModules
