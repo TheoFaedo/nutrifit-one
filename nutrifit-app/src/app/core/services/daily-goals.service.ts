@@ -11,12 +11,17 @@ export interface DailyGoal {
 @Injectable({ providedIn: 'root' })
 export class DailyGoalsService {
   async forDate(date: string): Promise<DailyGoal | null> {
-    const { data, error } = await supabase.from('daily_goals')
+    const { data, error } = await supabase
+      .from('daily_goals')
       .select('energy_kcal,carbs_g,fats_g,proteins_g')
       .lte('valid_from', date)
       .or(`valid_to.is.null,valid_to.gte.${date}`)
-      .order('valid_from', { ascending: false }).limit(1).maybeSingle();
-    if (error) throw error;
+      .order('valid_from', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      throw error;
+    }
     return data;
   }
 
@@ -27,6 +32,8 @@ export class DailyGoalsService {
       p_fats_g: goal.fats_g,
       p_proteins_g: goal.proteins_g,
     });
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
   }
 }

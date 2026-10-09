@@ -21,7 +21,11 @@ export class LoginComponent {
     try {
       await this.auth.signInWithGoogle();
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Google sign-in could not start. Please try again.');
+      this.error.set(
+        error instanceof Error
+          ? error.message
+          : 'Google sign-in could not start. Please try again.',
+      );
       this.busy.set(false);
     }
   }

@@ -1,8 +1,16 @@
 <main class="journal-shell">
-  <header class="setup-header"><app-brand /><button class="text-button" type="button" (click)="signOut()">Sign out</button></header>
+  <header class="setup-header">
+    <app-brand /><button class="text-button" type="button" (click)="signOut()">Sign out</button>
+  </header>
   <section class="journal-welcome">
-    <p class="eyebrow">Your space</p><h1>Your journal<br>starts here.</h1><p class="muted">A calmer way to notice what nourishes you.</p>
-    <div class="journal-empty"><span aria-hidden="true">✳</span><h2>Your day is a blank page.</h2><p>Food and meal tracking will be ready here soon.</p></div>
+    <p class="eyebrow">Your space</p>
+    <h1>Your journal<br />starts here.</h1>
+    <p class="muted">A calmer way to notice what nourishes you.</p>
+    <div class="journal-empty">
+      <span aria-hidden="true">✳</span>
+      <h2>Your day is a blank page.</h2>
+      <p>Food and meal tracking will be ready here soon.</p>
+    </div>
   </section>
 </main>
 <app-bottom-nav active="journal" />

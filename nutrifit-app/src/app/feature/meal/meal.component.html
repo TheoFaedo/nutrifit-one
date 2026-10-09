@@ -1,76 +1,296 @@
 <main class="setup-shell">
   <header class="setup-header"><app-brand /><span class="meal-date">Your space</span></header>
   <section class="meal-content" aria-labelledby="meal-title">
-    <p class="eyebrow">Meal</p><h1 id="meal-title">Food catalogue</h1>
-    <p class="muted">Find foods and recipes, check their portions and nutrition, or add your own.</p>
+    <p class="eyebrow">Meal</p>
+    <h1 id="meal-title">Food catalogue</h1>
+    <p class="muted">
+      Find foods and recipes, check their portions and nutrition, or add your own.
+    </p>
 
     <div class="catalogue-tools">
-      <label class="search-field"><span>Search foods</span><input type="search" [value]="query()" (input)="query.set($any($event.target).value)" (keyup.enter)="search()" placeholder="Food name"></label>
-      <label class="search-field"><span>Barcode</span><input inputmode="numeric" [value]="barcode()" (input)="barcode.set($any($event.target).value)" (keyup.enter)="lookupBarcode()" placeholder="Scan or enter a barcode"></label>
+      <label class="search-field"
+        ><span>Search foods</span
+        ><input
+          type="search"
+          [value]="query()"
+          (input)="query.set($any($event.target).value)"
+          (keyup.enter)="search()"
+          placeholder="Food name"
+      /></label>
+      <label class="search-field"
+        ><span>Barcode</span
+        ><input
+          inputmode="numeric"
+          [value]="barcode()"
+          (input)="barcode.set($any($event.target).value)"
+          (keyup.enter)="lookupBarcode()"
+          placeholder="Scan or enter a barcode"
+      /></label>
       <button class="secondary-button" type="button" (click)="search()">Search</button>
-      <button class="secondary-button" type="button" (click)="lookupBarcode()">Look up barcode</button>
-      <button class="primary-button" type="button" (click)="newFood()">Add a food <span aria-hidden="true">＋</span></button>
-      <button class="secondary-button" type="button" (click)="newRecipe()">Add a recipe <span aria-hidden="true">＋</span></button>
+      <button class="secondary-button" type="button" (click)="lookupBarcode()">
+        Look up barcode
+      </button>
+      <button class="primary-button" type="button" (click)="newFood()">
+        Add a food <span aria-hidden="true">＋</span>
+      </button>
+      <button class="secondary-button" type="button" (click)="newRecipe()">
+        Add a recipe <span aria-hidden="true">＋</span>
+      </button>
     </div>
 
-    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
     @if (offProduct(); as product) {
-      <article class="off-result"><div><span class="eyebrow">Open Food Facts</span><h2>{{ product.name }}</h2><p>{{ product.portions.length }} portion{{ product.portions.length === 1 ? '' : 's' }} with nutrition data when available · External product data</p></div><button class="secondary-button" type="button" (click)="importOff()">Use this product</button></article>
+      <article class="off-result">
+        <div>
+          <span class="eyebrow">Open Food Facts</span>
+          <h2>{{ product.name }}</h2>
+          <p>
+            {{ product.portions.length }} portion{{ product.portions.length === 1 ? '' : 's' }} with
+            nutrition data when available · External product data
+          </p>
+        </div>
+        <button class="secondary-button" type="button" (click)="importOff()">
+          Use this product
+        </button>
+      </article>
     }
     <div class="catalogue-layout">
-      <section class="food-list"><app-food-search-list [foods]="foods()" [loading]="loading()" [selectedId]="selected()?.id ?? null" (foodSelected)="select($event)" /></section>
+      <section class="food-list">
+        <app-food-search-list
+          [foods]="foods()"
+          [loading]="loading()"
+          [selectedId]="selected()?.id ?? null"
+          (foodSelected)="select($event)"
+        />
+      </section>
 
       @if (editing()) {
         <section class="food-detail" aria-labelledby="editor-title">
           @if (recipeMode()) {
-          <h2 id="editor-title">{{ selected() ? 'Edit recipe' : 'Add a recipe' }}</h2>
-          <form [formGroup]="recipeForm" (ngSubmit)="saveRecipe()">
-            <label class="field"><span>Recipe name</span><input formControlName="name" autocomplete="off" required></label>
-            <label class="check-field"><input type="checkbox" formControlName="isPublic"><span>Make this recipe public</span></label>
-            <div class="portion-size"><label class="field"><span>Reference amount</span><input type="number" min="0.001" step="any" formControlName="referenceQuantity" required></label><label class="field"><span>Unit</span><input formControlName="referenceUnit" required></label></div>
-            <section class="recipe-nutrition" aria-label="Estimated nutrition per reference amount"><div class="recipe-nutrition-heading"><h3>Nutrition per reference amount</h3><span class="eyebrow">Estimated</span></div><app-nutrition-summary [values]="recipeNutrition()" /></section>
-            <div class="portion-heading"><h3>Ingredients per reference portion</h3><button type="button" class="link-button" (click)="addRecipePart()">Add ingredient ＋</button></div>
-            <div formArrayName="parts">
-              @for (part of recipeParts.controls; track $index; let i = $index) {
-                <fieldset class="portion-editor" [formGroupName]="i"><legend>Ingredient {{ i + 1 }}</legend>
-                  <label class="field"><span>Food or recipe</span><app-food-picker [foods]="ingredientVersions(selected()?.version_id)" [loading]="loading()" [selectedId]="part.get('ingredient_version_id')?.value" (selection)="recipeParts.at(i).patchValue({ ingredient_version_id: $event.version_id }); ingredientChanged(i)" /></label>
-                  <div class="portion-size"><label class="field"><span>Portion</span><select formControlName="quantity_id" required><option value="">Choose a portion</option>@for (portion of portionsFor(part.get('ingredient_version_id')?.value); track portion.id) { <option [value]="portion.id">{{ portion.quantity_number }} {{ portion.quantity_unit }}</option> }</select></label><label class="field"><span>Amount per recipe portion</span><input type="number" min="0.001" step="any" formControlName="ratio" required></label></div>
-                  @if (recipeParts.length > 1) { <button class="link-button remove-button" type="button" (click)="removeRecipePart(i)">Remove ingredient</button> }
-                </fieldset>
-              }
-            </div>
-            <p class="detail-note">Amounts use each selected portion's unit. Nutrients are calculated when this version is saved.</p>
-            <div class="form-actions"><button class="secondary-button" type="button" (click)="editing.set(false)">Cancel</button><button class="primary-button" type="submit" [disabled]="recipeForm.invalid || saving()">{{ saving() ? 'Saving…' : 'Save recipe' }}</button></div>
-          </form>
+            <h2 id="editor-title">{{ selected() ? 'Edit recipe' : 'Add a recipe' }}</h2>
+            <form [formGroup]="recipeForm" (ngSubmit)="saveRecipe()">
+              <label class="field"
+                ><span>Recipe name</span><input formControlName="name" autocomplete="off" required
+              /></label>
+              <label class="check-field"
+                ><input type="checkbox" formControlName="isPublic" /><span
+                  >Make this recipe public</span
+                ></label
+              >
+              <div class="portion-size">
+                <label class="field"
+                  ><span>Reference amount</span
+                  ><input
+                    type="number"
+                    min="0.001"
+                    step="any"
+                    formControlName="referenceQuantity"
+                    required /></label
+                ><label class="field"
+                  ><span>Unit</span><input formControlName="referenceUnit" required
+                /></label>
+              </div>
+              <section
+                class="recipe-nutrition"
+                aria-label="Estimated nutrition per reference amount"
+              >
+                <div class="recipe-nutrition-heading">
+                  <h3>Nutrition per reference amount</h3>
+                  <span class="eyebrow">Estimated</span>
+                </div>
+                <app-nutrition-summary [values]="recipeNutrition()" />
+              </section>
+              <div class="portion-heading">
+                <h3>Ingredients per reference portion</h3>
+                <button type="button" class="link-button" (click)="addRecipePart()">
+                  Add ingredient ＋
+                </button>
+              </div>
+              <div formArrayName="parts">
+                @for (part of recipeParts.controls; track $index; let i = $index) {
+                  <fieldset class="portion-editor" [formGroupName]="i">
+                    <legend>Ingredient {{ i + 1 }}</legend>
+                    <label class="field"
+                      ><span>Food or recipe</span
+                      ><app-food-picker
+                        [foods]="ingredientVersions(selected()?.version_id)"
+                        [loading]="loading()"
+                        [selectedId]="part.get('ingredient_version_id')?.value"
+                        (selection)="
+                          recipeParts
+                            .at(i)
+                            .patchValue({ ingredient_version_id: $event.version_id });
+                          ingredientChanged(i)
+                        "
+                    /></label>
+                    <div class="portion-size">
+                      <label class="field"
+                        ><span>Portion</span
+                        ><select formControlName="quantity_id" required>
+                          <option value="">Choose a portion</option>
+                          @for (
+                            portion of portionsFor(part.get('ingredient_version_id')?.value);
+                            track portion.id
+                          ) {
+                            <option [value]="portion.id">
+                              {{ portion.quantity_number }} {{ portion.quantity_unit }}
+                            </option>
+                          }
+                        </select></label
+                      ><label class="field"
+                        ><span>Amount per recipe portion</span
+                        ><input
+                          type="number"
+                          min="0.001"
+                          step="any"
+                          formControlName="ratio"
+                          required
+                      /></label>
+                    </div>
+                    @if (recipeParts.length > 1) {
+                      <button
+                        class="link-button remove-button"
+                        type="button"
+                        (click)="removeRecipePart(i)"
+                      >
+                        Remove ingredient
+                      </button>
+                    }
+                  </fieldset>
+                }
+              </div>
+              <p class="detail-note">
+                Amounts use each selected portion's unit. Nutrients are calculated when this version
+                is saved.
+              </p>
+              <div class="form-actions">
+                <button class="secondary-button" type="button" (click)="editing.set(false)">
+                  Cancel</button
+                ><button
+                  class="primary-button"
+                  type="submit"
+                  [disabled]="recipeForm.invalid || saving()"
+                >
+                  {{ saving() ? 'Saving…' : 'Save recipe' }}
+                </button>
+              </div>
+            </form>
           } @else {
-          <h2 id="editor-title">{{ selected() ? 'Edit food' : 'Add a food' }}</h2>
-          <form [formGroup]="form" (ngSubmit)="save()">
-            <label class="field"><span>Food name</span><input formControlName="name" autocomplete="off" required></label>
-            <label class="field"><span>Barcode <small>(optional)</small></span><input formControlName="barcode" [readonly]="!!selected()" inputmode="numeric"></label>
-            <label class="check-field"><input type="checkbox" formControlName="isPublic"><span>Make this food public</span></label>
-            <div class="portion-heading"><h3>Portions and nutrition</h3><button type="button" class="link-button" (click)="addPortion()">Add portion ＋</button></div>
-            <div formArrayName="portions">
-              @for (portion of portions.controls; track $index; let i = $index) {
-                <fieldset class="portion-editor" [formGroupName]="i"><legend>Portion {{ i + 1 }}</legend>
-                  <div class="portion-size"><label class="field"><span>Amount</span><input type="number" min="0.001" step="any" formControlName="quantity_number" required></label><label class="field"><span>Unit</span><input formControlName="quantity_unit" placeholder="g, cup, piece" required></label></div>
-                  <div class="nutrient-inputs">
-                    <label class="field"><span>Energy (kcal)</span><input type="number" min="0" step="any" formControlName="energy_kcal" (input)="recalculateNutrition(i, 'energy_kcal')"></label>
-                    <label class="field"><span>Carbs (g)</span><input type="number" min="0" step="any" formControlName="carbs_g" (input)="recalculateNutrition(i, 'carbs_g')"></label>
-                    <label class="field"><span>Fat (g)</span><input type="number" min="0" step="any" formControlName="fats_g" (input)="recalculateNutrition(i, 'fats_g')"></label>
-                    <label class="field"><span>Protein (g)</span><input type="number" min="0" step="any" formControlName="proteins_g" (input)="recalculateNutrition(i, 'proteins_g')"></label>
-                  </div>
-                  @if (portions.length > 1) { <button class="link-button remove-button" type="button" (click)="removePortion(i)">Remove portion</button> }
-                </fieldset>
-              }
-            </div>
-            <div class="form-actions"><button class="secondary-button" type="button" (click)="editing.set(false)">Cancel</button><button class="primary-button" type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving…' : 'Save food' }}</button></div>
-          </form>
+            <h2 id="editor-title">{{ selected() ? 'Edit food' : 'Add a food' }}</h2>
+            <form [formGroup]="form" (ngSubmit)="save()">
+              <label class="field"
+                ><span>Food name</span><input formControlName="name" autocomplete="off" required
+              /></label>
+              <label class="field"
+                ><span>Barcode <small>(optional)</small></span
+                ><input formControlName="barcode" [readonly]="!!selected()" inputmode="numeric"
+              /></label>
+              <label class="check-field"
+                ><input type="checkbox" formControlName="isPublic" /><span
+                  >Make this food public</span
+                ></label
+              >
+              <div class="portion-heading">
+                <h3>Portions and nutrition</h3>
+                <button type="button" class="link-button" (click)="addPortion()">
+                  Add portion ＋
+                </button>
+              </div>
+              <div formArrayName="portions">
+                @for (portion of portions.controls; track $index; let i = $index) {
+                  <fieldset class="portion-editor" [formGroupName]="i">
+                    <legend>Portion {{ i + 1 }}</legend>
+                    <div class="portion-size">
+                      <label class="field"
+                        ><span>Amount</span
+                        ><input
+                          type="number"
+                          min="0.001"
+                          step="any"
+                          formControlName="quantity_number"
+                          required /></label
+                      ><label class="field"
+                        ><span>Unit</span
+                        ><input
+                          formControlName="quantity_unit"
+                          placeholder="g, cup, piece"
+                          required
+                      /></label>
+                    </div>
+                    <div class="nutrient-inputs">
+                      <label class="field"
+                        ><span>Energy (kcal)</span
+                        ><input
+                          type="number"
+                          min="0"
+                          step="any"
+                          formControlName="energy_kcal"
+                          (input)="recalculateNutrition(i, 'energy_kcal')"
+                      /></label>
+                      <label class="field"
+                        ><span>Carbs (g)</span
+                        ><input
+                          type="number"
+                          min="0"
+                          step="any"
+                          formControlName="carbs_g"
+                          (input)="recalculateNutrition(i, 'carbs_g')"
+                      /></label>
+                      <label class="field"
+                        ><span>Fat (g)</span
+                        ><input
+                          type="number"
+                          min="0"
+                          step="any"
+                          formControlName="fats_g"
+                          (input)="recalculateNutrition(i, 'fats_g')"
+                      /></label>
+                      <label class="field"
+                        ><span>Protein (g)</span
+                        ><input
+                          type="number"
+                          min="0"
+                          step="any"
+                          formControlName="proteins_g"
+                          (input)="recalculateNutrition(i, 'proteins_g')"
+                      /></label>
+                    </div>
+                    @if (portions.length > 1) {
+                      <button
+                        class="link-button remove-button"
+                        type="button"
+                        (click)="removePortion(i)"
+                      >
+                        Remove portion
+                      </button>
+                    }
+                  </fieldset>
+                }
+              </div>
+              <div class="form-actions">
+                <button class="secondary-button" type="button" (click)="editing.set(false)">
+                  Cancel</button
+                ><button class="primary-button" type="submit" [disabled]="form.invalid || saving()">
+                  {{ saving() ? 'Saving…' : 'Save food' }}
+                </button>
+              </div>
+            </form>
           }
         </section>
       } @else if (selected(); as food) {
-        <app-food-details [food]="food" [currentUserId]="currentUserId()" (edit)="$event.kind === 'RECIPE' ? editRecipe($event) : edit($event)" />
+        <app-food-details
+          [food]="food"
+          [currentUserId]="currentUserId()"
+          (edit)="$event.kind === 'RECIPE' ? editRecipe($event) : edit($event)"
+        />
       } @else {
-        <section class="food-detail detail-empty"><span aria-hidden="true">✳</span><h2>Choose a food</h2><p>Select a result to see its portions and nutrition.</p></section>
+        <section class="food-detail detail-empty">
+          <span aria-hidden="true">✳</span>
+          <h2>Choose a food</h2>
+          <p>Select a result to see its portions and nutrition.</p>
+        </section>
       }
     </div>
   </section>

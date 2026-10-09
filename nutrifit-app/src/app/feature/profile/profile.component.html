@@ -1,26 +1,115 @@
 <main class="setup-shell">
   <header class="setup-header"><app-brand /><span class="profile-mark">Your space</span></header>
   <section class="profile-content">
-    <p class="eyebrow">Your account</p><h1>Your profile</h1>
+    <p class="eyebrow">Your account</p>
+    <h1>Your profile</h1>
     <div class="identity">
-      @if (avatar()) { <img [src]="avatar()" alt="" referrerpolicy="no-referrer"> }
-      <div><h2>{{ name() || 'Nutrifit member' }}</h2><p>Daily nutrition targets</p></div>
+      @if (avatar()) {
+        <img [src]="avatar()" alt="" referrerpolicy="no-referrer" />
+      }
+      <div>
+        <h2>{{ name() || 'Nutrifit member' }}</h2>
+        <p>Daily nutrition targets</p>
+      </div>
     </div>
-    @if (loading()) { <p class="muted" aria-live="polite">Loading your targets…</p> }
-    @else {
+    @if (loading()) {
+      <p class="muted" aria-live="polite">Loading your targets…</p>
+    } @else {
       <form [formGroup]="form" (ngSubmit)="save()" novalidate>
-        <div class="targets-heading"><div><h2>Daily targets</h2><p>Adjust your nutrition for today.</p></div><button class="restore-button" type="button" aria-label="Restore saved targets" title="Restore saved targets" [disabled]="!savedTargets() || saving()" (click)="restoreSavedTargets()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11a8.5 8.5 0 1 1 2.2 6M3.5 4.5V11h6.5" /></svg></button></div>
+        <div class="targets-heading">
+          <div>
+            <h2>Daily targets</h2>
+            <p>Adjust your nutrition for today.</p>
+          </div>
+          <button
+            class="restore-button"
+            type="button"
+            aria-label="Restore saved targets"
+            title="Restore saved targets"
+            [disabled]="!savedTargets() || saving()"
+            (click)="restoreSavedTargets()"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3.5 11a8.5 8.5 0 1 1 2.2 6M3.5 4.5V11h6.5" />
+            </svg>
+          </button>
+        </div>
         <div class="goal-editor">
-          <label class="goal-energy"><span class="field-title">Energy target</span><span class="energy-entry"><input type="number" formControlName="energy" min="0" max="10000" step="50" inputmode="numeric" aria-label="Energy target in kilocalories"><span>kcal</span></span></label>
+          <label class="goal-energy"
+            ><span class="field-title">Energy target</span
+            ><span class="energy-entry"
+              ><input
+                type="number"
+                formControlName="energy"
+                min="0"
+                max="10000"
+                step="50"
+                inputmode="numeric"
+                aria-label="Energy target in kilocalories"
+              /><span>kcal</span></span
+            ></label
+          >
           <div class="macro-grid" aria-label="Macronutrient targets">
-            <label class="macro-field protein"><span class="macro-dot" aria-hidden="true"></span><span class="field-title">Protein</span><span class="macro-entry"><input type="number" formControlName="protein" min="0" max="1000" step="1" inputmode="numeric" aria-label="Protein target in grams"><span>g</span></span></label>
-            <label class="macro-field carbs"><span class="macro-dot" aria-hidden="true"></span><span class="field-title">Carbs</span><span class="macro-entry"><input type="number" formControlName="carbs" min="0" max="1000" step="1" inputmode="numeric" aria-label="Carbohydrates target in grams"><span>g</span></span></label>
-            <label class="macro-field fats"><span class="macro-dot" aria-hidden="true"></span><span class="field-title">Fat</span><span class="macro-entry"><input type="number" formControlName="fats" min="0" max="1000" step="1" inputmode="numeric" aria-label="Fat target in grams"><span>g</span></span></label>
+            <label class="macro-field protein"
+              ><span class="macro-dot" aria-hidden="true"></span
+              ><span class="field-title">Protein</span
+              ><span class="macro-entry"
+                ><input
+                  type="number"
+                  formControlName="protein"
+                  min="0"
+                  max="1000"
+                  step="1"
+                  inputmode="numeric"
+                  aria-label="Protein target in grams"
+                /><span>g</span></span
+              ></label
+            >
+            <label class="macro-field carbs"
+              ><span class="macro-dot" aria-hidden="true"></span
+              ><span class="field-title">Carbs</span
+              ><span class="macro-entry"
+                ><input
+                  type="number"
+                  formControlName="carbs"
+                  min="0"
+                  max="1000"
+                  step="1"
+                  inputmode="numeric"
+                  aria-label="Carbohydrates target in grams"
+                /><span>g</span></span
+              ></label
+            >
+            <label class="macro-field fats"
+              ><span class="macro-dot" aria-hidden="true"></span><span class="field-title">Fat</span
+              ><span class="macro-entry"
+                ><input
+                  type="number"
+                  formControlName="fats"
+                  min="0"
+                  max="1000"
+                  step="1"
+                  inputmode="numeric"
+                  aria-label="Fat target in grams"
+                /><span>g</span></span
+              ></label
+            >
           </div>
         </div>
-        @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
-        @if (saved()) { <p class="success" role="status">Your targets have been saved.</p> }
-        <button class="primary-button" type="submit" [disabled]="form.invalid || saving() || updatingTargets()">{{ saving() ? 'Saving…' : updatingTargets() ? 'Updating targets…' : 'Save targets' }}<span aria-hidden="true">↗</span></button>
+        @if (error()) {
+          <p class="error" role="alert">{{ error() }}</p>
+        }
+        @if (saved()) {
+          <p class="success" role="status">Your targets have been saved.</p>
+        }
+        <button
+          class="primary-button"
+          type="submit"
+          [disabled]="form.invalid || saving() || updatingTargets()"
+        >
+          {{ saving() ? 'Saving…' : updatingTargets() ? 'Updating targets…' : 'Save targets'
+          }}<span aria-hidden="true">↗</span>
+        </button>
       </form>
     }
   </section>

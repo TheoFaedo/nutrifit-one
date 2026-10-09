@@ -19,9 +19,17 @@ export class AuthCallbackComponent {
   private async finish(): Promise<void> {
     try {
       const user = await this.auth.user();
-      if (!user) throw new Error('Authentication was not completed.');
-      const { data, error } = await supabase.from('profiles').select('onboarded').eq('id', user.id).single();
-      if (error) throw error;
+      if (!user) {
+        throw new Error('Authentication was not completed.');
+      }
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('onboarded')
+        .eq('id', user.id)
+        .single();
+      if (error) {
+        throw error;
+      }
       await this.router.navigateByUrl(data.onboarded ? '/journal' : '/onboarding');
     } catch {
       await this.router.navigateByUrl('/login');
