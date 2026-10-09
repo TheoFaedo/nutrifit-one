@@ -35,16 +35,16 @@
     <label class="field"
       >Name <input name="name" [(ngModel)]="name" required maxlength="160" autocomplete="off"
     /></label>
-    <div class="check-field">
-      <input
-        id="food-public"
-        type="checkbox"
-        name="public"
-        [checked]="isPublic"
-        (change)="setPublic($event)"
-      />
-      <label for="food-public">Make this item public</label>
-    </div>
+    <button
+      class="check-field"
+      type="button"
+      role="checkbox"
+      [attr.aria-checked]="isPublic"
+      (click)="togglePublic()"
+    >
+      <span class="checkbox-mark" aria-hidden="true">✓</span>
+      <span>Make this item public</span>
+    </button>
     @if (kind() === 'FOOD') {
       <label class="field"
         >Barcode

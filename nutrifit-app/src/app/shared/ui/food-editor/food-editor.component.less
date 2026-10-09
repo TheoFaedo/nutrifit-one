@@ -112,52 +112,39 @@ select {
 
 .check-field {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 10px;
   padding: 13px 14px;
   color: var(--ink, #303a27);
   background: #f8f8f3;
+  border: 0;
   border-radius: 10px;
+  font: inherit;
   font-size: 13px;
+  text-align: left;
   cursor: pointer;
 }
 
-.check-field input {
-  appearance: none;
+.checkbox-mark {
   flex: 0 0 17px;
   width: 17px;
   height: 17px;
-  margin: 0;
   display: grid;
-  place-content: center;
-  background: #fff;
+  place-items: center;
+  color: transparent;
   border: 1px solid #879365;
   border-radius: 4px;
-  cursor: pointer;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  transition: color 0.12s ease-in-out, background-color 0.12s ease-in-out;
 }
 
-.check-field input::before {
-  width: 9px;
-  height: 5px;
-  border-bottom: 2px solid #fff;
-  border-left: 2px solid #fff;
-  content: '';
-  transform: rotate(-45deg) scale(0);
-  transition: transform 0.12s ease-in-out;
-}
-
-.check-field input:checked {
+.check-field[aria-checked='true'] .checkbox-mark {
   background: #596342;
   border-color: #596342;
-}
-
-.check-field input:checked::before {
-  transform: rotate(-45deg) scale(1);
-}
-
-.check-field label {
-  flex: 1;
-  cursor: pointer;
+  color: #fff;
 }
 
 .form-section {

@@ -101,8 +101,8 @@ export class FoodEditorComponent implements OnInit {
   removePart(index: number): void {
     this.parts = this.parts.filter((_, i) => i !== index);
   }
-  setPublic(event: Event): void {
-    this.isPublic = (event.target as HTMLInputElement).checked;
+  togglePublic(): void {
+    this.isPublic = !this.isPublic;
   }
   async save(): Promise<void> {
     if (this.saving()) {
