@@ -1,8 +1,7 @@
 <section class="daily-summary" aria-labelledby="daily-summary-title">
   <div class="daily-summary-heading">
     <div>
-      <p class="eyebrow">Daily intake</p>
-      <h2 id="daily-summary-title">Calories today</h2>
+      <h2 id="daily-summary-title">Tracker</h2>
     </div>
   </div>
   <div class="daily-energy">
@@ -18,7 +17,7 @@
       [class.over-goal]="exceedsGoal(totals().energy, goal()?.energy_kcal ?? null)"
       role="progressbar"
       aria-label="Calories consumed toward daily goal"
-      [attr.aria-valuenow]="totals().energy ?? 0"
+      [attr.aria-valuenow]="totals().energy"
       [attr.aria-valuemax]="goal()?.energy_kcal ?? null"
     >
       <span [style.width.%]="progressWidth(totals().energy, goal()?.energy_kcal ?? null)"></span>
@@ -71,7 +70,7 @@
           [class.over-goal]="exceedsGoal(macro.value, macro.target)"
           role="progressbar"
           [attr.aria-label]="macro.aria"
-          [attr.aria-valuenow]="macro.value ?? 0"
+          [attr.aria-valuenow]="macro.value"
           [attr.aria-valuemax]="macro.target"
         >
           <span [style.width.%]="progressWidth(macro.value, macro.target)"></span>

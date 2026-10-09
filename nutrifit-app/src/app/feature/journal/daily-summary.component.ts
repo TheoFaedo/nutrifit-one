@@ -1,6 +1,7 @@
 import { Component, input } from '@angular/core';
 import { DailyGoal } from '../../core/services/daily-goals.service';
 import { NutritionSummaryValues } from '../../shared/ui/nutrition-summary/nutrition-summary.component';
+import { formatNutrition } from '../../shared/ui/nutrition-summary/nutrition-format';
 
 @Component({
   selector: 'app-daily-summary',
@@ -11,9 +12,7 @@ export class DailySummaryComponent {
   readonly totals = input.required<NutritionSummaryValues>();
   readonly goal = input<DailyGoal | null>(null);
 
-  formatValue(value: number | null): string {
-    return value === null ? '—' : value.toFixed(1).replace(/\.0$/, '');
-  }
+  readonly formatValue = formatNutrition;
 
   progressWidth(consumed: number | null, target: number | null): number {
     return consumed === null || target === null || target <= 0

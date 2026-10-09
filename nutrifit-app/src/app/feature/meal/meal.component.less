@@ -12,41 +12,24 @@
 }
 .meal-content > .muted {
   max-width: 540px;
-  margin: 14px 0 30px;
+  margin: 14px 0 20px;
 }
 .meal-date {
   color: var(--muted);
   font-size: 12px;
 }
 .catalogue-tools {
-  display: flex;
-  align-items: end;
-  gap: 22px;
   padding: 18px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 18px;
 }
-.search-tools,
 .create-tools {
   display: flex;
-  align-items: end;
+  justify-content: flex-end;
   gap: 10px;
+  margin-bottom: 16px;
 }
-.search-tools {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.search-tools .search-field {
-  flex: 1 1 220px;
-  min-width: 150px;
-}
-.create-tools {
-  flex: 0 0 auto;
-  padding-left: 22px;
-  border-left: 1px solid var(--line);
-}
-.search-field,
 .field {
   display: grid;
   gap: 7px;
@@ -54,7 +37,6 @@
   font-size: 12px;
   font-weight: 600;
 }
-.search-field input,
 .field input,
 .amount-field input {
   min-width: 0;
@@ -375,16 +357,6 @@ input:focus-visible {
   outline-offset: 2px;
 }
 @media (max-width: 860px) {
-  .catalogue-tools {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .create-tools {
-    padding: 14px 0 0;
-    border-top: 1px solid var(--line);
-    border-left: 0;
-  }
   .catalogue-layout {
     grid-template-columns: 1fr;
   }
@@ -397,13 +369,9 @@ input:focus-visible {
   .catalogue-tools {
     padding: 13px;
   }
-  .search-tools,
   .create-tools {
     align-items: stretch;
     flex-direction: column;
-  }
-  .search-tools .search-field {
-    flex-basis: auto;
   }
   .create-tools > button {
     width: 100%;
@@ -421,4 +389,21 @@ input:focus-visible {
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+.editor-backdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(25 29 20 / 55%);
+}
+.editor-dialog {
+  width: min(100%, 640px);
+  max-height: min(90vh, 900px);
+  overflow: auto;
+  background: #fff;
+  border-radius: 18px;
 }

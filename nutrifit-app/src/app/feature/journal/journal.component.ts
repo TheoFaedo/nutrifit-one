@@ -1,10 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { DailyGoal, DailyGoalsService } from '../../core/services/daily-goals.service';
 import {
   FoodCatalogueService,
+  FoodCatalogueSort,
   FoodPortion,
   PortionInput,
   FoodRecord,
@@ -18,11 +19,17 @@ import {
 import { BrandComponent } from '../../shared/ui/brand/brand.component';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
 import { DailySummaryComponent } from './daily-summary.component';
-import { BarcodeScannerComponent } from '../../shared/ui/barcode-scanner/barcode-scanner.component';
+import {
+  FOOD_CATALOGUE_SORT_OPTIONS,
+  FoodCatalogueSearchComponent,
+} from '../../shared/ui/food-catalogue-search/food-catalogue-search.component';
+import { formatNutrition } from '../../shared/ui/nutrition-summary/nutrition-format';
+import { PortionSelectorComponent } from '../../shared/ui/portion-selector/portion-selector.component';
 import {
   NutritionSummaryComponent,
   NutritionSummaryValues,
 } from '../../shared/ui/nutrition-summary/nutrition-summary.component';
+import { FoodEditorComponent } from '../../shared/ui/food-editor/food-editor.component';
 
 const meals: { type: MealType; label: string }[] = [
   { type: 'BREAKFAST', label: 'Breakfast' },
@@ -32,7 +39,7 @@ const meals: { type: MealType; label: string }[] = [
 ];
 const todayParis = (): string =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
-const parisInstant = (date: string): string => {
+export const parisInstant = (date: string): string => {
   const [year, month, day] = date.split('-').map(Number);
   const target = Date.UTC(year, month - 1, day, 12);
   const formatter = new Intl.DateTimeFormat('en-GB', {
@@ -57,12 +64,13 @@ const parisInstant = (date: string): string => {
   selector: 'app-journal-page',
   imports: [
     FormsModule,
-    DecimalPipe,
     BrandComponent,
     BottomNavComponent,
     DailySummaryComponent,
     NutritionSummaryComponent,
-    BarcodeScannerComponent,
+    FoodCatalogueSearchComponent,
+    PortionSelectorComponent,
+    FoodEditorComponent,
   ],
   templateUrl: './journal.component.html',
   styleUrl: './journal.component.less',
@@ -72,15 +80,28 @@ export class JournalComponent {
   private readonly journal = inject(IntakeJournalService);
   private readonly catalogue = inject(FoodCatalogueService);
   private readonly goalsService = inject(DailyGoalsService);
+  private readonly document = inject(DOCUMENT);
+  private dayRequest = 0;
+  private foodRequest = 0;
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+  private returnFocus: HTMLElement | null = null;
   readonly date = signal(todayParis());
   readonly entries = signal<IntakeRecord[]>([]);
   readonly dailyGoal = signal<DailyGoal | null>(null);
   readonly foods = signal<FoodRecord[]>([]);
+  readonly historicalFood = signal<FoodRecord | null>(null);
+  readonly foodSort = signal<FoodCatalogueSort>('recent');
+  readonly sortOptions = FOOD_CATALOGUE_SORT_OPTIONS;
+  readonly foodsLoading = signal(false);
+  readonly foodsMore = signal(false);
+  readonly foodError = signal('');
+  readonly dialogError = signal('');
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal('');
   readonly dialogOpen = signal(false);
   readonly dialogView = signal<'search' | 'details'>('search');
+  readonly creatingFood = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly query = signal('');
   readonly barcode = signal('');
@@ -93,8 +114,10 @@ export class JournalComponent {
   readonly selectedPortionId = signal('');
   readonly amount = signal(1);
   readonly mealType = signal<MealType>('BREAKFAST');
-  readonly selectedFood = computed(
-    () => this.foods().find((food) => food.version_id === this.selectedFoodId()) ?? null,
+  readonly selectedFood = computed(() =>
+    this.historicalFood()?.version_id === this.selectedFoodId()
+      ? this.historicalFood()
+      : (this.foods().find((food) => food.version_id === this.selectedFoodId()) ?? null),
   );
   readonly selectedPortions = computed(() => this.selectedFood()?.portions ?? []);
   readonly selectedNutrition = computed<NutritionSummaryValues>(() => {
@@ -109,14 +132,7 @@ export class JournalComponent {
       protein: scale(portion?.proteins_g ?? null),
     };
   });
-  readonly matchingFoods = computed(() => {
-    const term = this.query().trim().toLocaleLowerCase();
-    return this.foods().filter((food) => !term || food.name.toLocaleLowerCase().includes(term));
-  });
-  readonly barcodeFoods = computed(() => {
-    const code = this.barcode().trim();
-    return code ? this.foods().filter((food) => food.barcode === code && food.is_public) : [];
-  });
+  readonly barcodeFoods = signal<FoodRecord[]>([]);
   readonly groupedMeals = computed(() =>
     meals.map((meal) => ({
       ...meal,
@@ -130,21 +146,31 @@ export class JournalComponent {
   }
 
   async load(): Promise<void> {
+    const request = ++this.dayRequest;
+    const date = this.date();
     this.loading.set(true);
     this.error.set('');
+    this.entries.set([]);
+    this.dailyGoal.set(null);
     try {
-      const [entries, foods, goal] = await Promise.all([
-        this.journal.forDate(this.date()),
-        this.catalogue.search(''),
-        this.goalsService.forDate(this.date()),
+      const [entries, goal] = await Promise.all([
+        this.journal.forDate(date),
+        this.goalsService.forDate(date),
       ]);
+      if (request !== this.dayRequest) {
+        return;
+      }
       this.entries.set(entries);
-      this.foods.set(foods);
       this.dailyGoal.set(goal);
     } catch (error) {
+      if (request !== this.dayRequest) {
+        return;
+      }
       this.error.set(this.message(error, 'The journal could not be loaded.'));
     } finally {
-      this.loading.set(false);
+      if (request === this.dayRequest) {
+        this.loading.set(false);
+      }
     }
   }
   async changeDate(delta: number): Promise<void> {
@@ -160,7 +186,10 @@ export class JournalComponent {
     }
   }
   startAdd(type: MealType): void {
+    this.rememberFocus();
+    this.historicalFood.set(null);
     this.dialogView.set('search');
+    this.creatingFood.set(false);
     this.editingId.set(null);
     this.mealType.set(type);
     this.amount.set(1);
@@ -170,10 +199,47 @@ export class JournalComponent {
     this.offProduct.set(null);
     this.selectedFoodId.set('');
     this.selectedPortionId.set('');
-    this.error.set('');
+    this.dialogError.set('');
     this.dialogOpen.set(true);
+    void this.loadFoods();
+    this.focusDialog();
   }
-  edit(entry: IntakeRecord): void {
+  startCreateFood(): void {
+    this.rememberFocus();
+    this.dialogOpen.set(true);
+    this.dialogView.set('search');
+    this.creatingFood.set(true);
+    this.dialogError.set('');
+    this.focusDialog();
+  }
+  createdFood(food: FoodRecord): void {
+    this.creatingFood.set(false);
+    this.historicalFood.set(food);
+    this.selectedFoodId.set(food.version_id);
+    this.selectedPortionId.set(food.portions[0]?.id ?? '');
+    this.amount.set(1);
+    this.editingId.set(null);
+    this.dialogView.set('details');
+    this.dialogError.set('');
+    this.focusDialog();
+  }
+  cancelCreateFood(): void {
+    this.creatingFood.set(false);
+    this.focusDialog();
+  }
+  async edit(entry: IntakeRecord): Promise<void> {
+    this.rememberFocus();
+    this.dialogError.set('');
+    try {
+      const food = await this.catalogue.version(entry.food_version_id);
+      if (!food) {
+        throw new Error('The saved food version could not be loaded.');
+      }
+      this.historicalFood.set(food);
+    } catch (error) {
+      this.error.set(this.message(error, 'The entry could not be edited.'));
+      return;
+    }
     this.dialogView.set('details');
     this.editingId.set(entry.id);
     this.mealType.set(entry.meal_type);
@@ -181,31 +247,55 @@ export class JournalComponent {
     this.selectedFoodId.set(entry.food_version_id);
     this.selectedPortionId.set(entry.quantity_id);
     this.query.set(entry.food_name);
-    this.error.set('');
     this.dialogOpen.set(true);
+    this.focusDialog();
   }
   chooseFood(food: FoodRecord): void {
+    this.historicalFood.set(food);
     this.selectedFoodId.set(food.version_id);
     this.selectedPortionId.set(food.portions[0]?.id ?? '');
     this.amount.set(1);
     this.dialogView.set('details');
-    this.error.set('');
+    this.dialogError.set('');
+  }
+  selectPortion(value: string): void {
+    this.selectedPortionId.set(value);
   }
   async lookupBarcode(): Promise<void> {
     const code = this.barcode().trim();
     this.barcodeError.set('');
     this.offProduct.set(null);
+    this.barcodeFoods.set([]);
     if (!code) {
       this.barcodeError.set('Enter a barcode first.');
       return;
     }
     this.barcodeSearching.set(true);
     try {
-      this.offProduct.set(await this.catalogue.lookupBarcode(code));
-    } catch (error) {
-      this.barcodeError.set(
-        this.message(error, 'Open Food Facts is unavailable. Local matches are still shown.'),
-      );
+      const [product, local] = await Promise.allSettled([
+        this.catalogue.lookupBarcode(code),
+        this.catalogue.journalPage('', this.foodSort(), 0, 100, code),
+      ]);
+      if (code !== this.barcode().trim() || !this.dialogOpen()) {
+        return;
+      }
+      if (product.status === 'fulfilled') {
+        this.offProduct.set(product.value);
+      } else {
+        this.barcodeError.set(
+          this.message(
+            product.reason,
+            'Open Food Facts is unavailable. Local matches are still shown.',
+          ),
+        );
+      }
+      if (local.status === 'fulfilled') {
+        this.barcodeFoods.set(local.value);
+      } else {
+        this.barcodeError.set(
+          this.message(local.reason, 'Local barcode matches could not be loaded.'),
+        );
+      }
     } finally {
       this.barcodeSearching.set(false);
     }
@@ -213,13 +303,61 @@ export class JournalComponent {
   async searchJournal(): Promise<void> {
     const term = this.query().trim();
     if (/^\d{8,14}$/.test(term)) {
+      ++this.foodRequest;
+      this.foods.set([]);
+      this.foodsMore.set(false);
       this.barcode.set(term);
       await this.lookupBarcode();
       return;
     }
     this.barcode.set('');
+    this.barcodeFoods.set([]);
     this.offProduct.set(null);
     this.barcodeError.set('');
+    await this.loadFoods();
+  }
+  searchChanged(value: string): void {
+    this.query.set(value);
+    ++this.foodRequest;
+    this.foods.set([]);
+    this.foodsMore.set(false);
+    this.barcodeFoods.set([]);
+    this.offProduct.set(null);
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => {
+      void this.searchJournal();
+    }, 250);
+  }
+  setFoodSort(value: string): void {
+    const sort: FoodCatalogueSort = ['recent', 'newest', 'asc', 'desc'].includes(value)
+      ? (value as FoodCatalogueSort)
+      : 'recent';
+    this.foodSort.set(sort);
+    void this.loadFoods();
+  }
+  async loadFoods(append = false): Promise<void> {
+    const request = ++this.foodRequest;
+    const offset = append ? this.foods().length : 0;
+    this.foodsLoading.set(true);
+    this.foodError.set('');
+    try {
+      const foods = await this.catalogue.journalPage(this.query().trim(), this.foodSort(), offset);
+      if (request !== this.foodRequest || !this.dialogOpen()) {
+        return;
+      }
+      this.foods.set(append ? [...this.foods(), ...foods] : foods);
+      this.foodsMore.set(foods.length === 20);
+    } catch (error) {
+      if (request === this.foodRequest) {
+        this.foodError.set(this.message(error, 'Foods could not be loaded.'));
+      }
+    } finally {
+      if (request === this.foodRequest) {
+        this.foodsLoading.set(false);
+      }
+    }
   }
   async scannedBarcode(code: string): Promise<void> {
     this.query.set(code);
@@ -228,14 +366,21 @@ export class JournalComponent {
   }
   closeDialog(): void {
     this.dialogOpen.set(false);
+    ++this.foodRequest;
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.returnFocus?.focus();
   }
   async chooseOffProduct(): Promise<void> {
     const product = this.offProduct();
-    if (!product) {return;}
+    if (!product) {
+      return;
+    }
     this.saving.set(true);
-    this.error.set('');
+    this.dialogError.set('');
     try {
-      await this.catalogue.save({
+      const foodId = await this.catalogue.save({
         name: product.name,
         isPublic: true,
         barcode: this.barcode().trim(),
@@ -243,23 +388,22 @@ export class JournalComponent {
         source: 'Open Food Facts',
         sourcePayload: product.payload,
       });
-      const foods = await this.catalogue.search('');
-      this.foods.set(foods);
-      const food = foods.find(
-        (item) => item.barcode === this.barcode().trim() && item.name === product.name,
-      );
-      if (!food) {throw new Error('The imported product could not be loaded.');}
+      const food = await this.catalogue.current(foodId);
+      if (!food) {
+        throw new Error('The imported product could not be loaded.');
+      }
       this.chooseFood(food);
       this.offProduct.set(null);
     } catch (error) {
-      this.error.set(this.message(error, 'The product could not be imported.'));
+      this.dialogError.set(this.message(error, 'The product could not be imported.'));
     } finally {
       this.saving.set(false);
     }
   }
   backToFoods(): void {
     this.dialogView.set('search');
-    this.error.set('');
+    this.dialogError.set('');
+    void this.loadFoods();
   }
   async saveEntry(): Promise<void> {
     const food = this.selectedFood();
@@ -271,11 +415,11 @@ export class JournalComponent {
       amount <= 0 ||
       Math.round(amount * 10) !== amount * 10
     ) {
-      this.error.set('Choose a food and portion, and enter a positive amount in tenths.');
+      this.dialogError.set('Choose a food and portion, and enter a positive amount in tenths.');
       return;
     }
     this.saving.set(true);
-    this.error.set('');
+    this.dialogError.set('');
     try {
       const user = await this.auth.user();
       if (!user) {
@@ -294,10 +438,10 @@ export class JournalComponent {
       } else {
         await this.journal.add(user.id, input);
       }
-      this.dialogOpen.set(false);
+      this.closeDialog();
       await this.load();
     } catch (error) {
-      this.error.set(this.message(error, 'The entry could not be saved.'));
+      this.dialogError.set(this.message(error, 'The entry could not be saved.'));
     } finally {
       this.saving.set(false);
     }
@@ -311,21 +455,19 @@ export class JournalComponent {
     }
   }
   portionLabel(portion: FoodPortion): string {
-    return `${portion.quantity_number} ${portion.quantity_unit}`;
+    return `${formatNutrition(portion.quantity_number)} ${portion.quantity_unit}`;
   }
   formatDate(date: string): string {
     return new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeZone: 'UTC' }).format(
       new Date(`${date}T12:00:00Z`),
     );
   }
-  formatValue(value: number | null): string {
-    return value === null ? '—' : value.toFixed(1).replace(/\.0$/, '');
-  }
+  readonly formatNutrition = formatNutrition;
   totals(entries: IntakeRecord[]): NutritionSummaryValues {
     const total = (
       key: keyof Pick<FoodPortion, 'energy_kcal' | 'carbs_g' | 'fats_g' | 'proteins_g'>,
     ): number | null => {
-      if (!entries.length || entries.some((entry) => entry.portion[key] === null)) {
+      if (entries.some((entry) => entry.portion[key] === null)) {
         return null;
       }
       return entries.reduce((sum, entry) => sum + Number(entry.portion[key]) * entry.ratio, 0);
@@ -342,5 +484,42 @@ export class JournalComponent {
   }
   private message(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
+  }
+  private rememberFocus(): void {
+    this.returnFocus =
+      this.document.activeElement instanceof HTMLElement ? this.document.activeElement : null;
+  }
+  private focusDialog(): void {
+    setTimeout(() =>
+      this.document
+        .querySelector<HTMLElement>('.entry-dialog input, .entry-dialog .dialog-close')
+        ?.focus(),
+    );
+  }
+  dialogKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeDialog();
+      return;
+    }
+    if (event.key !== 'Tab') {
+      return;
+    }
+    const dialog = this.document.querySelector('.entry-dialog');
+    const focusable = Array.from(
+      dialog?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled])',
+      ) ?? [],
+    );
+    if (!focusable.length) {
+      return;
+    }
+    if (event.shiftKey && this.document.activeElement === focusable[0]) {
+      event.preventDefault();
+      focusable.at(-1)?.focus();
+    } else if (!event.shiftKey && this.document.activeElement === focusable.at(-1)) {
+      event.preventDefault();
+      focusable[0].focus();
+    }
   }
 }
