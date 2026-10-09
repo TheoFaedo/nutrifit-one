@@ -19,10 +19,16 @@ export interface FoodRecord {
   version_id: string;
   version_number: number;
   name: string;
+  kind: 'FOOD' | 'RECIPE';
   barcode: string | null;
   source: string | null;
   portions: FoodPortion[];
+  parts: RecipePart[];
 }
+
+export interface RecipePart { ingredient_version_id: string; quantity_id: string; ratio: number; ingredient_name: string; ingredient_kind: 'FOOD' | 'RECIPE'; portions: FoodPortion[]; }
+export interface RecipePartInput { ingredient_version_id: string; quantity_id: string; ratio: number; }
+export interface RecipeInput { name: string; isPublic: boolean; referenceQuantity: number; referenceUnit: string; parts: RecipePartInput[]; foodId?: string; }
 
 export interface PortionInput {
   quantity_number: number;
@@ -47,7 +53,7 @@ export interface FoodInput {
 @Injectable({ providedIn: 'root' })
 export class FoodCatalogueService {
   async search(term: string): Promise<FoodRecord[]> {
-    let query = supabase.from('foods').select('id,author_id,is_public,food_versions!inner(id,version_number,name,product_details(barcode,source),quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))')
+    let query = supabase.from('foods').select('id,author_id,is_public,food_versions!inner(id,version_number,name,kind,product_details(barcode,source),quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g),recipe_parts!recipe_parts_recipe_version_id_fkey(id,ingredient_version_id,quantity_id,ratio,ingredient:food_versions!recipe_parts_ingredient_version_id_fkey(id,name,kind,quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))))')
       .eq('food_versions.is_current', true).order('name', { referencedTable: 'food_versions' }).limit(60);
     if (term.trim()) query = query.ilike('food_versions.name', `%${term.trim().replaceAll('%', '\\%')}%`);
     const { data, error } = await query;
@@ -59,8 +65,13 @@ export class FoodCatalogueService {
       return {
         id: String(row['id']), author_id: String(row['author_id']), is_public: Boolean(row['is_public']),
         version_id: String(version['id']), version_number: Number(version['version_number']), name: String(version['name']),
+        kind: String(version['kind'] ?? 'FOOD') as 'FOOD' | 'RECIPE',
         barcode: details?.['barcode'] ? String(details['barcode']) : null, source: details?.['source'] ? String(details['source']) : null,
         portions: (version['quantities'] as FoodPortion[]) ?? [],
+        parts: ((version['recipe_parts'] as Record<string, unknown>[] | undefined) ?? []).map((part) => {
+          const ingredient = part['ingredient'] as Record<string, unknown>;
+          return { ingredient_version_id: String(part['ingredient_version_id']), quantity_id: String(part['quantity_id']), ratio: Number(part['ratio']), ingredient_name: String(ingredient['name']), ingredient_kind: String(ingredient['kind']) as 'FOOD' | 'RECIPE', portions: (ingredient['quantities'] as FoodPortion[]) ?? [] };
+        }),
       };
     });
   }
@@ -70,6 +81,14 @@ export class FoodCatalogueService {
       p_name: input.name, p_is_public: input.isPublic, p_quantities: input.portions,
       p_food_id: input.foodId ?? null, p_barcode: input.barcode, p_source: input.source ?? null,
       p_source_payload: input.sourcePayload ?? null,
+    });
+    if (error) throw error;
+  }
+
+  async saveRecipe(input: RecipeInput): Promise<void> {
+    const { error } = await supabase.rpc('save_recipe_snapshot', {
+      p_name: input.name, p_is_public: input.isPublic, p_reference_quantity: input.referenceQuantity,
+      p_reference_unit: input.referenceUnit, p_parts: input.parts, p_food_id: input.foodId ?? null,
     });
     if (error) throw error;
   }
