@@ -95,7 +95,7 @@ Le détail ci-dessous rend ces capacités testables. Les règles de partage des 
 - Le code-barres sert d’aide à la recherche et ne constitue pas une clé unique.
 - Le code-barres de la fiche est immuable après sa création.
 - Si le produit est inconnu, l’application propose une saisie manuelle.
-- Les données reçues d’une source externe doivent être distinguées des données saisies ou corrigées par la personne.
+- Les données reçues d’une source externe doivent être distinguées des données saisies ou corrigées par la personne. La provenance est conservée par version : l’import initial garde la réponse OFF, une correction publiée ensuite porte la source `Author correction` sans remplacer l’instantané importé.
 - Open Food Facts est la source retenue pour les recherches par code-barres. L’interface est en anglais pour le MVP.
 - Si Open Food Facts est indisponible, seuls les résultats du catalogue de l’application sont affichés. Les réponses Open Food Facts ne sont pas mises en cache.
 
@@ -105,7 +105,7 @@ Les règles ci-dessous sont retenues ; les points explicitement indiqués resten
 
 1. **Catalogue :** `isPublic` distingue les aliments visibles par tous des aliments privés visibles par leur propriétaire. Seul l’auteur peut modifier une fiche publique.
 2. **Périmètre de livraison :** le MVP comprend toutes les fonctionnalités de l’application de référence ; l’ordre de réalisation reste à planifier.
-3. **Code-barres :** afficher d’abord une vue du résultat Open Food Facts (qui n’est pas encore un `Food`), puis les `Food` publics existants avec ce code-barres. La sélection du résultat Open Food Facts crée un `Food` public dont l’utilisateur devient l’auteur. La manière de conserver la provenance Open Food Facts et les corrections ultérieures reste à définir.
+3. **Code-barres :** afficher d’abord une vue du résultat Open Food Facts (qui n’est pas encore un `Food`), puis les `Food` publics existants avec ce code-barres. La sélection du résultat Open Food Facts crée un `Food` public dont l’utilisateur devient l’auteur. `source` et `source_payload` décrivent la provenance de chaque version ; une correction ultérieure est attribuée à l’auteur.
 4. **Recettes :** les valeurs nutritionnelles sont dérivées des ingrédients et chaque version de recette historise la composition et les versions des ingrédients. Une recette a une portion de référence.
 5. **Unités :** le libellé est libre et aucune conversion n’est effectuée.
 6. **Objectifs :** l’onboarding propose perdre, maintenir ou gagner, avec des cibles préremplies modifiables. Les valeurs exactes des préréglages et les règles des périodes seront définies lors de l’implémentation.

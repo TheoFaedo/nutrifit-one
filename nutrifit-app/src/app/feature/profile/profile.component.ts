@@ -23,6 +23,7 @@ export class ProfileComponent {
   readonly avatar = signal('');
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly signingOut = signal(false);
   readonly updatingTargets = signal(false);
   readonly error = signal('');
   readonly saved = signal(false);
@@ -128,6 +129,22 @@ export class ProfileComponent {
     this.updatingTargets.set(false);
     this.error.set('');
     this.saved.set(false);
+  }
+
+  async signOut(): Promise<void> {
+    if (this.signingOut()) {
+      return;
+    }
+    this.signingOut.set(true);
+    this.error.set('');
+    try {
+      await this.auth.signOut();
+    } catch (error) {
+      this.error.set(
+        error instanceof Error ? error.message : 'You could not be signed out. Please try again.',
+      );
+      this.signingOut.set(false);
+    }
   }
 
   private async load(): Promise<void> {

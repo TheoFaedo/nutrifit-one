@@ -1,5 +1,5 @@
 <main class="setup-shell">
-  <header class="setup-header"><app-brand /><span class="meal-date">Your space</span></header>
+  <header class="setup-header"><app-brand /></header>
   <section class="meal-content" aria-labelledby="meal-title">
     <p class="eyebrow">Meal</p>
     <h1 id="meal-title">Food catalogue</h1>
@@ -8,34 +8,28 @@
     </p>
 
     <div class="catalogue-tools">
-      <label class="search-field"
-        ><span>Search foods</span
-        ><input
-          type="search"
-          [value]="query()"
-          (input)="query.set($any($event.target).value)"
-          (keyup.enter)="search()"
-          placeholder="Food name"
-      /></label>
-      <label class="search-field"
-        ><span>Barcode</span
-        ><input
-          inputmode="numeric"
-          [value]="barcode()"
-          (input)="barcode.set($any($event.target).value)"
-          (keyup.enter)="lookupBarcode()"
-          placeholder="Scan or enter a barcode"
-      /></label>
-      <button class="secondary-button" type="button" (click)="search()">Search</button>
-      <button class="secondary-button" type="button" (click)="lookupBarcode()">
-        Look up barcode
-      </button>
-      <button class="primary-button" type="button" (click)="newFood()">
-        Add a food <span aria-hidden="true">＋</span>
-      </button>
-      <button class="secondary-button" type="button" (click)="newRecipe()">
-        Add a recipe <span aria-hidden="true">＋</span>
-      </button>
+      <div class="search-tools" role="group" aria-label="Search the catalogue">
+        <label class="search-field"
+          ><span>Search by name or barcode</span
+          ><input
+            type="search"
+            [value]="query()"
+            (input)="query.set($any($event.target).value)"
+            (keyup.enter)="search()"
+            inputmode="search"
+            placeholder="Food name or barcode"
+        /></label>
+        <app-barcode-scanner (detected)="scannedBarcode($event)" />
+        <button class="secondary-button" type="button" (click)="search()">Search</button>
+      </div>
+      <div class="create-tools" role="group" aria-label="Create catalogue items">
+        <button class="primary-button" type="button" (click)="newFood()">
+          Add a food <span aria-hidden="true">＋</span>
+        </button>
+        <button class="secondary-button" type="button" (click)="newRecipe()">
+          Add a recipe <span aria-hidden="true">＋</span>
+        </button>
+      </div>
     </div>
 
     @if (error()) {
@@ -59,7 +53,7 @@
     <div class="catalogue-layout">
       <section class="food-list">
         <app-food-search-list
-          [foods]="foods()"
+          [foods]="searchResults()"
           [loading]="loading()"
           [selectedId]="selected()?.id ?? null"
           (foodSelected)="select($event)"

@@ -29,6 +29,26 @@
 .identity p {
   margin: 0;
 }
+.sign-out-button {
+  display: inline-flex;
+  margin-top: 7px;
+  padding: 5px 10px;
+  border: 1px solid #dce4d7;
+  border-radius: 999px;
+  background: #fffefa;
+  color: #416b51;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+}
+.sign-out-button:hover:not(:disabled) {
+  border-color: #aab99d;
+  background: #f0f4e8;
+}
+.sign-out-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
 .identity h2 {
   font-size: 17px;
   font-weight: 600;

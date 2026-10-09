@@ -85,6 +85,14 @@
   padding: 0;
   font-size: 17px;
 }
+.search-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.search-actions app-barcode-scanner {
+  display: block;
+}
 .journal-shell .text-button {
   padding: 9px 14px;
   border: 1px solid transparent;
@@ -355,6 +363,9 @@
 }
 .entry-dialog {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   width: min(100%, 570px);
   max-height: min(88vh, 850px);
   overflow: auto;
@@ -364,16 +375,21 @@
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.2);
 }
 .entry-dialog h2 {
-  margin: 6px 0 20px;
+  margin: 0;
   font:
     400 28px Georgia,
     serif;
 }
+.entry-dialog > .eyebrow,
+.entry-dialog > .error {
+  margin: 0;
+}
 .detail-heading {
-  margin-bottom: 20px;
+  display: grid;
+  gap: 8px;
 }
 .detail-heading .eyebrow {
-  margin: 18px 0 6px;
+  margin: 0;
 }
 .detail-heading h2 {
   margin: 0;
@@ -397,7 +413,6 @@
 }
 .nutrition-preview {
   padding: 15px 17px;
-  margin-top: 8px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #f7f8f3;
@@ -429,7 +444,7 @@
   display: grid;
   flex: 1;
   gap: 7px;
-  margin: 12px 0;
+  margin: 0;
   color: var(--ink);
   font-size: 12px;
 }
@@ -483,6 +498,37 @@
   color: var(--muted);
   font-size: 13px;
 }
+.barcode-result {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f8f8f3;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.barcode-result span:first-child {
+  display: grid;
+  gap: 4px;
+}
+.barcode-result small {
+  color: var(--muted);
+}
+.scanner-preview {
+  margin: 10px 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #171a14;
+}
+.scanner-preview[hidden] { display: none; }
+.scanner-preview video { display: block; width: 100%; max-height: 260px; object-fit: cover; }
+.scanner-preview p { margin: 0; padding: 9px 12px; color: white; font-size: 12px; }
 .selected-label {
   margin: 14px 0 4px;
   color: var(--muted);
@@ -503,7 +549,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 20px;
 }
 .visually-hidden {
   position: absolute;
