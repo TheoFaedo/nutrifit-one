@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DOCUMENT } from '@angular/common';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -14,14 +15,12 @@ import {
 } from '../../core/services/food-catalogue.service';
 import { BrandComponent } from '../../shared/ui/brand/brand.component';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
-import { FoodSearchListComponent } from '../../shared/ui/food-search-list/food-search-list.component';
 import { FoodDetailsComponent } from '../../shared/ui/food-details/food-details.component';
-import {
-  FOOD_CATALOGUE_SORT_OPTIONS,
-  FoodCatalogueSearchComponent,
-} from '../../shared/ui/food-catalogue-search/food-catalogue-search.component';
+import { FOOD_CATALOGUE_SORT_OPTIONS } from '../../shared/ui/food-catalogue-search/food-catalogue-search.component';
+import { FoodCataloguePanelComponent } from '../../shared/ui/food-catalogue-panel/food-catalogue-panel.component';
 import { NutritionSummaryValues } from '../../shared/ui/nutrition-summary/nutrition-summary.component';
 import { FoodEditorComponent } from '../../shared/ui/food-editor/food-editor.component';
+import { Subject, debounceTime, filter } from 'rxjs';
 
 @Component({
   selector: 'app-meal-page',
@@ -29,9 +28,8 @@ import { FoodEditorComponent } from '../../shared/ui/food-editor/food-editor.com
     ReactiveFormsModule,
     BrandComponent,
     BottomNavComponent,
-    FoodSearchListComponent,
     FoodDetailsComponent,
-    FoodCatalogueSearchComponent,
+    FoodCataloguePanelComponent,
     FoodEditorComponent,
   ],
   templateUrl: './meal.component.html',
@@ -51,6 +49,8 @@ export class MealComponent {
   readonly query = signal('');
   readonly sortOptions = FOOD_CATALOGUE_SORT_OPTIONS;
   readonly sortOrder = signal<FoodCatalogueSort>('asc');
+  private readonly queryChanges = new Subject<string>();
+  private searchGeneration = 0;
   readonly barcode = signal('');
   readonly offProduct = signal<{ name: string; portions: PortionInput[]; payload: unknown } | null>(
     null,
@@ -104,6 +104,13 @@ export class MealComponent {
   });
 
   constructor() {
+    this.queryChanges
+      .pipe(
+        debounceTime(500),
+        filter((value) => !/^\d{8,14}$/.test(value.trim())),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => void this.load());
     void this.auth
       .user()
       .then((user) => this.currentUserId.set(user?.id ?? ''))
@@ -112,14 +119,22 @@ export class MealComponent {
   }
 
   async load(): Promise<void> {
+    const generation = ++this.searchGeneration;
     this.loading.set(true);
     this.error.set('');
     try {
-      this.foods.set(await this.catalogue.search(this.query(), this.sortOrder()));
+      const foods = await this.catalogue.search(this.query(), this.sortOrder());
+      if (generation === this.searchGeneration) {
+        this.foods.set(foods);
+      }
     } catch (error) {
-      this.error.set(this.message(error, 'Foods could not be loaded.'));
+      if (generation === this.searchGeneration) {
+        this.error.set(this.message(error, 'Foods could not be loaded.'));
+      }
     } finally {
-      this.loading.set(false);
+      if (generation === this.searchGeneration) {
+        this.loading.set(false);
+      }
     }
   }
 
@@ -132,8 +147,19 @@ export class MealComponent {
     this.offProduct.set(null);
     await this.load();
   }
+  queryChanged(value: string): void {
+    this.query.set(value);
+    this.barcode.set('');
+    this.offProduct.set(null);
+    this.searchGeneration++;
+    this.queryChanges.next(value);
+    if (/^\d{8,14}$/.test(value.trim())) {
+      void this.lookupBarcode();
+    }
+  }
   async scannedBarcode(code: string): Promise<void> {
     this.query.set(code);
+    this.queryChanges.next(code);
     await this.lookupBarcode();
   }
   select(food: FoodRecord): void {
@@ -416,17 +442,31 @@ export class MealComponent {
       return;
     }
     this.barcode.set(code);
+    const generation = ++this.searchGeneration;
+    this.loading.set(true);
     try {
-      this.foods.set(await this.catalogue.search('', this.sortOrder()));
+      const foods = await this.catalogue.search('', this.sortOrder());
+      if (generation === this.searchGeneration) {
+        this.foods.set(foods);
+      }
     } catch {
       // The external lookup can still be useful if local search is unavailable.
     }
     try {
-      this.offProduct.set(await this.catalogue.lookupBarcode(code));
+      const product = await this.catalogue.lookupBarcode(code);
+      if (generation === this.searchGeneration) {
+        this.offProduct.set(product);
+      }
     } catch (error) {
-      this.error.set(
-        this.message(error, 'Open Food Facts is unavailable. Local matches remain available.'),
-      );
+      if (generation === this.searchGeneration) {
+        this.error.set(
+          this.message(error, 'Open Food Facts is unavailable. Local matches remain available.'),
+        );
+      }
+    } finally {
+      if (generation === this.searchGeneration) {
+        this.loading.set(false);
+      }
     }
   }
 

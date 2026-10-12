@@ -11,49 +11,23 @@
         Create food <span aria-hidden="true">＋</span>
       </button>
     </div>
-    <app-food-catalogue-search
-      class="catalogue-tools"
-      groupLabel="Search the catalogue"
-      searchLabel="Search by name or barcode"
-      placeholder="Food name or barcode"
-      sortLabel="Sort by"
+    <div class="catalogue-layout">
+    <app-food-catalogue-panel
+      class="food-list"
       [query]="query()"
       [sort]="sortOrder()"
       [sortOptions]="sortOptions"
-      (queryChanged)="query.set($event)"
+      [foods]="searchResults()"
+      [loading]="loading()"
+      [error]="error()"
+      [offProduct]="offProduct()"
+      [selectedId]="selected()?.id ?? null"
+      (queryChanged)="queryChanged($event)"
       (sortChanged)="setSortOrder($event)"
-      (searchRequested)="search()"
       (barcodeDetected)="scannedBarcode($event)"
+      (foodSelected)="select($event)"
+      (importProduct)="importOff()"
     />
-
-    @if (error()) {
-      <p class="error" role="alert">{{ error() }}</p>
-    }
-    @if (offProduct(); as product) {
-      <article class="off-result">
-        <div>
-          <span class="eyebrow">Open Food Facts</span>
-          <h2>{{ product.name }}</h2>
-          <p>
-            {{ product.portions.length }} portion{{ product.portions.length === 1 ? '' : 's' }} with
-            nutrition data when available · External product data
-          </p>
-        </div>
-        <button class="secondary-button" type="button" (click)="importOff()">
-          Use this product
-        </button>
-      </article>
-    }
-    <div class="catalogue-layout">
-      <section class="food-list">
-        <app-food-search-list
-          [foods]="searchResults()"
-          [showSearch]="false"
-          [loading]="loading()"
-          [selectedId]="selected()?.id ?? null"
-          (foodSelected)="select($event)"
-        />
-      </section>
 
       @if (editing()) {
         <div

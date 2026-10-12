@@ -38,14 +38,6 @@ export const FOOD_CATALOGUE_SORT_OPTIONS = [
         </select>
       </label>
       <app-barcode-scanner (detected)="barcodeDetected.emit($event)" />
-      <button
-        class="search-button"
-        type="button"
-        [disabled]="searching()"
-        (click)="searchRequested.emit()"
-      >
-        {{ searching() ? 'Searching…' : 'Search' }}
-      </button>
     </div>
   `,
   styles: [
@@ -91,32 +83,8 @@ export const FOOD_CATALOGUE_SORT_OPTIONS = [
       select {
         cursor: pointer;
       }
-      .search-button {
-        display: inline-flex;
-        min-height: 42px;
-        align-items: center;
-        justify-content: center;
-        padding: 0 16px;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        color: var(--ink);
-        background: #fff;
-        font: inherit;
-        font-size: 12px;
-        font-weight: 650;
-        cursor: pointer;
-      }
-      .search-button:hover:not(:disabled) {
-        border-color: #aab99d;
-        background: #f0f4e8;
-      }
-      .search-button:disabled {
-        opacity: 0.55;
-        cursor: wait;
-      }
       input:focus-visible,
-      select:focus-visible,
-      .search-button:focus-visible {
+      select:focus-visible {
         outline: 3px solid #879365;
         outline-offset: 2px;
       }
@@ -129,9 +97,6 @@ export const FOOD_CATALOGUE_SORT_OPTIONS = [
         .sort-field {
           width: 100%;
           flex-basis: auto;
-        }
-        .search-button {
-          width: 100%;
         }
       }
     `,
