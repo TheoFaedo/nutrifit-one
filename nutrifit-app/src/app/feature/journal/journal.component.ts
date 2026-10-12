@@ -402,13 +402,7 @@ export class JournalComponent {
   async saveEntry(): Promise<void> {
     const food = this.selectedFood();
     const amount = this.parseRatio(this.amount());
-    if (
-      !food ||
-      !this.selectedPortions().some((portion) => portion.id === this.selectedPortionId()) ||
-      !Number.isFinite(amount) ||
-      amount <= 0 ||
-      Math.round(amount * 10) !== amount * 10
-    ) {
+    if (!this.hasValidEntryDetails(food, amount)) {
       this.dialogError.set('Choose a food and portion, and enter a positive amount in tenths.');
       return;
     }
@@ -429,11 +423,12 @@ export class JournalComponent {
       const id = this.editingId();
       if (id) {
         await this.journal.update(id, input);
+        this.updateLocalEntry(id, food, input);
       } else {
-        await this.journal.add(user.id, input);
+        const entryId = await this.journal.add(user.id, input);
+        this.addLocalEntry(entryId, food, input);
       }
       this.closeDialog();
-      await this.load();
     } catch (error) {
       this.dialogError.set(this.message(error, 'The entry could not be saved.'));
     } finally {
@@ -443,10 +438,37 @@ export class JournalComponent {
   async remove(entry: IntakeRecord): Promise<void> {
     try {
       await this.journal.remove(entry.id);
-      await this.load();
+      this.entries.update((entries) => entries.filter((item) => item.id !== entry.id));
     } catch (error) {
       this.error.set(this.message(error, 'The entry could not be deleted.'));
     }
+  }
+  private updateLocalEntry(id: string, food: FoodRecord, input: IntakeInput): void {
+    const entry = this.toIntakeRecord(id, food, input);
+    this.entries.update((entries) =>
+      entries.map((current) => (current.id === id ? entry : current)),
+    );
+  }
+  private addLocalEntry(id: string, food: FoodRecord, input: IntakeInput): void {
+    const entry = this.toIntakeRecord(id, food, input);
+    this.entries.update((entries) => [...entries, entry]);
+  }
+  private toIntakeRecord(id: string, food: FoodRecord, input: IntakeInput): IntakeRecord {
+    const portion = food.portions.find((item) => item.id === input.quantityId);
+    if (!portion) {
+      throw new Error('The selected portion could not be loaded.');
+    }
+    return {
+      id,
+      food_version_id: food.version_id,
+      quantity_id: input.quantityId,
+      ratio: input.ratio,
+      meal_type: input.mealType,
+      consumed_at: input.consumedAt,
+      food_name: food.name,
+      kind: food.kind,
+      portion,
+    };
   }
   portionLabel(portion: FoodPortion): string {
     return `${formatNutrition(portion.quantity_number)} ${portion.quantity_unit}`;
@@ -478,6 +500,15 @@ export class JournalComponent {
   }
   private message(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
+  }
+  private hasValidEntryDetails(food: FoodRecord | null, amount: number): food is FoodRecord {
+    return (
+      food !== null &&
+      food.portions.some((portion) => portion.id === this.selectedPortionId()) &&
+      Number.isFinite(amount) &&
+      amount > 0 &&
+      Math.round(amount * 10) === amount * 10
+    );
   }
   private parseRatio(value: string): number {
     const normalized = value.trim().replace(',', '.');

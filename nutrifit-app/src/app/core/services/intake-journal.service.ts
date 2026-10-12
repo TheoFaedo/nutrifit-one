@@ -67,18 +67,19 @@ export class IntakeJournalService {
     });
   }
 
-  async add(userId: string, input: IntakeInput): Promise<void> {
-    const { error } = await supabase.from('intakes').insert({
+  async add(userId: string, input: IntakeInput): Promise<string> {
+    const { data, error } = await supabase.from('intakes').insert({
       user_id: userId,
       food_version_id: input.foodVersionId,
       quantity_id: input.quantityId,
       ratio: input.ratio,
       meal_type: input.mealType,
       consumed_at: input.consumedAt,
-    });
+    }).select('id').single();
     if (error) {
       throw error;
     }
+    return String(data.id);
   }
 
   async update(id: string, input: IntakeInput): Promise<void> {
