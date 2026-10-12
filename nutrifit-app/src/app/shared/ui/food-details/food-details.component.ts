@@ -31,8 +31,7 @@ import { PortionSelectorComponent } from '../portion-selector/portion-selector.c
             [portions]="food().portions"
             [selection]="selection()"
             (selectionChange)="selectPortion($event)"
-          /></label
-        >
+        /></label>
         <label class="amount"
           ><span>Ratio</span
           ><input

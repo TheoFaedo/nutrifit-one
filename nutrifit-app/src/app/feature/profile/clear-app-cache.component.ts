@@ -19,7 +19,9 @@ export class ClearAppCacheComponent {
 
     try {
       if ('caches' in globalThis) {
-        const cacheNames = (await caches.keys()).filter((cacheName) => cacheName.startsWith('ngsw:'));
+        const cacheNames = (await caches.keys()).filter((cacheName) =>
+          cacheName.startsWith('ngsw:'),
+        );
         await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
       }
 
@@ -28,9 +30,7 @@ export class ClearAppCacheComponent {
         const appPath = window.location.pathname;
         const appRegistrations = registrations.filter((registration) => {
           const scope = new URL(registration.scope);
-          return (
-            scope.origin === window.location.origin && appPath.startsWith(scope.pathname)
-          );
+          return scope.origin === window.location.origin && appPath.startsWith(scope.pathname);
         });
         await Promise.all(appRegistrations.map((registration) => registration.unregister()));
       }

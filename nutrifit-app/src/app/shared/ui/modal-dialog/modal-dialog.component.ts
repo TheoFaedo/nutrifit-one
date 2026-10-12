@@ -28,11 +28,54 @@ import { Component, effect, inject, input, output } from '@angular/core';
     }
   `,
   styles: `
-    .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: #1f251db8; }
-    .modal-dialog { position: relative; width: min(100%, 620px); max-height: min(88vh, 800px); overflow: auto; padding: 24px; color: var(--ink); background: #fff; border-radius: 20px; box-shadow: 0 24px 80px #0004; }
-    .modal-close { position: absolute; z-index: 1; top: 12px; right: 14px; width: 40px; height: 40px; border: 0; border-radius: 50%; background: #f1f2e8; color: var(--ink); font-size: 24px; cursor: pointer; }
-    .modal-close:focus-visible, .modal-dialog :focus-visible { outline: 3px solid #879365; outline-offset: 2px; }
-    @media (max-width: 600px) { .modal-backdrop { padding: 10px; } .modal-dialog { max-height: 94vh; padding: 20px 16px; } }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: #1f251db8;
+    }
+    .modal-dialog {
+      position: relative;
+      width: min(100%, 620px);
+      max-height: min(88vh, 800px);
+      overflow: auto;
+      padding: 24px;
+      color: var(--ink);
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 24px 80px #0004;
+    }
+    .modal-close {
+      position: absolute;
+      z-index: 1;
+      top: 12px;
+      right: 14px;
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 50%;
+      background: #f1f2e8;
+      color: var(--ink);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .modal-close:focus-visible,
+    .modal-dialog :focus-visible {
+      outline: 3px solid #879365;
+      outline-offset: 2px;
+    }
+    @media (max-width: 600px) {
+      .modal-backdrop {
+        padding: 10px;
+      }
+      .modal-dialog {
+        max-height: 94vh;
+        padding: 20px 16px;
+      }
+    }
   `,
 })
 export class ModalDialogComponent {
@@ -49,9 +92,7 @@ export class ModalDialogComponent {
           this.document.activeElement instanceof HTMLElement ? this.document.activeElement : null;
         setTimeout(() => {
           this.dialogElement()
-            ?.querySelector<HTMLElement>(
-              'input, select, button:not(.modal-close), .modal-close',
-            )
+            ?.querySelector<HTMLElement>('input, select, button:not(.modal-close), .modal-close')
             ?.focus();
         });
       } else {

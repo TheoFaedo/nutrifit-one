@@ -12,22 +12,22 @@
       </button>
     </div>
     <div class="catalogue-layout">
-    <app-food-catalogue-panel
-      class="food-list"
-      [query]="query()"
-      [sort]="sortOrder()"
-      [sortOptions]="sortOptions"
-      [foods]="searchResults()"
-      [loading]="loading()"
-      [error]="error()"
-      [offProduct]="offProduct()"
-      [selectedId]="selected()?.id ?? null"
-      (queryChanged)="queryChanged($event)"
-      (sortChanged)="setSortOrder($event)"
-      (barcodeDetected)="scannedBarcode($event)"
-      (foodSelected)="select($event)"
-      (importProduct)="importOff()"
-    />
+      <app-food-catalogue-panel
+        class="food-list"
+        [query]="query()"
+        [sort]="sortOrder()"
+        [sortOptions]="sortOptions"
+        [foods]="searchResults()"
+        [loading]="loading()"
+        [error]="error()"
+        [offProduct]="offProduct()"
+        [selectedId]="selected()?.id ?? null"
+        (queryChanged)="queryChanged($event)"
+        (sortChanged)="setSortOrder($event)"
+        (barcodeDetected)="scannedBarcode($event)"
+        (foodSelected)="select($event)"
+        (importProduct)="importOff()"
+      />
 
       <app-modal-dialog
         [open]="detailsOpen()"

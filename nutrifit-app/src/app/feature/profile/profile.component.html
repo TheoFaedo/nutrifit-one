@@ -8,12 +8,7 @@
       }
       <div>
         <h2>{{ name() || 'Nutrifit member' }}</h2>
-        <button
-          class="sign-out-button"
-          type="button"
-          [disabled]="signingOut()"
-          (click)="signOut()"
-        >
+        <button class="sign-out-button" type="button" [disabled]="signingOut()" (click)="signOut()">
           {{ signingOut() ? 'Signing out…' : 'Sign out' }}
         </button>
       </div>
