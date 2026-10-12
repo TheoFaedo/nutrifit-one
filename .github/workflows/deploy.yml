@@ -58,6 +58,7 @@ jobs:
             );
           '
           bun run build --base-href "/${{ github.event.repository.name }}/"
+          cp public/manifest.github-pages.webmanifest dist/nutrifit-app/browser/manifest.webmanifest
           cp dist/nutrifit-app/browser/index.html dist/nutrifit-app/browser/404.html
 
       - name: Upload Pages artifact
