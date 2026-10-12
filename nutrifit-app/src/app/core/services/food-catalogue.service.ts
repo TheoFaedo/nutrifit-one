@@ -206,7 +206,7 @@ export class FoodCatalogueService {
     barcode: string,
   ): Promise<{ name: string; portions: PortionInput[]; payload: unknown } | null> {
     const response = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,product_name_en,nutriments,serving_size,serving_quantity,product_quantity,product_quantity_unit`,
+      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,product_name_en,product_name_fr,nutriments,nutrition_data_per,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit`,
     );
     // Open Food Facts returns 404 when a barcode has no matching product.
     // Treat that as an empty result; reserve the error for actual service failures.
@@ -221,10 +221,11 @@ export class FoodCatalogueService {
       return null;
     }
     const product = (payload as { product?: Record<string, unknown>; status?: number }).product;
+    const productName = [product?.['product_name'], product?.['product_name_fr'], product?.['product_name_en']]
+      .find((name): name is string => typeof name === 'string' && name.trim().length > 0);
     if (
       !product ||
-      (typeof product['product_name'] !== 'string' &&
-        typeof product['product_name_en'] !== 'string')
+      !productName
     ) {
       return null;
     }
@@ -242,11 +243,13 @@ export class FoodCatalogueService {
       return null;
     };
     const calories = (suffix: '100g' | 'serving'): number | null => {
-      const kcal = number(`energy-kcal_${suffix}`);
+      const baseEnergyKeys = suffix === '100g' ? ['energy-kcal'] : [];
+      const kcal = number(`energy-kcal_${suffix}`, ...baseEnergyKeys);
       if (kcal !== null) {
         return kcal;
       }
-      const kj = number(`energy-kj_${suffix}`, `energy_${suffix}`);
+      const baseKjKeys = suffix === '100g' ? ['energy-kj', 'energy'] : [];
+      const kj = number(`energy-kj_${suffix}`, `energy_${suffix}`, ...baseKjKeys);
       return kj === null ? null : kj / 4.184;
     };
     const makePortion = (
@@ -254,48 +257,88 @@ export class FoodCatalogueService {
       unit: string,
       suffix: '100g' | 'serving',
       fallback?: PortionInput,
-    ): PortionInput => ({
-      quantity_number: amount,
-      quantity_unit: unit,
-      is_reference: suffix === '100g',
-      energy_kcal: calories(suffix) ?? fallback?.energy_kcal ?? null,
-      carbs_g: number(`carbohydrates_${suffix}`, `carbs_${suffix}`) ?? fallback?.carbs_g ?? null,
-      fats_g: number(`fat_${suffix}`, `fats_${suffix}`) ?? fallback?.fats_g ?? null,
-      proteins_g: number(`proteins_${suffix}`, `protein_${suffix}`) ?? fallback?.proteins_g ?? null,
-    });
-    const unit = String(product['serving_size'] ?? '')
-      .match(/(?:^|\s)(g|kg|ml|l|piece|pieces|portion)\b/i)?.[1]
+    ): PortionInput => {
+      const baseMacroKeys = suffix === '100g';
+      return {
+        quantity_number: amount,
+        quantity_unit: unit,
+        is_reference: suffix === '100g',
+        energy_kcal: calories(suffix) ?? fallback?.energy_kcal ?? null,
+        carbs_g:
+          number(
+            `carbohydrates_${suffix}`,
+            `carbs_${suffix}`,
+            ...(baseMacroKeys ? ['carbohydrates', 'carbs'] : []),
+          ) ??
+          fallback?.carbs_g ??
+          null,
+        fats_g:
+          number(`fat_${suffix}`, `fats_${suffix}`, ...(baseMacroKeys ? ['fat', 'fats'] : [])) ??
+          fallback?.fats_g ??
+          null,
+        proteins_g:
+          number(
+            `proteins_${suffix}`,
+            `protein_${suffix}`,
+            ...(baseMacroKeys ? ['proteins', 'protein'] : []),
+          ) ??
+          fallback?.proteins_g ??
+          null,
+      };
+    };
+    const unit = String(product['serving_quantity_unit'] ?? product['serving_size'] ?? '')
+      .match(/(?:^|\s|\d)(g|kg|ml|l|piece|pieces|portion)\b/i)?.[1]
       ?.toLowerCase();
     const amountFromLabel = String(product['serving_size'] ?? '').match(
       /([\d.,]+)\s*(?:g|kg|ml|l|piece|pieces|portion)\b/i,
     )?.[1];
+    const productNumber = (...keys: string[]): number | null => {
+      for (const key of keys) {
+        const value = product[key];
+        if (typeof value === 'number' && Number.isFinite(value)) {
+          return value;
+        }
+        if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) {
+          return Number(value);
+        }
+      }
+      return null;
+    };
     const servingAmount =
-      number('serving_quantity') ??
+      productNumber('serving_quantity') ??
       (amountFromLabel ? Number(amountFromLabel.replace(',', '.')) : null);
-    const servingUnit = unit ?? (servingAmount !== null ? 'g' : null);
-    const reference = makePortion(100, 'g', '100g');
+    const productAmount = productNumber('product_quantity');
+    const productUnit = String(product['product_quantity_unit'] ?? '')
+      .trim()
+      .toLowerCase();
+    const portionAmount = servingAmount ?? productAmount;
+    const servingUnit = unit ?? (productUnit || (portionAmount !== null ? 'g' : null));
+    const referenceUnit = String(product['nutrition_data_per'] ?? '')
+      .match(/(?:^|[^a-z])(ml|g)\s*$/i)?.[1]
+      ?.toLowerCase() ?? 'g';
+    const reference = makePortion(100, referenceUnit, '100g');
     const portions = [reference];
     if (
-      servingAmount !== null &&
-      servingAmount > 0 &&
+      portionAmount !== null &&
+      portionAmount > 0 &&
       servingUnit &&
-      !(servingAmount === 100 && servingUnit === 'g')
+      !(portionAmount === 100 && servingUnit === referenceUnit)
     ) {
       const computedServing: PortionInput = {
-        quantity_number: servingAmount,
+        quantity_number: portionAmount,
         quantity_unit: servingUnit,
         is_reference: false,
         energy_kcal:
-          reference.energy_kcal === null ? null : (reference.energy_kcal * servingAmount) / 100,
-        carbs_g: reference.carbs_g === null ? null : (reference.carbs_g * servingAmount) / 100,
-        fats_g: reference.fats_g === null ? null : (reference.fats_g * servingAmount) / 100,
+          reference.energy_kcal === null ? null : (reference.energy_kcal * portionAmount) / 100,
+        carbs_g: reference.carbs_g === null ? null : (reference.carbs_g * portionAmount) / 100,
+        fats_g: reference.fats_g === null ? null : (reference.fats_g * portionAmount) / 100,
         proteins_g:
-          reference.proteins_g === null ? null : (reference.proteins_g * servingAmount) / 100,
+          reference.proteins_g === null ? null : (reference.proteins_g * portionAmount) / 100,
       };
-      portions.push(makePortion(servingAmount, servingUnit, 'serving', computedServing));
+      portions.push(makePortion(portionAmount, servingUnit, 'serving', computedServing));
     }
     return {
-      name: String(product['product_name'] ?? product['product_name_en']),
+      name: productName.trim(),
       payload,
       portions,
     };

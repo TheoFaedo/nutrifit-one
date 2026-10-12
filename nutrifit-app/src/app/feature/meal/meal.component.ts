@@ -249,6 +249,9 @@ export class MealComponent {
 
   closeEditor(): void {
     this.editing.set(false);
+    if (!this.selected()) {
+      this.detailsOpen.set(false);
+    }
   }
 
   addRecipePart(): void {
@@ -436,9 +439,6 @@ export class MealComponent {
       return;
     }
     this.newFood();
-    this.form.patchValue({ name: product.name, isPublic: true, barcode: this.barcode().trim() });
-    this.portions.clear();
-    product.portions.forEach((portion) => this.portions.push(this.portionGroup(portion)));
   }
 
   async save(): Promise<void> {

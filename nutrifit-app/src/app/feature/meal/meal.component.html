@@ -39,6 +39,8 @@
             <app-food-editor
               [food]="selected()"
               [initialKind]="editorKind()"
+              [initialProduct]="offProduct()"
+              [initialBarcode]="barcode()"
               (saved)="editorSaved($event)"
               (dismissed)="closeEditor()"
             />

@@ -21,6 +21,12 @@ export class FoodEditorComponent implements OnInit {
       : 'number';
   readonly food = input<FoodRecord | null>(null);
   readonly initialKind = input<'FOOD' | 'RECIPE'>('FOOD');
+  readonly initialProduct = input<{
+    name: string;
+    portions: PortionInput[];
+    payload: unknown;
+  } | null>(null);
+  readonly initialBarcode = input('');
   readonly saved = output<FoodRecord>();
   readonly dismissed = output<void>();
   readonly kind = signal<'FOOD' | 'RECIPE'>('FOOD');
@@ -41,8 +47,15 @@ export class FoodEditorComponent implements OnInit {
   ngOnInit(): void {
     void this.loadIngredients();
     const food = this.food();
+    const initialProduct = this.initialProduct();
     this.kind.set(food?.kind ?? this.initialKind());
     if (!food) {
+      if (initialProduct) {
+        this.name = initialProduct.name;
+        this.isPublic = true;
+        this.barcode = this.initialBarcode();
+        this.portions = initialProduct.portions.map((portion) => ({ ...portion }));
+      }
       return;
     }
     this.name = food.name;
@@ -127,6 +140,12 @@ export class FoodEditorComponent implements OnInit {
             quantity_number: Number(portion.quantity_number),
             is_reference: index === 0,
           })),
+          ...(this.initialProduct()
+            ? {
+                source: 'Open Food Facts',
+                sourcePayload: this.initialProduct()?.payload,
+              }
+            : {}),
           ...(current ? { foodId: current.id } : {}),
         });
       } else {
