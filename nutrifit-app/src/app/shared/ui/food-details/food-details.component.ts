@@ -36,11 +36,10 @@ import { PortionSelectorComponent } from '../portion-selector/portion-selector.c
         <label class="amount"
           ><span>Ratio</span
           ><input
-            type="number"
-            min="0.1"
-            step="0.1"
-            [value]="ratio()"
-            (input)="ratio.set(+$any($event.target).value)"
+            [type]="ratioInputType"
+            inputmode="decimal"
+            [value]="ratioInput()"
+            (input)="ratioInput.set($any($event.target).value)"
           />× {{ baseQuantity() }} {{ selectedPortion().quantity_unit }}</label
         >
       </div>
@@ -166,11 +165,20 @@ import { PortionSelectorComponent } from '../portion-selector/portion-selector.c
   ],
 })
 export class FoodDetailsComponent {
+  readonly ratioInputType =
+    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+      ? 'text'
+      : 'number';
   readonly food = input.required<FoodRecord>();
   readonly currentUserId = input('');
   readonly edit = output<FoodRecord>();
   readonly selectedPortionId = signal('');
-  readonly ratio = signal(1);
+  readonly ratioInput = signal('1');
+  readonly ratio = computed(() => {
+    const value = this.ratioInput().trim().replace(',', '.');
+    const parsed = value ? Number(value) : 1;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  });
   readonly baseQuantity = computed(() => this.selectedPortion().quantity_number);
   readonly effectiveQuantity = computed(() => this.baseQuantity() * this.ratio());
   readonly selection = computed(() => this.selectedPortion().id);
@@ -208,7 +216,7 @@ export class FoodDetailsComponent {
       return;
     }
     this.selectedPortionId.set(portion.id);
-    this.ratio.set(1);
+    this.ratioInput.set('1');
   }
   scaledNutrition(portion: FoodPortion): {
     energy: number | null;

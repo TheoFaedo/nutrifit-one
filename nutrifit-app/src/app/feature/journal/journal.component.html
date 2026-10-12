@@ -188,11 +188,11 @@
         <label class="field amount-field"
           ><span>Portion ratio</span
           ><input
-            type="number"
-            min="0.1"
-            step="0.1"
+            [type]="ratioInputType"
+            inputmode="decimal"
+            autocomplete="off"
             [value]="amount()"
-            (input)="amount.set(+$any($event.target).value)"
+            (input)="amount.set($any($event.target).value)"
         /></label>
         <section class="nutrition-preview" aria-label="Nutrition for selected amount">
           <h3>Nutrition</h3>

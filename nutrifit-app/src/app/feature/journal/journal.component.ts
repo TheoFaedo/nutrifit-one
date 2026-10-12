@@ -77,6 +77,10 @@ export const parisInstant = (date: string): string => {
   styleUrl: './journal.component.less',
 })
 export class JournalComponent {
+  readonly ratioInputType =
+    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+      ? 'text'
+      : 'number';
   private readonly auth = inject(AuthService);
   private readonly journal = inject(IntakeJournalService);
   private readonly catalogue = inject(FoodCatalogueService);
@@ -111,7 +115,7 @@ export class JournalComponent {
   );
   readonly selectedFoodId = signal('');
   readonly selectedPortionId = signal('');
-  readonly amount = signal(1);
+  readonly amount = signal('1');
   readonly mealType = signal<MealType>('BREAKFAST');
   readonly selectedFood = computed(() =>
     this.historicalFood()?.version_id === this.selectedFoodId()
@@ -121,7 +125,7 @@ export class JournalComponent {
   readonly selectedPortions = computed(() => this.selectedFood()?.portions ?? []);
   readonly selectedNutrition = computed<NutritionSummaryValues>(() => {
     const portion = this.selectedPortions().find((item) => item.id === this.selectedPortionId());
-    const multiplier = Number(this.amount());
+    const multiplier = this.parseRatio(this.amount());
     const scale = (value: number | null): number | null =>
       value === null || !Number.isFinite(multiplier) ? value : value * multiplier;
     return {
@@ -190,7 +194,7 @@ export class JournalComponent {
     this.creatingFood.set(false);
     this.editingId.set(null);
     this.mealType.set(type);
-    this.amount.set(1);
+    this.amount.set('1');
     this.query.set('');
     this.barcode.set('');
     this.barcodeError.set('');
@@ -212,7 +216,7 @@ export class JournalComponent {
     this.historicalFood.set(food);
     this.selectedFoodId.set(food.version_id);
     this.selectedPortionId.set(food.portions[0]?.id ?? '');
-    this.amount.set(1);
+    this.amount.set('1');
     this.editingId.set(null);
     this.dialogView.set('details');
     this.dialogError.set('');
@@ -235,7 +239,7 @@ export class JournalComponent {
     this.dialogView.set('details');
     this.editingId.set(entry.id);
     this.mealType.set(entry.meal_type);
-    this.amount.set(entry.ratio);
+    this.amount.set(String(entry.ratio));
     this.selectedFoodId.set(entry.food_version_id);
     this.selectedPortionId.set(entry.quantity_id);
     this.query.set(entry.food_name);
@@ -245,7 +249,7 @@ export class JournalComponent {
     this.historicalFood.set(food);
     this.selectedFoodId.set(food.version_id);
     this.selectedPortionId.set(food.portions[0]?.id ?? '');
-    this.amount.set(1);
+    this.amount.set('1');
     this.dialogView.set('details');
     this.dialogError.set('');
   }
@@ -397,7 +401,7 @@ export class JournalComponent {
   }
   async saveEntry(): Promise<void> {
     const food = this.selectedFood();
-    const amount = Number(this.amount());
+    const amount = this.parseRatio(this.amount());
     if (
       !food ||
       !this.selectedPortions().some((portion) => portion.id === this.selectedPortionId()) ||
@@ -474,5 +478,9 @@ export class JournalComponent {
   }
   private message(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
+  }
+  private parseRatio(value: string): number {
+    const normalized = value.trim().replace(',', '.');
+    return normalized ? Number(normalized) : Number.NaN;
   }
 }

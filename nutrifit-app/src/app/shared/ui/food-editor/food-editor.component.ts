@@ -15,6 +15,10 @@ import {
   styleUrl: './food-editor.component.less',
 })
 export class FoodEditorComponent implements OnInit {
+  readonly ratioInputType =
+    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+      ? 'text'
+      : 'number';
   readonly food = input<FoodRecord | null>(null);
   readonly initialKind = input<'FOOD' | 'RECIPE'>('FOOD');
   readonly saved = output<FoodRecord>();
@@ -24,8 +28,8 @@ export class FoodEditorComponent implements OnInit {
   readonly error = signal('');
   private readonly catalogue = inject(FoodCatalogueService);
   readonly ingredients = signal<FoodRecord[]>([]);
-  parts: { versionId: string; portionId: string; ratio: number }[] = [
-    { versionId: '', portionId: '', ratio: 1 },
+  parts: { versionId: string; portionId: string; ratio: string }[] = [
+    { versionId: '', portionId: '', ratio: '1' },
   ];
   name = '';
   isPublic = false;
@@ -64,7 +68,7 @@ export class FoodEditorComponent implements OnInit {
       this.parts = food.parts.map((part) => ({
         versionId: part.ingredient_version_id,
         portionId: part.quantity_id,
-        ratio: part.ratio,
+        ratio: String(part.ratio),
       }));
     }
   }
@@ -96,7 +100,7 @@ export class FoodEditorComponent implements OnInit {
     this.portions = this.portions.filter((_, i) => i !== index);
   }
   addPart(): void {
-    this.parts = [...this.parts, { versionId: '', portionId: '', ratio: 1 }];
+    this.parts = [...this.parts, { versionId: '', portionId: '', ratio: '1' }];
   }
   removePart(index: number): void {
     this.parts = this.parts.filter((_, i) => i !== index);
@@ -126,15 +130,22 @@ export class FoodEditorComponent implements OnInit {
           ...(current ? { foodId: current.id } : {}),
         });
       } else {
+        const parts = this.parts.map((part) => ({
+          ...part,
+          ratio: Number(part.ratio.trim().replace(',', '.')),
+        }));
+        if (parts.some((part) => !Number.isFinite(part.ratio) || part.ratio <= 0)) {
+          throw new Error('Enter a positive amount for every ingredient.');
+        }
         const recipe: RecipeInput = {
           name: this.name.trim(),
           isPublic: this.isPublic,
           referenceQuantity: Number(this.quantity),
           referenceUnit: this.unit.trim(),
-          parts: this.parts.map((part) => ({
+          parts: parts.map((part) => ({
             ingredient_version_id: part.versionId,
             quantity_id: part.portionId,
-            ratio: Number(part.ratio),
+            ratio: part.ratio,
           })),
           ...(current ? { foodId: current.id } : {}),
         };

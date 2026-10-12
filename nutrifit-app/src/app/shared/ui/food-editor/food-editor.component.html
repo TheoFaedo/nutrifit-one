@@ -202,7 +202,8 @@
               <label class="field"
                 >Amount
                 <input
-                  type="number"
+                  [type]="ratioInputType"
+                  inputmode="decimal"
                   [name]="'ratio-' + i"
                   [(ngModel)]="part.ratio"
                   min="0.001"
