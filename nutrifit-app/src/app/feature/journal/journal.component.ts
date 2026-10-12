@@ -423,10 +423,14 @@ export class JournalComponent {
       const id = this.editingId();
       if (id) {
         await this.journal.update(id, input);
-        this.updateLocalEntry(id, food, input);
+        const entry = this.toIntakeRecord(id, food, input);
+        this.entries.update((entries) =>
+          entries.map((current) => (current.id === id ? entry : current)),
+        );
       } else {
         const entryId = await this.journal.add(user.id, input);
-        this.addLocalEntry(entryId, food, input);
+        const entry = this.toIntakeRecord(entryId, food, input);
+        this.entries.update((entries) => [...entries, entry]);
       }
       this.closeDialog();
     } catch (error) {
@@ -442,16 +446,6 @@ export class JournalComponent {
     } catch (error) {
       this.error.set(this.message(error, 'The entry could not be deleted.'));
     }
-  }
-  private updateLocalEntry(id: string, food: FoodRecord, input: IntakeInput): void {
-    const entry = this.toIntakeRecord(id, food, input);
-    this.entries.update((entries) =>
-      entries.map((current) => (current.id === id ? entry : current)),
-    );
-  }
-  private addLocalEntry(id: string, food: FoodRecord, input: IntakeInput): void {
-    const entry = this.toIntakeRecord(id, food, input);
-    this.entries.update((entries) => [...entries, entry]);
   }
   private toIntakeRecord(id: string, food: FoodRecord, input: IntakeInput): IntakeRecord {
     const portion = food.portions.find((item) => item.id === input.quantityId);

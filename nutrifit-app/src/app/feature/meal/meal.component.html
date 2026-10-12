@@ -48,7 +48,7 @@
             <app-food-details
               [food]="food"
               [currentUserId]="currentUserId()"
-              (edit)="$event.kind === 'RECIPE' ? editRecipe($event) : edit($event)"
+              (edit)="edit($event)"
             />
           }
         }

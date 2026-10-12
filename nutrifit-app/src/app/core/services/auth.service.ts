@@ -1,10 +1,10 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Session, User } from '@supabase/supabase-js';
 import { BehaviorSubject } from 'rxjs';
 import { supabase } from './supabase.client';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class AuthService {
   private readonly router = inject(Router);
   private readonly sessionState = new BehaviorSubject<Session | null>(null);

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { supabase } from './supabase.client';
 import { FoodPortion } from './food-catalogue.service';
 
@@ -22,7 +22,7 @@ export interface IntakeInput {
   consumedAt: string;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class IntakeJournalService {
   async forDate(date: string): Promise<IntakeRecord[]> {
     const { data, error } = await supabase

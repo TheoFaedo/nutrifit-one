@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { supabase } from './supabase.client';
 
 export interface FoodPortion {
@@ -72,7 +72,7 @@ export interface FoodInput {
   sourcePayload?: unknown;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class FoodCatalogueService {
   async search(term: string, sort: FoodCatalogueSort = 'asc'): Promise<FoodRecord[]> {
     return this.journalPage(term, sort, 0, 100);

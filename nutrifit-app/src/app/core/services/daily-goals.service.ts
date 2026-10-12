@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { supabase } from './supabase.client';
 
 export interface DailyGoal {
@@ -8,7 +8,7 @@ export interface DailyGoal {
   proteins_g: number;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class DailyGoalsService {
   async forDate(date: string): Promise<DailyGoal | null> {
     const { data, error } = await supabase
