@@ -1,0 +1,57 @@
+:host {
+  display: block;
+  margin-top: 18px;
+}
+
+.cache-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #e6eadf;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+h2,
+p {
+  margin: 0;
+}
+
+h2 {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.cache-card div p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+button {
+  justify-self: start;
+  padding: 9px 13px;
+  border: 1px solid #dce4d7;
+  border-radius: 999px;
+  background: #fffefa;
+  color: #416b51;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+button:hover:not(:disabled) {
+  border-color: #aab99d;
+  background: #f0f4e8;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.error {
+  color: #a13d32;
+  font-size: 13px;
+}

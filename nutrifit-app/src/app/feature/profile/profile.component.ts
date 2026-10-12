@@ -8,10 +8,11 @@ import { AuthService } from '../../core/services/auth.service';
 import { DailyGoalsService } from '../../core/services/daily-goals.service';
 import { BrandComponent } from '../../shared/ui/brand/brand.component';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
+import { ClearAppCacheComponent } from './clear-app-cache.component';
 
 @Component({
   selector: 'app-profile-page',
-  imports: [ReactiveFormsModule, BrandComponent, BottomNavComponent],
+  imports: [ReactiveFormsModule, BrandComponent, BottomNavComponent, ClearAppCacheComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.less',
 })

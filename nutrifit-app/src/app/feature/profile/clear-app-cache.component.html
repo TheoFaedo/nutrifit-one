@@ -1,0 +1,12 @@
+<section class="cache-card" aria-labelledby="cache-title">
+  <div>
+    <h2 id="cache-title">App not updating?</h2>
+    <p>Clear the app’s saved files and reload it.</p>
+  </div>
+  <button type="button" [disabled]="clearing()" (click)="clearCache()">
+    {{ clearing() ? 'Clearing and reloading…' : 'Clear app cache' }}
+  </button>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+</section>
