@@ -14,7 +14,7 @@
       "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": {
-        "files": ["/manifest.webmanifest", "/white-hat.svg", "/icons/**"]
+        "files": ["/white-hat.svg", "/icons/**"]
       }
     }
   ],
