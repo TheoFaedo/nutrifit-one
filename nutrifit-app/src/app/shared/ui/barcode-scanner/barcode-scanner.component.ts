@@ -1,4 +1,15 @@
-import { Component, ElementRef, OnDestroy, output, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnDestroy,
+  inject,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { BrowserMultiFormatReader } from '@zxing/browser';
+import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 
 @Component({
   selector: 'app-barcode-scanner',
@@ -199,9 +210,9 @@ export class BarcodeScannerComponent implements OnDestroy {
   readonly scanning = signal(false);
   readonly modalOpen = signal(false);
   readonly error = signal('');
+  private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly video = viewChild<ElementRef<HTMLVideoElement>>('video');
-  private stream: MediaStream | null = null;
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private controls: { stop: () => void } | null = null;
   private generation = 0;
 
   async start(): Promise<void> {
@@ -210,60 +221,40 @@ export class BarcodeScannerComponent implements OnDestroy {
     }
     this.error.set('');
     this.modalOpen.set(true);
-    const BarcodeDetectorApi = window as unknown as {
-      BarcodeDetector?: new (options?: { formats?: string[] }) => {
-        detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue: string }>>;
-      };
-    };
-    const Detector = BarcodeDetectorApi.BarcodeDetector;
-    if (!Detector) {
-      this.error.set(
-        'Camera scanning is not supported in this browser. Enter the barcode manually.',
-      );
-      return;
-    }
+    this.changeDetector.detectChanges();
     if (!navigator.mediaDevices?.getUserMedia) {
       this.error.set('Camera access is unavailable. Enter the barcode manually.');
       return;
     }
     try {
       const generation = ++this.generation;
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false,
-      });
-      if (generation !== this.generation) {
-        this.stream.getTracks().forEach((track) => track.stop());
-        return;
-      }
       const video = this.video()?.nativeElement;
       if (!video) {
         throw new Error('Camera preview is unavailable.');
       }
-      video.srcObject = this.stream;
-      await video.play();
-      const detector = new Detector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+      const hints = new Map<DecodeHintType, unknown>([
+        [
+          DecodeHintType.POSSIBLE_FORMATS,
+          [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E],
+        ],
+      ]);
+      const reader = new BrowserMultiFormatReader(hints);
       this.scanning.set(true);
-      const scan = async (): Promise<void> => {
-        if (!this.scanning() || generation !== this.generation) {
+      const controls = await reader.decodeFromVideoDevice(undefined, video, (result) => {
+        if (!result || generation !== this.generation) {
           return;
         }
-        try {
-          const [result] = await detector.detect(video);
-          if (result?.rawValue) {
-            this.detected.emit(result.rawValue);
-            this.stop();
-            return;
-          }
-        } catch {
-          this.error.set('Could not read a barcode. Adjust the camera or enter it manually.');
-        }
-        this.timer = setTimeout(() => void scan(), 250);
-      };
-      void scan();
+        this.detected.emit(result.getText());
+        this.stop();
+      });
+      if (generation !== this.generation) {
+        controls.stop();
+      } else {
+        this.controls = controls;
+      }
     } catch (error) {
-      this.stream?.getTracks().forEach((track) => track.stop());
-      this.stream = null;
+      this.controls?.stop();
+      this.controls = null;
       this.scanning.set(false);
       this.error.set(
         error instanceof DOMException && error.name === 'NotAllowedError'
@@ -277,12 +268,8 @@ export class BarcodeScannerComponent implements OnDestroy {
     this.generation += 1;
     this.scanning.set(false);
     this.modalOpen.set(false);
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-    this.timer = null;
-    this.stream?.getTracks().forEach((track) => track.stop());
-    this.stream = null;
+    this.controls?.stop();
+    this.controls = null;
     const video = this.video()?.nativeElement;
     if (video) {
       video.srcObject = null;
