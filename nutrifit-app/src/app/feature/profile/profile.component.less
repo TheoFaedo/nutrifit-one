@@ -1,9 +1,12 @@
 .profile-content {
   width: min(100%, 520px);
-  margin: 48px auto 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0 auto;
 }
 .profile-content h1 {
-  margin: 0 0 25px;
+  margin: 32px 0 0 0;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(40px, 6vw, 52px);
   font-weight: 400;
@@ -13,7 +16,6 @@
   display: flex;
   align-items: center;
   gap: 15px;
-  margin-bottom: 32px;
   padding: 16px;
   border: 1px solid #e6eadf;
   border-radius: 18px;
@@ -226,9 +228,6 @@
   font-size: 12px;
 }
 @media (max-width: 560px) {
-  .profile-content {
-    margin: 34px auto 24px;
-  }
   .profile-content form {
     padding: 17px;
   }
