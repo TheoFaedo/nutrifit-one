@@ -1,6 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DOCUMENT } from '@angular/common';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { NutritionFacts } from '../../core/models/nutrition-facts.model';
@@ -20,6 +19,7 @@ import { FOOD_CATALOGUE_SORT_OPTIONS } from '../../shared/ui/food-catalogue-sear
 import { FoodCataloguePanelComponent } from '../../shared/ui/food-catalogue-panel/food-catalogue-panel.component';
 import { NutritionSummaryValues } from '../../shared/ui/nutrition-summary/nutrition-summary.component';
 import { FoodEditorComponent } from '../../shared/ui/food-editor/food-editor.component';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { Subject, debounceTime, filter } from 'rxjs';
 
 @Component({
@@ -31,6 +31,7 @@ import { Subject, debounceTime, filter } from 'rxjs';
     FoodDetailsComponent,
     FoodCataloguePanelComponent,
     FoodEditorComponent,
+    ModalDialogComponent,
   ],
   templateUrl: './meal.component.html',
   styleUrl: './meal.component.less',
@@ -38,8 +39,6 @@ import { Subject, debounceTime, filter } from 'rxjs';
 export class MealComponent {
   private readonly catalogue = inject(FoodCatalogueService);
   private readonly auth = inject(AuthService);
-  private readonly document = inject(DOCUMENT);
-  private returnFocus: HTMLElement | null = null;
   readonly foods = signal<FoodRecord[]>([]);
   readonly selected = signal<FoodRecord | null>(null);
   readonly currentUserId = signal('');
@@ -57,6 +56,7 @@ export class MealComponent {
   );
   readonly quantity = signal(1);
   readonly editing = signal(false);
+  readonly detailsOpen = signal(false);
   readonly recipeMode = signal(false);
   readonly editorKind = signal<'FOOD' | 'RECIPE'>('FOOD');
   readonly searchResults = computed(() => {
@@ -166,6 +166,7 @@ export class MealComponent {
     this.selected.set(food);
     this.quantity.set(1);
     this.editing.set(false);
+    this.detailsOpen.set(true);
     this.error.set('');
   }
   scale(value: number | null, portion: FoodPortion): string {
@@ -185,8 +186,7 @@ export class MealComponent {
     this.selected.set(null);
     this.editorKind.set('FOOD');
     this.editing.set(true);
-    this.rememberFocus();
-    this.focusEditor();
+    this.detailsOpen.set(true);
     this.error.set('');
     this.form.reset({ name: '', isPublic: false, barcode: '' });
     this.portions.clear();
@@ -198,8 +198,7 @@ export class MealComponent {
     this.selected.set(null);
     this.editorKind.set('RECIPE');
     this.editing.set(true);
-    this.rememberFocus();
-    this.focusEditor();
+    this.detailsOpen.set(true);
     this.error.set('');
     this.recipeForm.reset({
       name: '',
@@ -215,8 +214,7 @@ export class MealComponent {
     this.recipeMode.set(true);
     this.selected.set(food);
     this.editing.set(true);
-    this.rememberFocus();
-    this.focusEditor();
+    this.detailsOpen.set(true);
     this.error.set('');
     const reference = food.portions.find((portion) => portion.is_reference) ?? food.portions[0];
     this.recipeForm.reset({
@@ -251,43 +249,6 @@ export class MealComponent {
 
   closeEditor(): void {
     this.editing.set(false);
-    this.returnFocus?.focus();
-  }
-
-  editorKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.closeEditor();
-      return;
-    }
-    if (event.key !== 'Tab') {
-      return;
-    }
-    const dialog = this.document.querySelector('.editor-dialog');
-    const focusable = Array.from(
-      dialog?.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), input:not([disabled]), select:not([disabled])',
-      ) ?? [],
-    );
-    if (!focusable.length) {
-      return;
-    }
-    if (event.shiftKey && this.document.activeElement === focusable[0]) {
-      event.preventDefault();
-      focusable.at(-1)?.focus();
-    } else if (!event.shiftKey && this.document.activeElement === focusable.at(-1)) {
-      event.preventDefault();
-      focusable[0].focus();
-    }
-  }
-
-  private rememberFocus(): void {
-    this.returnFocus =
-      this.document.activeElement instanceof HTMLElement ? this.document.activeElement : null;
-  }
-
-  private focusEditor(): void {
-    setTimeout(() => this.document.querySelector<HTMLElement>('.editor-dialog input')?.focus());
   }
 
   addRecipePart(): void {
@@ -380,8 +341,7 @@ export class MealComponent {
   edit(food: FoodRecord): void {
     this.selected.set(food);
     this.editing.set(true);
-    this.rememberFocus();
-    this.focusEditor();
+    this.detailsOpen.set(true);
     this.error.set('');
     this.form.reset({ name: food.name, isPublic: food.is_public, barcode: food.barcode ?? '' });
     this.portions.clear();

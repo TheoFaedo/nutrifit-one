@@ -175,7 +175,7 @@ describe('JournalComponent', () => {
     opener.click();
     fixture.detectChanges();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    const dialog = document.querySelector('.entry-dialog') as HTMLElement;
+    const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.contains(document.activeElement)).toBe(true);
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();

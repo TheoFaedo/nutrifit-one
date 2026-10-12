@@ -29,39 +29,28 @@
       (importProduct)="importOff()"
     />
 
-      @if (editing()) {
-        <div
-          class="editor-backdrop"
-          (click)="$event.target === $event.currentTarget && editing.set(false)"
-        >
-          <section
-            class="editor-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="food-editor-title"
-            (keydown)="editorKeydown($event)"
-          >
+      <app-modal-dialog
+        [open]="detailsOpen()"
+        [labelledBy]="editing() ? 'food-editor-title' : 'food-title'"
+        (closed)="editing() ? closeEditor() : detailsOpen.set(false)"
+      >
+        @if (detailsOpen()) {
+          @if (editing()) {
             <app-food-editor
               [food]="selected()"
               [initialKind]="editorKind()"
               (saved)="editorSaved($event)"
               (dismissed)="closeEditor()"
             />
-          </section>
-        </div>
-      } @else if (selected(); as food) {
-        <app-food-details
-          [food]="food"
-          [currentUserId]="currentUserId()"
-          (edit)="$event.kind === 'RECIPE' ? editRecipe($event) : edit($event)"
-        />
-      } @else {
-        <section class="food-detail detail-empty">
-          <span aria-hidden="true">✳</span>
-          <h2>Choose a food</h2>
-          <p>Select a result to see its portions and nutrition.</p>
-        </section>
-      }
+          } @else if (selected(); as food) {
+            <app-food-details
+              [food]="food"
+              [currentUserId]="currentUserId()"
+              (edit)="$event.kind === 'RECIPE' ? editRecipe($event) : edit($event)"
+            />
+          }
+        }
+      </app-modal-dialog>
     </div>
   </section>
 </main>

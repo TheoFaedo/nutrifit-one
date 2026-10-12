@@ -86,18 +86,9 @@
     }
   </section>
 </main>
-@if (dialogOpen()) {
-  <div class="dialog-backdrop" (click)="$event.target === $event.currentTarget && closeDialog()">
-    <section
-      class="entry-dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="entry-dialog-title"
-      (keydown)="dialogKeydown($event)"
-    >
-      <button class="dialog-close" type="button" aria-label="Close" (click)="closeDialog()">
-        ×
-      </button>
+<app-modal-dialog [open]="dialogOpen()" labelledBy="entry-dialog-title" (closed)="closeDialog()">
+  @if (dialogOpen()) {
+    <div class="entry-dialog">
       @if (dialogView() === 'search') {
         @if (creatingFood()) {
           <app-food-editor
@@ -224,7 +215,7 @@
           </button>
         </div>
       }
-    </section>
-  </div>
-}
+    </div>
+  }
+</app-modal-dialog>
 <app-bottom-nav active="journal" />

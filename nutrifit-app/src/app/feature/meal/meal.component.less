@@ -76,11 +76,8 @@
   color: var(--muted);
 }
 .catalogue-layout {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.5fr);
-  gap: 20px;
+  display: block;
   margin-top: 20px;
-  align-items: start;
 }
 .food-detail {
   background: #fff;
@@ -373,21 +370,4 @@ input:focus-visible {
     align-items: flex-start;
     flex-direction: column;
   }
-}
-
-.editor-backdrop {
-  position: fixed;
-  z-index: 20;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgb(25 29 20 / 55%);
-}
-.editor-dialog {
-  width: min(100%, 640px);
-  max-height: min(90vh, 900px);
-  overflow: auto;
-  background: #fff;
-  border-radius: 18px;
 }

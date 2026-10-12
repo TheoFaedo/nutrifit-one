@@ -56,4 +56,41 @@ describe('MealComponent', () => {
     fixture.detectChanges();
     expect(names()).toEqual(['Zucchini', 'Apple']);
   });
+
+  it('opens selected food details in a dialog and keeps the row selected after closing', async () => {
+    const fixture = TestBed.createComponent(MealComponent);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const page = fixture.nativeElement as HTMLElement;
+    const row = page.querySelector('.food-list .row') as HTMLButtonElement;
+    row.click();
+    fixture.detectChanges();
+
+    expect(page.querySelector('[role="dialog"] app-food-details')).toBeTruthy();
+    expect(row.classList.contains('active')).toBe(true);
+    (page.querySelector('.modal-close') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(page.querySelector('[role="dialog"]')).toBeNull();
+    expect(row.classList.contains('active')).toBe(true);
+  });
+
+  it('returns from the food editor to the selected food details', async () => {
+    const fixture = TestBed.createComponent(MealComponent);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const page = fixture.nativeElement as HTMLElement;
+    (page.querySelector('.food-list .row') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (page.querySelector('app-food-details button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(page.querySelector('app-food-editor')).toBeTruthy();
+
+    const cancel = Array.from(page.querySelectorAll('app-food-editor button')).find(
+      (button) => button.textContent?.trim() === 'Cancel',
+    ) as HTMLButtonElement;
+    cancel.click();
+    fixture.detectChanges();
+    expect(page.querySelector('app-food-details')).toBeTruthy();
+    expect(page.querySelector('app-food-editor')).toBeNull();
+  });
 });

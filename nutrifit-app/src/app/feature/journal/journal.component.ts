@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { DailyGoal, DailyGoalsService } from '../../core/services/daily-goals.service';
@@ -30,6 +29,7 @@ import {
   NutritionSummaryValues,
 } from '../../shared/ui/nutrition-summary/nutrition-summary.component';
 import { FoodEditorComponent } from '../../shared/ui/food-editor/food-editor.component';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 
 const meals: { type: MealType; label: string }[] = [
   { type: 'BREAKFAST', label: 'Breakfast' },
@@ -71,6 +71,7 @@ export const parisInstant = (date: string): string => {
     FoodCatalogueSearchComponent,
     PortionSelectorComponent,
     FoodEditorComponent,
+    ModalDialogComponent,
   ],
   templateUrl: './journal.component.html',
   styleUrl: './journal.component.less',
@@ -80,11 +81,9 @@ export class JournalComponent {
   private readonly journal = inject(IntakeJournalService);
   private readonly catalogue = inject(FoodCatalogueService);
   private readonly goalsService = inject(DailyGoalsService);
-  private readonly document = inject(DOCUMENT);
   private dayRequest = 0;
   private foodRequest = 0;
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
-  private returnFocus: HTMLElement | null = null;
   readonly date = signal(todayParis());
   readonly entries = signal<IntakeRecord[]>([]);
   readonly dailyGoal = signal<DailyGoal | null>(null);
@@ -186,7 +185,6 @@ export class JournalComponent {
     }
   }
   startAdd(type: MealType): void {
-    this.rememberFocus();
     this.historicalFood.set(null);
     this.dialogView.set('search');
     this.creatingFood.set(false);
@@ -202,15 +200,12 @@ export class JournalComponent {
     this.dialogError.set('');
     this.dialogOpen.set(true);
     void this.loadFoods();
-    this.focusDialog();
   }
   startCreateFood(): void {
-    this.rememberFocus();
     this.dialogOpen.set(true);
     this.dialogView.set('search');
     this.creatingFood.set(true);
     this.dialogError.set('');
-    this.focusDialog();
   }
   createdFood(food: FoodRecord): void {
     this.creatingFood.set(false);
@@ -221,14 +216,11 @@ export class JournalComponent {
     this.editingId.set(null);
     this.dialogView.set('details');
     this.dialogError.set('');
-    this.focusDialog();
   }
   cancelCreateFood(): void {
     this.creatingFood.set(false);
-    this.focusDialog();
   }
   async edit(entry: IntakeRecord): Promise<void> {
-    this.rememberFocus();
     this.dialogError.set('');
     try {
       const food = await this.catalogue.version(entry.food_version_id);
@@ -248,7 +240,6 @@ export class JournalComponent {
     this.selectedPortionId.set(entry.quantity_id);
     this.query.set(entry.food_name);
     this.dialogOpen.set(true);
-    this.focusDialog();
   }
   chooseFood(food: FoodRecord): void {
     this.historicalFood.set(food);
@@ -370,7 +361,6 @@ export class JournalComponent {
     if (this.searchTimer) {
       clearTimeout(this.searchTimer);
     }
-    this.returnFocus?.focus();
   }
   async chooseOffProduct(): Promise<void> {
     const product = this.offProduct();
@@ -484,42 +474,5 @@ export class JournalComponent {
   }
   private message(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
-  }
-  private rememberFocus(): void {
-    this.returnFocus =
-      this.document.activeElement instanceof HTMLElement ? this.document.activeElement : null;
-  }
-  private focusDialog(): void {
-    setTimeout(() =>
-      this.document
-        .querySelector<HTMLElement>('.entry-dialog input, .entry-dialog .dialog-close')
-        ?.focus(),
-    );
-  }
-  dialogKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.closeDialog();
-      return;
-    }
-    if (event.key !== 'Tab') {
-      return;
-    }
-    const dialog = this.document.querySelector('.entry-dialog');
-    const focusable = Array.from(
-      dialog?.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), input:not([disabled]), select:not([disabled])',
-      ) ?? [],
-    );
-    if (!focusable.length) {
-      return;
-    }
-    if (event.shiftKey && this.document.activeElement === focusable[0]) {
-      event.preventDefault();
-      focusable.at(-1)?.focus();
-    } else if (!event.shiftKey && this.document.activeElement === focusable.at(-1)) {
-      event.preventDefault();
-      focusable[0].focus();
-    }
   }
 }
