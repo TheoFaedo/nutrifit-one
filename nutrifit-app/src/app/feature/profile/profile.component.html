@@ -22,18 +22,20 @@
             <h2>Daily targets</h2>
             <p>Adjust your nutrition for today.</p>
           </div>
-          <button
-            class="restore-button"
-            type="button"
-            aria-label="Restore saved targets"
-            title="Restore saved targets"
-            [disabled]="!savedTargets() || saving()"
-            (click)="restoreSavedTargets()"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3.5 11a8.5 8.5 0 1 1 2.2 6M3.5 4.5V11h6.5" />
-            </svg>
-          </button>
+          @if (form.dirty) {
+            <button
+              class="restore-button"
+              type="button"
+              aria-label="Restore saved targets"
+              title="Restore saved targets"
+              [disabled]="!savedTargets() || saving()"
+              (click)="restoreSavedTargets()"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3.5 11a8.5 8.5 0 1 1 2.2 6M3.5 4.5V11h6.5" />
+              </svg>
+            </button>
+          }
         </div>
         <div class="goal-editor">
           <label class="goal-energy"

@@ -106,6 +106,7 @@ export class ProfileComponent {
         fats_g: value.fats,
         proteins_g: value.protein,
       });
+      this.form.markAsPristine();
       this.savedTargets.set(value);
       this.saved.set(true);
     } catch (error) {
@@ -127,6 +128,7 @@ export class ProfileComponent {
     this.recalculationVersion += 1;
     this.facts = NutritionFacts.from(targets);
     this.form.setValue(targets, { emitEvent: false });
+    this.form.markAsPristine();
     this.updatingTargets.set(false);
     this.error.set('');
     this.saved.set(false);
@@ -172,6 +174,7 @@ export class ProfileComponent {
       const targets = this.facts.toValues();
       this.savedTargets.set(targets);
       this.form.setValue(targets, { emitEvent: false });
+      this.form.markAsPristine();
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Your profile could not be loaded.');
     } finally {
