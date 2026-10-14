@@ -1,5 +1,6 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { BarcodeScannerComponent } from '../barcode-scanner/barcode-scanner.component';
+import { I18nService } from '@core/i18n/i18n.service';
 
 export interface FoodSortOption {
   value: string;
@@ -17,23 +18,29 @@ export const FOOD_CATALOGUE_SORT_OPTIONS = [
   selector: 'app-food-catalogue-search',
   imports: [BarcodeScannerComponent],
   template: `
-    <div class="controls" role="group" [attr.aria-label]="groupLabel()">
+    <div
+      class="controls"
+      role="group"
+      [attr.aria-label]="groupLabel() || i18n.t('catalogue', 'searchGroup')"
+    >
       <label class="search-field">
-        <span>{{ searchLabel() }}</span>
+        <span>{{ searchLabel() || i18n.t('catalogue', 'searchLabel') }}</span>
         <input
           type="search"
           [value]="query()"
           (input)="queryChanged.emit($any($event.target).value)"
           (keyup.enter)="searchRequested.emit()"
           inputmode="search"
-          [placeholder]="placeholder()"
+          [placeholder]="placeholder() || i18n.t('catalogue', 'searchPlaceholder')"
         />
       </label>
       <label class="sort-field">
-        <span>{{ sortLabel() }}</span>
+        <span>{{ sortLabel() || i18n.t('catalogue', 'sort') }}</span>
         <select [value]="sort()" (change)="sortChanged.emit($any($event.target).value)">
           @for (option of sortOptions(); track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
+            <option [value]="option.value">
+              {{ i18n.t('catalogue', sortTranslationKey(option.value)) }}
+            </option>
           }
         </select>
       </label>
@@ -103,10 +110,11 @@ export const FOOD_CATALOGUE_SORT_OPTIONS = [
   ],
 })
 export class FoodCatalogueSearchComponent {
-  readonly groupLabel = input('Search the food catalogue');
-  readonly searchLabel = input('Search foods, recipes, or barcode');
-  readonly placeholder = input('Enter a name or barcode');
-  readonly sortLabel = input('Sort foods');
+  readonly i18n = inject(I18nService);
+  readonly groupLabel = input('');
+  readonly searchLabel = input('');
+  readonly placeholder = input('');
+  readonly sortLabel = input('');
   readonly query = input('');
   readonly sort = input('');
   readonly sortOptions = input.required<readonly FoodSortOption[]>();
@@ -115,4 +123,14 @@ export class FoodCatalogueSearchComponent {
   readonly sortChanged = output<string>();
   readonly searchRequested = output<void>();
   readonly barcodeDetected = output<string>();
+
+  sortTranslationKey(value: string): string {
+    return value === 'recent'
+      ? 'recentlyUsed'
+      : value === 'newest'
+        ? 'newest'
+        : value === 'asc'
+          ? 'nameAsc'
+          : 'nameDesc';
+  }
 }

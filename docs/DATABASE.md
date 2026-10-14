@@ -5,6 +5,8 @@ Elle suppose les schémas `auth` et les rôles `anon`/`authenticated` fournis pa
 
 ## Modèle retenu
 
+- `profiles.language` conserve la langue d’interface du compte (`fr` ou `en`). La migration `20261014120000_profile_language.sql` attribue `en` aux profils existants et aux nouveaux profils ; le propriétaire peut mettre à jour cette valeur selon les politiques RLS déjà appliquées à `profiles`.
+
 - `daily_goals` conserve l’historique des objectifs. `valid_from` et `valid_to` sont inclusifs ; les périodes successives ne se chevauchent pas. `complete_onboarding` calcule le début initial côté serveur dans `Europe/Paris`. `update_daily_goal` ferme la période précédente à la veille du jour parisien courant et crée la nouvelle période. Une nouvelle sauvegarde le même jour met à jour la ligne déjà commencée ce jour-là ; les dates antérieures sont conservées.
 - `foods` porte l’identité logique, l’auteur et la visibilité ; `food_versions` porte les instantanés nommés et typés. La contrainte partielle autorise au plus une version courante. La RPC `save_food_snapshot` (migration `20261008130000_food_catalogue_rpc.sql`) crée une fiche complète ou verrouille une fiche existante, désactive sa version courante, puis insère l’instantané et toutes ses portions dans une seule transaction. Une erreur annule l’ensemble. L’appelant doit être authentifié et seul l’auteur peut publier une nouvelle version.
 - La migration `20261008140000_fix_recipe_snapshot_trigger.sql` corrige l’accès au champ `NEW` dans le déclencheur différé de validation des recettes, partagé entre `food_versions` et `recipe_parts`.

@@ -1,4 +1,5 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output, inject } from '@angular/core';
+import { I18nService } from '@core/i18n/i18n.service';
 import {
   FoodRecord,
   FoodCatalogueSort,
@@ -15,18 +16,18 @@ import { FoodSearchListComponent } from '../food-search-list/food-search-list.co
   imports: [FoodCatalogueSearchComponent, FoodSearchListComponent],
   template: `
     <app-food-catalogue-search
-      groupLabel="Search the catalogue"
-      searchLabel="Search by name or barcode"
-      placeholder="Food name or barcode"
-      sortLabel="Sort by"
+      [groupLabel]="i18n.t('catalogue', 'searchGroup')"
+      [searchLabel]="i18n.t('catalogue', 'searchLabel')"
+      [placeholder]="i18n.t('catalogue', 'searchPlaceholder')"
+      [sortLabel]="i18n.t('catalogue', 'sort')"
       [query]="query()"
       [sort]="sort()"
-      [sortOptions]="sortOptions()"
+      [sortOptions]="translatedSortOptions()"
       (queryChanged)="queryChanged.emit($event)"
       (sortChanged)="sortChanged.emit($event)"
       (barcodeDetected)="barcodeDetected.emit($event)"
     />
-    <hr aria-label="Search results" />
+    <hr [attr.aria-label]="i18n.t('catalogue', 'results')" />
     @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
     }
@@ -127,9 +128,25 @@ import { FoodSearchListComponent } from '../food-search-list/food-search-list.co
   ],
 })
 export class FoodCataloguePanelComponent {
+  readonly i18n = inject(I18nService);
   readonly query = input('');
   readonly sort = input<FoodCatalogueSort>('recent');
   readonly sortOptions = input.required<readonly FoodSortOption[]>();
+  readonly translatedSortOptions = computed(() =>
+    this.sortOptions().map((option) => ({
+      ...option,
+      label: this.i18n.t(
+        'catalogue',
+        option.value === 'recent'
+          ? 'recentlyUsed'
+          : option.value === 'newest'
+            ? 'newest'
+            : option.value === 'asc'
+              ? 'nameAsc'
+              : 'nameDesc',
+      ),
+    })),
+  );
   readonly foods = input<FoodRecord[]>([]);
   readonly loading = input(false);
   readonly error = input('');

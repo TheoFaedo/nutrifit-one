@@ -1,13 +1,13 @@
 <section class="editor" aria-labelledby="food-editor-title">
   @if (!food()) {
-    <div class="tabs" role="tablist" aria-label="Item type">
+    <div class="tabs" role="tablist" [attr.aria-label]="i18n.t('foodEditor', 'itemType')">
       <button
         type="button"
         role="tab"
         [attr.aria-selected]="kind() === 'FOOD'"
         (click)="kind.set('FOOD')"
       >
-        Food
+        {{ i18n.t('foodEditor', 'food') }}
       </button>
       <button
         type="button"
@@ -15,25 +15,30 @@
         [attr.aria-selected]="kind() === 'RECIPE'"
         (click)="kind.set('RECIPE')"
       >
-        Recipe
+        {{ i18n.t('foodEditor', 'recipe') }}
       </button>
     </div>
   }
   <header class="editor-heading">
-    <span class="eyebrow">Catalogue</span>
+    <span class="eyebrow">{{ i18n.t('foodEditor', 'catalogue') }}</span>
     <h2 id="food-editor-title">
       {{
         food()
-          ? 'Edit ' + (kind() === 'FOOD' ? 'food' : 'recipe')
-          : 'Create ' + (kind() === 'FOOD' ? 'food' : 'recipe')
+          ? i18n.t('foodEditor', kind() === 'FOOD' ? 'editFood' : 'editRecipe')
+          : i18n.t('foodEditor', kind() === 'FOOD' ? 'createFood' : 'createRecipe')
       }}
     </h2>
-    <p>Keep portions and nutrition details up to date.</p>
+    <p>{{ i18n.t('foodEditor', 'description') }}</p>
   </header>
 
   <form (ngSubmit)="save()">
     <label class="field"
-      >Name <input name="name" [(ngModel)]="name" required maxlength="160" autocomplete="off"
+      >{{ i18n.t('foodEditor', 'name') }} <input
+        name="name"
+        [(ngModel)]="name"
+        required
+        maxlength="160"
+        autocomplete="off"
     /></label>
     <button
       class="check-field"
@@ -43,26 +48,26 @@
       (click)="togglePublic()"
     >
       <span class="checkbox-mark" aria-hidden="true">✓</span>
-      <span>Make this item public</span>
+      <span>{{ i18n.t('foodEditor', 'public') }}</span>
     </button>
     @if (kind() === 'FOOD') {
       <label class="field"
-        >Barcode
+        >{{ i18n.t('foodEditor', 'barcode') }}
         <input name="barcode" [(ngModel)]="barcode" [readonly]="!!food()" inputmode="numeric"
       /></label>
       <section class="form-section" aria-labelledby="portions-title">
         <div class="section-heading">
           <div>
-            <h3 id="portions-title">Portions</h3>
-            <p>Enter nutrition for each serving size.</p>
+            <h3 id="portions-title">{{ i18n.t('foodEditor', 'portions') }}</h3>
+            <p>{{ i18n.t('foodEditor', 'portionNutrition') }}</p>
           </div>
         </div>
         @for (portion of portions; track $index; let i = $index) {
           <fieldset class="entry-card">
-            <legend>Portion {{ i + 1 }}</legend>
+            <legend>{{ i18n.t('foodEditor', 'portion', { number: i + 1 }) }}</legend>
             <div class="portion-fields">
               <label class="field"
-                >Amount
+                >{{ i18n.t('foodEditor', 'amount') }}
                 <input
                   type="number"
                   [name]="'amount-' + i"
@@ -72,17 +77,17 @@
                   required
               /></label>
               <label class="field"
-                >Unit
+                >{{ i18n.t('foodEditor', 'unit') }}
                 <input
                   [name]="'unit-' + i"
                   [(ngModel)]="portion.quantity_unit"
                   required
-                  placeholder="e.g. g, ml, slice"
+                  [placeholder]="i18n.t('foodEditor', 'unitPlaceholder')"
               /></label>
             </div>
             <div class="nutrients">
               <label class="field"
-                >Energy
+                >{{ i18n.t('foodEditor', 'energy') }}
                 <span class="input-suffix"
                   ><input
                     type="number"
@@ -94,7 +99,7 @@
                 ></label
               >
               <label class="field"
-                >Carbohydrates
+                >{{ i18n.t('foodEditor', 'carbs') }}
                 <span class="input-suffix"
                   ><input
                     type="number"
@@ -106,7 +111,7 @@
                 ></label
               >
               <label class="field"
-                >Fat
+                >{{ i18n.t('foodEditor', 'fat') }}
                 <span class="input-suffix"
                   ><input
                     type="number"
@@ -118,7 +123,7 @@
                 ></label
               >
               <label class="field"
-                >Protein
+                >{{ i18n.t('foodEditor', 'protein') }}
                 <span class="input-suffix"
                   ><input
                     type="number"
@@ -132,26 +137,26 @@
             </div>
             @if (portions.length > 1) {
               <button class="text-button danger" type="button" (click)="removePortion(i)">
-                Remove portion
+                {{ i18n.t('foodEditor', 'removePortion') }}
               </button>
             }
           </fieldset>
         }
         <button class="outline-button add-button" type="button" (click)="addPortion()">
-          <span aria-hidden="true">＋</span> Add another portion
+          <span aria-hidden="true">＋</span> {{ i18n.t('foodEditor', 'addPortion') }}
         </button>
       </section>
     } @else {
       <section class="form-section" aria-labelledby="recipe-details-title">
         <div class="section-heading">
           <div>
-            <h3 id="recipe-details-title">Recipe details</h3>
-            <p>Choose a reference serving size.</p>
+            <h3 id="recipe-details-title">{{ i18n.t('foodEditor', 'recipeDetails') }}</h3>
+            <p>{{ i18n.t('foodEditor', 'referenceSize') }}</p>
           </div>
         </div>
         <div class="portion-fields">
           <label class="field"
-            >Reference amount
+            >{{ i18n.t('foodEditor', 'referenceAmount') }}
             <input
               type="number"
               name="refAmount"
@@ -160,28 +165,31 @@
               step="any"
               required
           /></label>
-          <label class="field">Unit <input name="unit" [(ngModel)]="unit" required /></label>
+          <label class="field"
+            >{{ i18n.t('foodEditor', 'unit') }}
+            <input name="unit" [(ngModel)]="unit" required
+          /></label>
         </div>
       </section>
-      <section class="form-section" aria-label="Recipe ingredients">
+      <section class="form-section" [attr.aria-label]="i18n.t('foodEditor', 'ingredients')">
         <div class="section-heading">
           <div>
-            <h3>Ingredients</h3>
-            <p>Add the foods and portions used in this recipe.</p>
+            <h3>{{ i18n.t('foodEditor', 'ingredients') }}</h3>
+            <p>{{ i18n.t('foodEditor', 'ingredientsDescription') }}</p>
           </div>
         </div>
         @for (part of parts; track $index; let i = $index) {
           <fieldset class="entry-card ingredient-card">
-            <legend>Ingredient {{ i + 1 }}</legend>
+            <legend>{{ i18n.t('foodEditor', 'ingredient', { number: i + 1 }) }}</legend>
             <label class="field"
-              >Food or recipe
+              >{{ i18n.t('foodEditor', 'foodOrRecipe') }}
               <select
                 [name]="'ingredient-' + i"
                 [(ngModel)]="part.versionId"
                 (ngModelChange)="part.portionId = ''"
                 required
               >
-                <option value="">Choose an item</option>
+                <option value="">{{ i18n.t('foodEditor', 'chooseItem') }}</option>
                 @for (item of ingredients(); track item.version_id) {
                   <option [value]="item.version_id">{{ item.name }}</option>
                 }
@@ -189,9 +197,9 @@
             </label>
             <div class="portion-fields ingredient-fields">
               <label class="field"
-                >Portion
+                >{{ i18n.t('foodEditor', 'portion', { number: i + 1 }) }}
                 <select [name]="'portion-' + i" [(ngModel)]="part.portionId" required>
-                  <option value="">Choose a portion</option>
+                  <option value="">{{ i18n.t('foodEditor', 'choosePortion') }}</option>
                   @for (portion of portionsFor(part.versionId); track portion.id) {
                     <option [value]="portion.id">
                       {{ portion.quantity_number }} {{ portion.quantity_unit }}
@@ -200,7 +208,7 @@
                 </select>
               </label>
               <label class="field"
-                >Amount
+                >{{ i18n.t('foodEditor', 'amount') }}
                 <input
                   [type]="ratioInputType"
                   inputmode="decimal"
@@ -213,13 +221,13 @@
             </div>
             @if (parts.length > 1) {
               <button class="text-button danger" type="button" (click)="removePart(i)">
-                Remove ingredient
+                {{ i18n.t('foodEditor', 'removeIngredient') }}
               </button>
             }
           </fieldset>
         }
         <button class="outline-button add-button" type="button" (click)="addPart()">
-          <span aria-hidden="true">＋</span> Add an ingredient
+          <span aria-hidden="true">＋</span> {{ i18n.t('foodEditor', 'addIngredient') }}
         </button>
       </section>
     }
@@ -227,9 +235,11 @@
       <p class="error" role="alert">{{ error() }}</p>
     }
     <div class="actions">
-      <button class="secondary-button" type="button" (click)="dismissed.emit()">Cancel</button>
+      <button class="secondary-button" type="button" (click)="dismissed.emit()">
+        {{ i18n.t('foodEditor', 'cancel') }}
+      </button>
       <button class="primary-button" type="submit" [disabled]="saving()">
-        {{ saving() ? 'Saving…' : 'Save item' }}
+        {{ saving() ? i18n.t('foodEditor', 'saving') : i18n.t('foodEditor', 'save') }}
       </button>
     </div>
   </form>

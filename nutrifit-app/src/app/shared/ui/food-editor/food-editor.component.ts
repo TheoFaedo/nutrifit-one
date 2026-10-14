@@ -1,5 +1,6 @@
 import { Component, input, output, signal, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { I18nService } from '@core/i18n/i18n.service';
 import {
   FoodCatalogueService,
   FoodRecord,
@@ -33,6 +34,7 @@ export class FoodEditorComponent implements OnInit {
   readonly saving = signal(false);
   readonly error = signal('');
   private readonly catalogue = inject(FoodCatalogueService);
+  readonly i18n = inject(I18nService);
   readonly ingredients = signal<FoodRecord[]>([]);
   parts: { versionId: string; portionId: string; ratio: string }[] = [
     { versionId: '', portionId: '', ratio: '1' },
@@ -89,7 +91,7 @@ export class FoodEditorComponent implements OnInit {
     try {
       this.ingredients.set(await this.catalogue.search('', 'asc'));
     } catch {
-      this.error.set('Foods could not be loaded for recipe ingredients.');
+      this.error.set(this.i18n.t('foodEditor', 'ingredientsLoadFailed'));
     }
   }
   portionsFor(versionId: string): FoodPortion[] {
@@ -154,7 +156,7 @@ export class FoodEditorComponent implements OnInit {
           ratio: Number(part.ratio.trim().replace(',', '.')),
         }));
         if (parts.some((part) => !Number.isFinite(part.ratio) || part.ratio <= 0)) {
-          throw new Error('Enter a positive amount for every ingredient.');
+          throw new Error(this.i18n.t('foodEditor', 'amountRequired'));
         }
         const recipe: RecipeInput = {
           name: this.name.trim(),
@@ -172,11 +174,13 @@ export class FoodEditorComponent implements OnInit {
       }
       const fresh = await this.catalogue.current(id);
       if (!fresh) {
-        throw new Error('The saved item could not be loaded.');
+        throw new Error(this.i18n.t('foodEditor', 'loadFailed'));
       }
       this.saved.emit(fresh);
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'The item could not be saved.');
+      this.error.set(
+        error instanceof Error ? error.message : this.i18n.t('foodEditor', 'saveFailed'),
+      );
     } finally {
       this.saving.set(false);
     }

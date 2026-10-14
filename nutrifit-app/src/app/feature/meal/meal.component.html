@@ -1,14 +1,17 @@
 <main class="setup-shell">
-  <header class="setup-header"><app-brand /></header>
+  <header class="setup-header">
+    <app-brand /><app-language-switch (changed)="languageChanged($event)" />
+  </header>
+  @if (languageError()) {
+    <p class="error" role="alert">{{ i18n.t('errors', 'languageSaveFailed') }}</p>
+  }
   <section class="meal-content" aria-labelledby="meal-title">
-    <h1 id="meal-title">Food catalogue</h1>
-    <p class="muted">
-      Find foods and recipes, check their portions and nutrition, or add your own.
-    </p>
+    <h1 id="meal-title">{{ i18n.t('meal', 'title') }}</h1>
+    <p class="muted">{{ i18n.t('meal', 'intro') }}</p>
 
-    <div class="create-tools" role="group" aria-label="Create catalogue items">
+    <div class="create-tools" role="group" [attr.aria-label]="i18n.t('meal', 'createGroup')">
       <button class="primary-button" type="button" (click)="newFood()">
-        Create food <span aria-hidden="true">＋</span>
+        {{ i18n.t('meal', 'createFood') }} <span aria-hidden="true">＋</span>
       </button>
     </div>
     <div class="catalogue-layout">

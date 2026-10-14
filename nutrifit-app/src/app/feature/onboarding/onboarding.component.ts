@@ -5,6 +5,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NutritionFacts } from '@core/models/nutrition-facts.model';
 import { supabase } from '@core/services/supabase.client';
 import { BrandComponent } from '@shared/ui/brand/brand.component';
+import { LanguageSwitchComponent } from '@shared/ui/language-switch/language-switch.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { Language } from '@core/i18n/translations';
 
 type GoalPreset = 'lose' | 'maintain' | 'gain';
 const presets: Record<GoalPreset, NutritionFacts> = {
@@ -15,27 +18,44 @@ const presets: Record<GoalPreset, NutritionFacts> = {
 
 @Component({
   selector: 'app-onboarding-page',
-  imports: [ReactiveFormsModule, BrandComponent],
+  imports: [ReactiveFormsModule, BrandComponent, LanguageSwitchComponent],
   templateUrl: './onboarding.component.html',
   styleUrl: './onboarding.component.less',
 })
 export class OnboardingComponent {
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
   private readonly destroyRef = inject(DestroyRef);
   readonly goals = [
-    { id: 'lose' as const, icon: '↘', title: 'Lose weight', detail: 'A gentle calorie deficit' },
+    { id: 'lose' as const, icon: '↘', titleKey: 'lose', detailKey: 'loseDetail' },
     {
       id: 'maintain' as const,
       icon: '↔',
-      title: 'Maintain weight',
-      detail: 'A steady, balanced routine',
+      titleKey: 'maintain',
+      detailKey: 'maintainDetail',
     },
-    { id: 'gain' as const, icon: '↗', title: 'Gain weight', detail: 'A little more fuel each day' },
+    { id: 'gain' as const, icon: '↗', titleKey: 'gain', detailKey: 'gainDetail' },
   ];
   readonly selected = signal<GoalPreset>('maintain');
   readonly nutritionFacts = signal(presets.maintain);
   readonly saving = signal(false);
   readonly error = signal('');
+  readonly languageError = signal(false);
+
+  async languageChanged(language: Language): Promise<void> {
+    this.languageError.set(false);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No session');
+      }
+      await this.i18n.saveForUser(user.id, language);
+    } catch {
+      this.languageError.set(true);
+    }
+  }
   readonly form = new FormGroup({
     nutritionFacts: new FormGroup({
       energy: new FormControl(presets.maintain.energy, {
@@ -99,7 +119,7 @@ export class OnboardingComponent {
         error: userError,
       } = await supabase.auth.getUser();
       if (userError || !user) {
-        throw new Error('Your session has expired. Sign in again to continue.');
+        throw new Error(this.i18n.t('onboarding', 'sessionExpired'));
       }
       const { error: saveError } = await supabase.rpc('complete_onboarding', {
         p_energy_kcal: nutritionFacts.energy,
@@ -113,9 +133,7 @@ export class OnboardingComponent {
       await this.router.navigateByUrl('/journal');
     } catch (error) {
       this.error.set(
-        error instanceof Error
-          ? error.message
-          : 'Your targets could not be saved. Please try again.',
+        error instanceof Error ? error.message : this.i18n.t('onboarding', 'saveFailed'),
       );
       this.saving.set(false);
     }

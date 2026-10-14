@@ -1,16 +1,23 @@
 <main class="setup-shell">
   <header class="setup-header">
-    <app-brand /><span class="step-note">Your starting point</span>
+    <app-brand /><app-language-switch (changed)="languageChanged($event)" /><span
+      class="step-note"
+      >{{ i18n.t('onboarding', 'starting') }}</span
+    >
   </header>
   <section class="setup-content">
     <div class="setup-intro">
-      <p class="eyebrow">A good place to begin</p>
-      <h1>What feels right<br />for your goals?</h1>
-      <p class="muted">Choose a direction. You can make these daily targets your own.</p>
+      <p class="eyebrow">{{ i18n.t('onboarding', 'beginning') }}</p>
+      <h1>
+        {{ i18n.language() === 'fr' ? 'Quel objectif vous' : 'What feels right' }}<br />{{
+          i18n.language() === 'fr' ? 'correspond ?' : 'for your goals?'
+        }}
+      </h1>
+      <p class="muted">{{ i18n.t('onboarding', 'intro') }}</p>
     </div>
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <fieldset class="goal-options">
-        <legend class="sr-only">Choose your goal</legend>
+        <legend class="sr-only">{{ i18n.t('onboarding', 'choose') }}</legend>
         @for (goal of goals; track goal.id) {
           <button
             type="button"
@@ -21,22 +28,22 @@
           >
             <span class="goal-icon" aria-hidden="true">{{ goal.icon }}</span
             ><span
-              ><strong>{{ goal.title }}</strong
-              ><small>{{ goal.detail }}</small></span
+              ><strong>{{ i18n.t('onboarding', goal.titleKey) }}</strong
+              ><small>{{ i18n.t('onboarding', goal.detailKey) }}</small></span
             ><span class="radio-dot" aria-hidden="true"></span>
           </button>
         }
       </fieldset>
       <div class="targets-heading">
         <div>
-          <h2>Your daily targets</h2>
-          <p>Starting suggestions — adjust any number.</p>
+          <h2>{{ i18n.t('onboarding', 'targets') }}</h2>
+          <p>{{ i18n.t('onboarding', 'suggestions') }}</p>
         </div>
         <span class="target-unit">kcal · grams</span>
       </div>
       <div class="target-grid" formGroupName="nutritionFacts">
         <label class="target-field energy-field"
-          ><span>Energy <small>kcal</small></span
+          ><span>{{ i18n.t('onboarding', 'energy') }} <small>kcal</small></span
           ><input
             type="number"
             formControlName="energy"
@@ -46,7 +53,7 @@
             inputmode="numeric"
         /></label>
         <label class="target-field"
-          ><span>Protein <small>g</small></span
+          ><span>{{ i18n.t('onboarding', 'protein') }} <small>g</small></span
           ><input
             type="number"
             formControlName="protein"
@@ -56,7 +63,7 @@
             inputmode="numeric"
         /></label>
         <label class="target-field"
-          ><span>Carbohydrates <small>g</small></span
+          ><span>{{ i18n.t('onboarding', 'carbs') }} <small>g</small></span
           ><input
             type="number"
             formControlName="carbs"
@@ -66,7 +73,7 @@
             inputmode="numeric"
         /></label>
         <label class="target-field"
-          ><span>Fat <small>g</small></span
+          ><span>{{ i18n.t('onboarding', 'fat') }} <small>g</small></span
           ><input
             type="number"
             formControlName="fats"
@@ -79,12 +86,20 @@
       @if (error()) {
         <p class="error" role="alert">{{ error() }}</p>
       }
+      @if (languageError()) {
+        <p class="error" role="alert">
+          {{ i18n.t('errors', 'languageSaveFailed') }}
+          <button type="button" (click)="languageChanged(i18n.language())">
+            {{ i18n.t('common', 'retry') }}
+          </button>
+        </p>
+      }
       <button class="primary-button" type="submit" [disabled]="form.invalid || saving()">
-        {{ saving() ? 'Saving your targets…' : 'Save and open my journal'
+        {{ saving() ? i18n.t('onboarding', 'saving') : i18n.t('onboarding', 'submit')
         }}<span aria-hidden="true">↗</span>
       </button>
       <p class="form-footnote">
-        These are starting points, not rules. You can change them any time.
+        {{ i18n.t('onboarding', 'footnote') }}
       </p>
     </form>
   </section>

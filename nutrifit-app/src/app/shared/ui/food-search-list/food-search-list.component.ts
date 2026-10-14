@@ -1,4 +1,5 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal, inject } from '@angular/core';
+import { I18nService } from '@core/i18n/i18n.service';
 import { FoodRecord } from '@core/services/food-catalogue.service';
 
 @Component({
@@ -11,15 +12,15 @@ import { FoodRecord } from '@core/services/food-catalogue.service';
           type="search"
           [value]="query()"
           (input)="query.set($any($event.target).value)"
-          placeholder="Search foods and recipes"
+          [placeholder]="i18n.t('catalogue', 'searchFoods')"
           autofocus
       /></label>
     }
-    <section class="results" aria-label="Food search results">
+    <section class="results" [attr.aria-label]="i18n.t('catalogue', 'resultsLabel')">
       @if (loading()) {
-        <p class="muted" aria-live="polite">Loading foods…</p>
+        <p class="muted" aria-live="polite">{{ i18n.t('catalogue', 'loading') }}</p>
       } @else if (matches().length === 0) {
-        <p class="muted">No matching foods.</p>
+        <p class="muted">{{ i18n.t('catalogue', 'noMatches') }}</p>
       } @else {
         @for (food of matches(); track food.id) {
           <button
@@ -31,8 +32,11 @@ import { FoodRecord } from '@core/services/food-catalogue.service';
             <span
               ><strong>{{ food.name }}</strong
               ><small
-                >{{ food.kind === 'RECIPE' ? 'Recipe' : 'Food' }} ·
-                {{ food.portions.length }} portion{{ food.portions.length === 1 ? '' : 's' }}</small
+                >{{ i18n.t('foodEditor', food.kind === 'RECIPE' ? 'recipe' : 'food') }} ·
+                {{ food.portions.length }}
+                {{
+                  i18n.t('catalogue', food.portions.length === 1 ? 'portion' : 'portions')
+                }}</small
               ></span
             ><span aria-hidden="true">›</span>
           </button>
@@ -107,6 +111,7 @@ import { FoodRecord } from '@core/services/food-catalogue.service';
   ],
 })
 export class FoodSearchListComponent {
+  readonly i18n = inject(I18nService);
   readonly foods = input<FoodRecord[]>([]);
   readonly loading = input(false);
   readonly selectedId = input<string | null>(null);

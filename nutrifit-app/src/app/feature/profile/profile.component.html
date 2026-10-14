@@ -1,33 +1,35 @@
 <main class="setup-shell">
-  <header class="setup-header"><app-brand /></header>
+  <header class="setup-header">
+    <app-brand /><app-language-switch (changed)="languageChanged($event)" />
+  </header>
   <section class="profile-content">
-    <h1>Your profile</h1>
+    <h1>{{ i18n.t('profile', 'title') }}</h1>
     <div class="identity">
       @if (avatar()) {
         <img [src]="avatar()" alt="" referrerpolicy="no-referrer" />
       }
       <div>
-        <h2>{{ name() || 'Nutrifit member' }}</h2>
+        <h2>{{ name() || i18n.t('profile', 'member') }}</h2>
         <button class="sign-out-button" type="button" [disabled]="signingOut()" (click)="signOut()">
-          {{ signingOut() ? 'Signing out…' : 'Sign out' }}
+          {{ signingOut() ? i18n.t('profile', 'signingOut') : i18n.t('profile', 'signOut') }}
         </button>
       </div>
     </div>
     @if (loading()) {
-      <p class="muted" aria-live="polite">Loading your targets…</p>
+      <p class="muted" aria-live="polite">{{ i18n.t('profile', 'loading') }}</p>
     } @else {
       <form [formGroup]="form" (ngSubmit)="save()" novalidate>
         <div class="targets-heading">
           <div>
-            <h2>Daily targets</h2>
-            <p>Adjust your nutrition for today.</p>
+            <h2>{{ i18n.t('profile', 'targets') }}</h2>
+            <p>{{ i18n.t('profile', 'adjust') }}</p>
           </div>
           @if (form.dirty) {
             <button
               class="restore-button"
               type="button"
-              aria-label="Restore saved targets"
-              title="Restore saved targets"
+              [attr.aria-label]="i18n.t('profile', 'restore')"
+              [attr.title]="i18n.t('profile', 'restore')"
               [disabled]="!savedTargets() || saving()"
               (click)="restoreSavedTargets()"
             >
@@ -39,7 +41,7 @@
         </div>
         <div class="goal-editor">
           <label class="goal-energy"
-            ><span class="field-title">Energy target</span
+            ><span class="field-title">{{ i18n.t('profile', 'energy') }}</span
             ><span class="energy-entry"
               ><input
                 type="number"
@@ -48,14 +50,14 @@
                 max="10000"
                 step="50"
                 inputmode="numeric"
-                aria-label="Energy target in kilocalories"
+                [attr.aria-label]="i18n.t('profile', 'energyAria')"
               /><span>kcal</span></span
             ></label
           >
-          <div class="macro-grid" aria-label="Macronutrient targets">
+          <div class="macro-grid" [attr.aria-label]="i18n.t('profile', 'macrosAria')">
             <label class="macro-field protein"
               ><span class="macro-dot" aria-hidden="true"></span
-              ><span class="field-title">Protein</span
+              ><span class="field-title">{{ i18n.t('profile', 'protein') }}</span
               ><span class="macro-entry"
                 ><input
                   type="number"
@@ -64,13 +66,13 @@
                   max="1000"
                   step="1"
                   inputmode="numeric"
-                  aria-label="Protein target in grams"
+                  [attr.aria-label]="i18n.t('profile', 'proteinAria')"
                 /><span>g</span></span
               ></label
             >
             <label class="macro-field carbs"
               ><span class="macro-dot" aria-hidden="true"></span
-              ><span class="field-title">Carbs</span
+              ><span class="field-title">{{ i18n.t('profile', 'carbs') }}</span
               ><span class="macro-entry"
                 ><input
                   type="number"
@@ -79,12 +81,13 @@
                   max="1000"
                   step="1"
                   inputmode="numeric"
-                  aria-label="Carbohydrates target in grams"
+                  [attr.aria-label]="i18n.t('profile', 'carbsAria')"
                 /><span>g</span></span
               ></label
             >
             <label class="macro-field fats"
-              ><span class="macro-dot" aria-hidden="true"></span><span class="field-title">Fat</span
+              ><span class="macro-dot" aria-hidden="true"></span
+              ><span class="field-title">{{ i18n.t('profile', 'fat') }}</span
               ><span class="macro-entry"
                 ><input
                   type="number"
@@ -93,7 +96,7 @@
                   max="1000"
                   step="1"
                   inputmode="numeric"
-                  aria-label="Fat target in grams"
+                  [attr.aria-label]="i18n.t('profile', 'fatAria')"
                 /><span>g</span></span
               ></label
             >
@@ -103,7 +106,7 @@
           <p class="error" role="alert">{{ error() }}</p>
         }
         @if (saved()) {
-          <p class="success" role="status">Your targets have been saved.</p>
+          <p class="success" role="status">{{ i18n.t('profile', 'saved') }}</p>
         }
         <button
           class="primary-button"
@@ -115,8 +118,13 @@
         </button>
       </form>
     }
+    @if (languageError()) {
+      <p class="error" role="alert">
+        {{ i18n.t('profile', 'languageSaveFailed') }}
+        <button type="button" (click)="retryLanguageSave()">{{ i18n.t('common', 'retry') }}</button>
+      </p>
+    }
     <app-app-update />
   </section>
-    
 </main>
 <app-bottom-nav active="profile" />

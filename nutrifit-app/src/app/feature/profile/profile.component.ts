@@ -9,16 +9,26 @@ import { DailyGoalsService } from '@core/services/daily-goals.service';
 import { BrandComponent } from '@shared/ui/brand/brand.component';
 import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
 import { AppUpdateComponent } from './app-update/app-update.component';
+import { LanguageSwitchComponent } from '@shared/ui/language-switch/language-switch.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { Language } from '@core/i18n/translations';
 
 @Component({
   selector: 'app-profile-page',
-  imports: [ReactiveFormsModule, BrandComponent, BottomNavComponent, AppUpdateComponent],
+  imports: [
+    ReactiveFormsModule,
+    BrandComponent,
+    BottomNavComponent,
+    AppUpdateComponent,
+    LanguageSwitchComponent,
+  ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.less',
 })
 export class ProfileComponent {
   private readonly auth = inject(AuthService);
   private readonly goalsService = inject(DailyGoalsService);
+  readonly i18n = inject(I18nService);
   private readonly destroyRef = inject(DestroyRef);
   readonly name = signal('');
   readonly avatar = signal('');
@@ -27,6 +37,8 @@ export class ProfileComponent {
   readonly signingOut = signal(false);
   readonly updatingTargets = signal(false);
   readonly error = signal('');
+  readonly languageError = signal(false);
+  private languageUserId: string | null = null;
   readonly saved = signal(false);
   readonly savedTargets = signal<NutritionFactsValues | null>(null);
   readonly form = new FormGroup({
@@ -110,14 +122,31 @@ export class ProfileComponent {
       this.savedTargets.set(value);
       this.saved.set(true);
     } catch (error) {
-      this.error.set(
-        error instanceof Error
-          ? error.message
-          : 'Your targets could not be saved. Please try again.',
-      );
+      this.error.set(error instanceof Error ? error.message : this.i18n.t('profile', 'saveFailed'));
     } finally {
       this.saving.set(false);
     }
+  }
+
+  async languageChanged(language: Language): Promise<void> {
+    this.languageError.set(false);
+    try {
+      const user = await this.auth.user();
+      if (!user) {
+        throw new Error('No session');
+      }
+      this.languageUserId = user.id;
+      await this.i18n.saveForUser(user.id, language);
+    } catch {
+      this.languageError.set(true);
+    }
+  }
+
+  async retryLanguageSave(): Promise<void> {
+    if (!this.languageUserId) {
+      return;
+    }
+    await this.languageChanged(this.i18n.language());
   }
 
   restoreSavedTargets(): void {
@@ -144,7 +173,7 @@ export class ProfileComponent {
       await this.auth.signOut();
     } catch (error) {
       this.error.set(
-        error instanceof Error ? error.message : 'You could not be signed out. Please try again.',
+        error instanceof Error ? error.message : this.i18n.t('profile', 'signoutFailed'),
       );
       this.signingOut.set(false);
     }
@@ -163,7 +192,7 @@ export class ProfileComponent {
       );
       const goal = await this.goalsService.forDate(this.parisDate());
       if (!goal) {
-        throw new Error('No daily targets were found.');
+        throw new Error(this.i18n.t('profile', 'missingTargets'));
       }
       this.facts = NutritionFacts.from({
         energy: Number(goal.energy_kcal),
@@ -176,7 +205,7 @@ export class ProfileComponent {
       this.form.setValue(targets, { emitEvent: false });
       this.form.markAsPristine();
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Your profile could not be loaded.');
+      this.error.set(error instanceof Error ? error.message : this.i18n.t('profile', 'loadFailed'));
     } finally {
       this.loading.set(false);
     }

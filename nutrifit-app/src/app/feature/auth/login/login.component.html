@@ -1,27 +1,31 @@
 <main class="entry-shell">
-  <section class="entry-art" aria-label="A balanced meal with grains, greens and fruit">
+  <section class="entry-art" [attr.aria-label]="i18n.t('login', 'artLabel')">
     <app-brand />
     <div class="art-copy">
-      <p class="art-kicker">A little more in tune</p>
-      <h1>Eat well.<br />Feel like you.</h1>
-      <p>Build a rhythm that fits your life, one meal at a time.</p>
+      <p class="art-kicker">{{ i18n.t('login', 'kicker') }}</p>
+      <h1>
+        {{ i18n.language() === 'fr' ? 'Bien manger.' : 'Eat well.' }}<br />{{
+          i18n.language() === 'fr' ? 'Se sentir bien.' : 'Feel like you.'
+        }}
+      </h1>
+      <p>{{ i18n.t('login', 'rhythm') }}</p>
     </div>
     <div class="plate" aria-hidden="true">
       <span class="leaf leaf-a"></span><span class="leaf leaf-b"></span><span class="tomato"></span
       ><span class="grain"></span><span class="berry"></span>
     </div>
-    <p class="art-note">Good habits grow gently.</p>
+    <p class="art-note">{{ i18n.t('login', 'note') }}</p>
   </section>
   <section class="entry-panel">
     <div class="mobile-brand"><app-brand /></div>
     <div class="login-card">
-      <p class="eyebrow">Your food, your pace</p>
-      <h2>Make space for better.</h2>
-      <p class="muted">Sign in to start a food journal that feels like yours.</p>
+      <app-language-switch />
+      <p class="eyebrow">{{ i18n.t('login', 'eyebrow') }}</p>
+      <h2>{{ i18n.t('login', 'title') }}</h2>
+      <p class="muted">{{ i18n.t('login', 'intro') }}</p>
       @if (!configured()) {
         <p class="notice" role="status">
-          Copy the Supabase example settings into <code>src/environments/environment.ts</code> to
-          enable sign in.
+          {{ i18n.t('login', 'config') }}
         </p>
       }
       @if (error()) {
@@ -51,9 +55,9 @@
             d="M12 5.36c1.62 0 3.07.56 4.21 1.64l3.16-3.16C17.45 2.07 14.97 1 12 1a11 11 0 0 0-9.84 6.05l3.69 2.84C6.72 7.29 9.14 5.36 12 5.36Z"
           />
         </svg>
-        {{ busy() ? 'Connecting…' : 'Continue with Google' }}
+        {{ busy() ? i18n.t('login', 'connecting') : i18n.t('login', 'connect') }}
       </button>
-      <p class="privacy">Your journal is private to you.</p>
+      <p class="privacy">{{ i18n.t('login', 'privacy') }}</p>
     </div>
     <footer>© 2026 nutrifit one</footer>
   </section>

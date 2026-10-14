@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { BarcodeFormat, DecodeHintType } from '@zxing/library';
+import { I18nService } from '@core/i18n/i18n.service';
 
 @Component({
   selector: 'app-barcode-scanner',
@@ -19,7 +20,7 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
         <path d="M3 6.5h3l1.2-2h5.6l1.2 2h3v9H3v-9Z" />
         <circle cx="10" cy="11" r="3" />
       </svg>
-      Scan a barcode
+      {{ i18n.t('barcode', 'scan') }}
     </button>
     @if (modalOpen()) {
       <div class="camera-backdrop" (click)="$event.target === $event.currentTarget && stop()">
@@ -30,21 +31,28 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
           aria-labelledby="camera-dialog-title"
           (keydown.escape)="stop()"
         >
-          <button class="close-button" type="button" aria-label="Close camera" (click)="stop()">
+          <button
+            class="close-button"
+            type="button"
+            [attr.aria-label]="i18n.t('barcode', 'close')"
+            (click)="stop()"
+          >
             ×
           </button>
-          <p class="eyebrow">Barcode scanner</p>
-          <h2 id="camera-dialog-title">Scan a product</h2>
+          <p class="eyebrow">{{ i18n.t('barcode', 'title') }}</p>
+          <h2 id="camera-dialog-title">{{ i18n.t('barcode', 'heading') }}</h2>
           <div class="preview">
             <video #video autoplay muted playsinline></video>
             <p role="status">
-              {{ scanning() ? 'Point the camera at a barcode.' : 'Starting camera…' }}
+              {{ scanning() ? i18n.t('barcode', 'pointCamera') : i18n.t('barcode', 'starting') }}
             </p>
           </div>
           @if (error()) {
             <p class="error" role="status">{{ error() }}</p>
           }
-          <button class="cancel-button" type="button" (click)="stop()">Close camera</button>
+          <button class="cancel-button" type="button" (click)="stop()">
+            {{ i18n.t('barcode', 'close') }}
+          </button>
         </section>
       </div>
     }
@@ -211,6 +219,7 @@ export class BarcodeScannerComponent implements OnDestroy {
   readonly modalOpen = signal(false);
   readonly error = signal('');
   private readonly changeDetector = inject(ChangeDetectorRef);
+  readonly i18n = inject(I18nService);
   private readonly video = viewChild<ElementRef<HTMLVideoElement>>('video');
   private controls: { stop: () => void } | null = null;
   private generation = 0;
@@ -223,14 +232,14 @@ export class BarcodeScannerComponent implements OnDestroy {
     this.modalOpen.set(true);
     this.changeDetector.detectChanges();
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.error.set('Camera access is unavailable. Enter the barcode manually.');
+      this.error.set(this.i18n.t('barcode', 'unavailable'));
       return;
     }
     try {
       const generation = ++this.generation;
       const video = this.video()?.nativeElement;
       if (!video) {
-        throw new Error('Camera preview is unavailable.');
+        throw new Error(this.i18n.t('barcode', 'previewUnavailable'));
       }
       const hints = new Map<DecodeHintType, unknown>([
         [
@@ -258,8 +267,8 @@ export class BarcodeScannerComponent implements OnDestroy {
       this.scanning.set(false);
       this.error.set(
         error instanceof DOMException && error.name === 'NotAllowedError'
-          ? 'Camera permission was denied. Allow camera access or enter the barcode manually.'
-          : 'Could not start the camera. Enter the barcode manually.',
+          ? this.i18n.t('barcode', 'denied')
+          : this.i18n.t('barcode', 'failed'),
       );
     }
   }

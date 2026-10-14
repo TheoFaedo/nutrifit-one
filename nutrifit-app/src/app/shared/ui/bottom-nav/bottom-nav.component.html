@@ -1,4 +1,4 @@
-<nav class="bottom-nav" aria-label="Main navigation">
+<nav class="bottom-nav" [attr.aria-label]="i18n.t('navigation', 'label')">
   <a
     routerLink="/journal"
     routerLinkActive="active"
@@ -7,7 +7,7 @@
   >
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M4 5.5h16v15H4zM8 3.5v4M16 3.5v4M4 10h16M8 14h3m2 0h3M8 17h3" /></svg
-    ><span>Journal</span>
+    ><span>{{ i18n.t('navigation', 'journal') }}</span>
   </a>
   <a
     routerLink="/meal"
@@ -24,7 +24,7 @@
         />
         <path d="M17 40h30M17 51h30M26 41v9m6-9v9m6-9v9" />
       </g></svg
-    ><span>Meal</span>
+    ><span>{{ i18n.t('navigation', 'meal') }}</span>
   </a>
   <a
     routerLink="/profile"
@@ -35,6 +35,6 @@
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="8" r="3.5" />
       <path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg
-    ><span>Profile</span>
+    ><span>{{ i18n.t('navigation', 'profile') }}</span>
   </a>
 </nav>

@@ -1,12 +1,12 @@
 <section class="daily-summary" aria-labelledby="daily-summary-title">
   <div class="daily-summary-heading">
     <div>
-      <h2 id="daily-summary-title">Tracker</h2>
+      <h2 id="daily-summary-title">{{ i18n.t('summary', 'tracker') }}</h2>
     </div>
   </div>
   <div class="daily-energy">
     <div class="macro-values energy-values">
-      <span><i aria-hidden="true"></i>Energy</span>
+      <span><i aria-hidden="true"></i>{{ i18n.t('summary', 'energy') }}</span>
       <div class="macro-ratio">
         <strong>{{ formatValue(totals().energy) }}<small>kcal</small></strong
         ><span>/ {{ formatValue(goal()?.energy_kcal ?? null) }} kcal</span>
@@ -16,42 +16,42 @@
       class="progress-track energy-track"
       [class.over-goal]="exceedsGoal(totals().energy, goal()?.energy_kcal ?? null)"
       role="progressbar"
-      aria-label="Calories consumed toward daily goal"
+      [attr.aria-label]="i18n.t('summary', 'caloriesAria')"
       [attr.aria-valuenow]="totals().energy"
       [attr.aria-valuemax]="goal()?.energy_kcal ?? null"
     >
       <span [style.width.%]="progressWidth(totals().energy, goal()?.energy_kcal ?? null)"></span>
     </div>
   </div>
-  <div class="daily-macros" aria-label="Daily macronutrients">
+  <div class="daily-macros" [attr.aria-label]="i18n.t('summary', 'macrosAria')">
     @for (
       macro of [
         {
           key: 'protein',
-          label: 'Protein',
+          label: i18n.t('summary', 'protein'),
           value: totals().protein,
           target: goal()?.proteins_g ?? null,
           unit: 'g',
           class: 'protein',
-          aria: 'Protein consumed toward daily goal',
+          aria: i18n.t('summary', 'proteinAria'),
         },
         {
           key: 'carbs',
-          label: 'Carbs',
+          label: i18n.t('summary', 'carbs'),
           value: totals().carbs,
           target: goal()?.carbs_g ?? null,
           unit: 'g',
           class: 'carbs',
-          aria: 'Carbohydrates consumed toward daily goal',
+          aria: i18n.t('summary', 'carbsAria'),
         },
         {
           key: 'fats',
-          label: 'Fat',
+          label: i18n.t('summary', 'fat'),
           value: totals().fats,
           target: goal()?.fats_g ?? null,
           unit: 'g',
           class: 'fats',
-          aria: 'Fat consumed toward daily goal',
+          aria: i18n.t('summary', 'fatAria'),
         },
       ];
       track macro.key

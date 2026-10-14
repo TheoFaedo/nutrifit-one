@@ -3,20 +3,34 @@ import { Router } from '@angular/router';
 import { Session, User } from '@supabase/supabase-js';
 import { BehaviorSubject } from 'rxjs';
 import { supabase } from './supabase.client';
+import { I18nService } from '@core/i18n/i18n.service';
 
 @Service()
 export class AuthService {
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
   private readonly sessionState = new BehaviorSubject<Session | null>(null);
   readonly session$ = this.sessionState.asObservable();
   private initialized?: Promise<Session | null>;
+  private restoredUserId: string | null = null;
 
   initialize(): Promise<Session | null> {
     if (!this.initialized) {
       this.initialized = supabase.auth.getSession().then(({ data }) => {
         this.sessionState.next(data.session);
-        supabase.auth.onAuthStateChange((_event, session) => {
+        if (data.session?.user.id) {
+          this.restoredUserId = data.session.user.id;
+          void this.i18n.restoreProfile(data.session.user.id).catch(() => undefined);
+        }
+        supabase.auth.onAuthStateChange((event, session) => {
           this.sessionState.next(session);
+          if (!session?.user.id) {
+            this.restoredUserId = null;
+            this.i18n.clearAccount(null);
+          } else if (event === 'SIGNED_IN' && this.restoredUserId !== session.user.id) {
+            this.restoredUserId = session.user.id;
+            void this.i18n.restoreProfile(session.user.id).catch(() => undefined);
+          }
         });
         return data.session;
       });
@@ -52,6 +66,8 @@ export class AuthService {
     if (error) {
       throw error;
     }
+    this.restoredUserId = null;
+    this.i18n.clearAccount(null);
     await this.router.navigateByUrl('/login');
   }
 }

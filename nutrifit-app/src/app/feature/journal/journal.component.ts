@@ -30,6 +30,9 @@ import {
 } from '@shared/ui/nutrition-summary/nutrition-summary.component';
 import { FoodEditorComponent } from '@shared/ui/food-editor/food-editor.component';
 import { ModalDialogComponent } from '@shared/ui/modal-dialog/modal-dialog.component';
+import { LanguageSwitchComponent } from '@shared/ui/language-switch/language-switch.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { Language } from '@core/i18n/translations';
 
 const meals: { type: MealType; label: string }[] = [
   { type: 'BREAKFAST', label: 'Breakfast' },
@@ -65,6 +68,7 @@ export const parisInstant = (date: string): string => {
   imports: [
     FormsModule,
     BrandComponent,
+    LanguageSwitchComponent,
     BottomNavComponent,
     DailySummaryComponent,
     NutritionSummaryComponent,
@@ -85,6 +89,8 @@ export class JournalComponent {
   private readonly journal = inject(IntakeJournalService);
   private readonly catalogue = inject(FoodCatalogueService);
   private readonly goalsService = inject(DailyGoalsService);
+  readonly i18n = inject(I18nService);
+  readonly languageError = signal(false);
   private dayRequest = 0;
   private foodRequest = 0;
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -123,6 +129,17 @@ export class JournalComponent {
       : (this.foods().find((food) => food.version_id === this.selectedFoodId()) ?? null),
   );
   readonly selectedPortions = computed(() => this.selectedFood()?.portions ?? []);
+  async languageChanged(language: Language): Promise<void> {
+    this.languageError.set(false);
+    try {
+      const user = await this.auth.user();
+      if (user) {
+        await this.i18n.saveForUser(user.id, language);
+      }
+    } catch {
+      this.languageError.set(true);
+    }
+  }
   readonly selectedNutrition = computed<NutritionSummaryValues>(() => {
     const portion = this.selectedPortions().find((item) => item.id === this.selectedPortionId());
     const multiplier = this.parseRatio(this.amount());

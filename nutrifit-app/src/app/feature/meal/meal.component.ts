@@ -15,11 +15,15 @@ import { FoodCataloguePanelComponent } from '@shared/ui/food-catalogue-panel/foo
 import { FoodEditorComponent } from '@shared/ui/food-editor/food-editor.component';
 import { ModalDialogComponent } from '@shared/ui/modal-dialog/modal-dialog.component';
 import { Subject, debounceTime, filter } from 'rxjs';
+import { LanguageSwitchComponent } from '@shared/ui/language-switch/language-switch.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { Language } from '@core/i18n/translations';
 
 @Component({
   selector: 'app-meal-page',
   imports: [
     BrandComponent,
+    LanguageSwitchComponent,
     BottomNavComponent,
     FoodDetailsComponent,
     FoodCataloguePanelComponent,
@@ -32,6 +36,8 @@ import { Subject, debounceTime, filter } from 'rxjs';
 export class MealComponent {
   private readonly catalogue = inject(FoodCatalogueService);
   private readonly auth = inject(AuthService);
+  readonly i18n = inject(I18nService);
+  readonly languageError = signal(false);
   readonly foods = signal<FoodRecord[]>([]);
   readonly selected = signal<FoodRecord | null>(null);
   readonly currentUserId = signal('');
@@ -66,6 +72,18 @@ export class MealComponent {
       : 'recent';
     this.sortOrder.set(sort);
     void this.load();
+  }
+
+  async languageChanged(language: Language): Promise<void> {
+    this.languageError.set(false);
+    try {
+      const user = await this.auth.user();
+      if (user) {
+        await this.i18n.saveForUser(user.id, language);
+      }
+    } catch {
+      this.languageError.set(true);
+    }
   }
 
   constructor() {
