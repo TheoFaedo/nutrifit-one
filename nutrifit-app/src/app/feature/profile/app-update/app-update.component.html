@@ -1,0 +1,14 @@
+@if (updateAvailable()) {
+  <section class="update-card" aria-labelledby="update-title">
+    <div>
+      <h2 id="update-title">An update is ready</h2>
+      <p>Install the latest version of Nutrifit to get the newest improvements.</p>
+    </div>
+    <button type="button" [disabled]="updating()" (click)="applyUpdate()">
+      {{ updating() ? 'Updating…' : 'Update now' }}
+    </button>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+  </section>
+}
