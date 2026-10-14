@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-The Angular application is in `nutrifit-app/`. Feature pages live under `src/app/feature/` (currently auth, journal, and onboarding); shared UI, core services, guards, and models live in their corresponding `shared/` and `core/` folders. App-wide routes and configuration are in `src/app/`. Global styles and static files are in `src/` and `public/`. Database schema changes belong in `supabase/migrations/`; product, architecture, and database notes are in `docs/`. Each components, should be inside a repertory and its children have to be located in sub repertories.
+The Angular application is in `nutrifit-app/`. Feature pages live under `src/app/feature/` (currently auth, journal, and onboarding); shared UI, core services, guards, and models live in their corresponding `shared/` and `core/` folders. App-wide routes and configuration are in `src/app/`. Global styles and static files are in `src/` and `public/`. Database schema changes belong in `supabase/migrations/`; product, architecture, and database notes are in `docs/`. Each components, should be inside a repertory and its children have to be located in sub repertories. Please use the `@shared`, `@feature` and `@core` aliases instead of import via relatives paths.
 
 ## Build, Test, and Development Commands
 
