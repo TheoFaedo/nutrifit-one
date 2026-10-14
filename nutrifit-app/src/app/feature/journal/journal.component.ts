@@ -17,7 +17,7 @@ import {
 } from '../../core/services/intake-journal.service';
 import { BrandComponent } from '../../shared/ui/brand/brand.component';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
-import { DailySummaryComponent } from './daily-summary.component';
+import { DailySummaryComponent } from './daily-summary/daily-summary.component';
 import {
   FOOD_CATALOGUE_SORT_OPTIONS,
   FoodCatalogueSearchComponent,

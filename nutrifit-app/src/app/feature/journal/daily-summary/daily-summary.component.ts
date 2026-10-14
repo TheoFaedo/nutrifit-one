@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
-import { DailyGoal } from '../../core/services/daily-goals.service';
-import { NutritionSummaryValues } from '../../shared/ui/nutrition-summary/nutrition-summary.component';
-import { formatNutrition } from '../../shared/ui/nutrition-summary/nutrition-format';
+import { DailyGoal } from '@core/services/daily-goals.service';
+import { NutritionSummaryValues } from '@shared/ui/nutrition-summary/nutrition-summary.component';
+import { formatNutrition } from '@shared/ui/nutrition-summary/nutrition-format';
 
 @Component({
   selector: 'app-daily-summary',
