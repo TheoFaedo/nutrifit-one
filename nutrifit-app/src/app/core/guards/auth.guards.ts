@@ -38,24 +38,36 @@ export const onboardingGuard: CanActivateFn = async () => {
   }
 };
 
-export const journalGuard: CanActivateFn = async () => {
+export const onboardedGuard: CanActivateFn = (_route, state) => {
+  validateOnboardingInBackground(state.url);
+  return true;
+};
+
+async function validateOnboardingInBackground(targetUrl: string): Promise<void> {
   const auth = inject(AuthService);
   const router = inject(Router);
+  let redirectUrl: string;
+
   try {
     const user = await auth.user();
     if (!user) {
-      return router.createUrlTree(['/login']);
+      redirectUrl = '/login';
+    } else {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('onboarded')
+        .eq('id', user.id)
+        .single();
+      if (error) {
+        throw error;
+      }
+      redirectUrl = data.onboarded ? targetUrl : '/onboarding';
     }
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('onboarded')
-      .eq('id', user.id)
-      .single();
-    if (error) {
-      throw error;
-    }
-    return data.onboarded ? true : router.createUrlTree(['/onboarding']);
   } catch {
-    return router.createUrlTree(['/login']);
+    redirectUrl = '/login';
   }
-};
+
+  if (redirectUrl !== targetUrl && router.url === targetUrl) {
+    await router.navigateByUrl(redirectUrl);
+  }
+}

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { signedInGuard, onboardingGuard, journalGuard } from './core/guards/auth.guards';
+import { signedInGuard, onboardingGuard, onboardedGuard } from './core/guards/auth.guards';
 
 export const routes: Routes = [
   {
@@ -26,19 +26,19 @@ export const routes: Routes = [
     path: 'journal',
     loadComponent: () =>
       import('./feature/journal/journal.component').then((feature) => feature.JournalComponent),
-    canActivate: [journalGuard],
+    canActivate: [onboardedGuard],
   },
   {
     path: 'profile',
     loadComponent: () =>
       import('./feature/profile/profile.component').then((feature) => feature.ProfileComponent),
-    canActivate: [journalGuard],
+    canActivate: [onboardedGuard],
   },
   {
     path: 'meal',
     loadComponent: () =>
       import('./feature/meal/meal.component').then((feature) => feature.MealComponent),
-    canActivate: [journalGuard],
+    canActivate: [onboardedGuard],
   },
   { path: '', pathMatch: 'full', redirectTo: 'journal' },
   { path: '**', redirectTo: 'journal' },
