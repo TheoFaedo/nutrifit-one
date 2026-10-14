@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
-import { AuthService } from '../../core/services/auth.service';
-import { FoodCatalogueService, FoodRecord } from '../../core/services/food-catalogue.service';
+import { AuthService } from '@core/services/auth.service';
+import { FoodCatalogueService, FoodRecord } from '@core/services/food-catalogue.service';
 import { MealComponent } from './meal.component';
 
 const food = (id: string, name: string): FoodRecord => ({

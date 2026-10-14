@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
-import { AuthService } from '../../core/services/auth.service';
-import { DailyGoal, DailyGoalsService } from '../../core/services/daily-goals.service';
-import { FoodCatalogueService, FoodRecord } from '../../core/services/food-catalogue.service';
-import { IntakeJournalService, IntakeRecord } from '../../core/services/intake-journal.service';
+import { AuthService } from '@core/services/auth.service';
+import { DailyGoal, DailyGoalsService } from '@core/services/daily-goals.service';
+import { FoodCatalogueService, FoodRecord } from '@core/services/food-catalogue.service';
+import { IntakeJournalService, IntakeRecord } from '@core/services/intake-journal.service';
 import { JournalComponent, parisInstant } from './journal.component';
 
 const portion = {

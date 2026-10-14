@@ -2,9 +2,9 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NutritionFacts } from '../../core/models/nutrition-facts.model';
-import { supabase } from '../../core/services/supabase.client';
-import { BrandComponent } from '../../shared/ui/brand/brand.component';
+import { NutritionFacts } from '@core/models/nutrition-facts.model';
+import { supabase } from '@core/services/supabase.client';
+import { BrandComponent } from '@shared/ui/brand/brand.component';
 
 type GoalPreset = 'lose' | 'maintain' | 'gain';
 const presets: Record<GoalPreset, NutritionFacts> = {

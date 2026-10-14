@@ -1,19 +1,19 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService } from '../../core/services/auth.service';
+import { AuthService } from '@core/services/auth.service';
 import {
   FoodCatalogueService,
   FoodCatalogueSort,
   FoodRecord,
   PortionInput,
-} from '../../core/services/food-catalogue.service';
-import { BrandComponent } from '../../shared/ui/brand/brand.component';
-import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
-import { FoodDetailsComponent } from '../../shared/ui/food-details/food-details.component';
-import { FOOD_CATALOGUE_SORT_OPTIONS } from '../../shared/ui/food-catalogue-search/food-catalogue-search.component';
-import { FoodCataloguePanelComponent } from '../../shared/ui/food-catalogue-panel/food-catalogue-panel.component';
-import { FoodEditorComponent } from '../../shared/ui/food-editor/food-editor.component';
-import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+} from '@core/services/food-catalogue.service';
+import { BrandComponent } from '@shared/ui/brand/brand.component';
+import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
+import { FoodDetailsComponent } from '@shared/ui/food-details/food-details.component';
+import { FOOD_CATALOGUE_SORT_OPTIONS } from '@shared/ui/food-catalogue-search/food-catalogue-search.component';
+import { FoodCataloguePanelComponent } from '@shared/ui/food-catalogue-panel/food-catalogue-panel.component';
+import { FoodEditorComponent } from '@shared/ui/food-editor/food-editor.component';
+import { ModalDialogComponent } from '@shared/ui/modal-dialog/modal-dialog.component';
 import { Subject, debounceTime, filter } from 'rxjs';
 
 @Component({

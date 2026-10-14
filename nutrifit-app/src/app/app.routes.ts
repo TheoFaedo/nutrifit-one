@@ -5,12 +5,12 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./feature/auth/login.component').then((feature) => feature.LoginComponent),
+      import('./feature/auth/login/login.component').then((feature) => feature.LoginComponent),
   },
   {
     path: 'auth/callback',
     loadComponent: () =>
-      import('./feature/auth/auth-callback.component').then(
+      import('./feature/auth/auth-callback/auth-callback.component').then(
         (feature) => feature.AuthCallbackComponent,
       ),
   },

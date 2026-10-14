@@ -3,7 +3,7 @@ import {
   FoodRecord,
   FoodCatalogueSort,
   PortionInput,
-} from '../../../core/services/food-catalogue.service';
+} from '@core/services/food-catalogue.service';
 import {
   FoodCatalogueSearchComponent,
   FoodSortOption,

@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
-import { AuthService } from '../../core/services/auth.service';
-import { supabaseConfigured } from '../../core/services/supabase.client';
-import { BrandComponent } from '../../shared/ui/brand/brand.component';
+import { AuthService } from '@core/services/auth.service';
+import { supabaseConfigured } from '@core/services/supabase.client';
+import { BrandComponent } from '@shared/ui/brand/brand.component';
 
 @Component({
   selector: 'app-login-page',

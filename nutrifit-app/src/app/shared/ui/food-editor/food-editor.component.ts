@@ -6,7 +6,7 @@ import {
   PortionInput,
   RecipeInput,
   FoodPortion,
-} from '../../../core/services/food-catalogue.service';
+} from '@core/services/food-catalogue.service';
 
 @Component({
   selector: 'app-food-editor',

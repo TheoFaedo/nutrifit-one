@@ -1,5 +1,5 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core';
-import { FoodPortion, FoodRecord, RecipePart } from '../../../core/services/food-catalogue.service';
+import { FoodPortion, FoodRecord, RecipePart } from '@core/services/food-catalogue.service';
 import { NutritionSummaryComponent } from '../nutrition-summary/nutrition-summary.component';
 import { PortionSelectorComponent } from '../portion-selector/portion-selector.component';
 

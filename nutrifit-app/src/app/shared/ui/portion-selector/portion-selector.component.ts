@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { FoodPortion } from '../../../core/services/food-catalogue.service';
+import { FoodPortion } from '@core/services/food-catalogue.service';
 
 @Component({
   selector: 'app-portion-selector',

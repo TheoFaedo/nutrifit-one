@@ -1,5 +1,5 @@
 import { Component, computed, input, output, signal } from '@angular/core';
-import { FoodRecord } from '../../../core/services/food-catalogue.service';
+import { FoodRecord } from '@core/services/food-catalogue.service';
 
 @Component({
   selector: 'app-food-search-list',

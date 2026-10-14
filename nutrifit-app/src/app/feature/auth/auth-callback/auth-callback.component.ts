@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
-import { supabase } from '../../core/services/supabase.client';
+import { AuthService } from '@core/services/auth.service';
+import { supabase } from '@core/services/supabase.client';
 
 @Component({
   selector: 'app-auth-callback-page',

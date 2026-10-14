@@ -1,35 +1,35 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../core/services/auth.service';
-import { DailyGoal, DailyGoalsService } from '../../core/services/daily-goals.service';
+import { AuthService } from '@core/services/auth.service';
+import { DailyGoal, DailyGoalsService } from '@core/services/daily-goals.service';
 import {
   FoodCatalogueService,
   FoodCatalogueSort,
   FoodPortion,
   PortionInput,
   FoodRecord,
-} from '../../core/services/food-catalogue.service';
+} from '@core/services/food-catalogue.service';
 import {
   IntakeInput,
   IntakeJournalService,
   IntakeRecord,
   MealType,
-} from '../../core/services/intake-journal.service';
-import { BrandComponent } from '../../shared/ui/brand/brand.component';
-import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
+} from '@core/services/intake-journal.service';
+import { BrandComponent } from '@shared/ui/brand/brand.component';
+import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
 import { DailySummaryComponent } from './daily-summary/daily-summary.component';
 import {
   FOOD_CATALOGUE_SORT_OPTIONS,
   FoodCatalogueSearchComponent,
-} from '../../shared/ui/food-catalogue-search/food-catalogue-search.component';
-import { formatNutrition } from '../../shared/ui/nutrition-summary/nutrition-format';
-import { PortionSelectorComponent } from '../../shared/ui/portion-selector/portion-selector.component';
+} from '@shared/ui/food-catalogue-search/food-catalogue-search.component';
+import { formatNutrition } from '@shared/ui/nutrition-summary/nutrition-format';
+import { PortionSelectorComponent } from '@shared/ui/portion-selector/portion-selector.component';
 import {
   NutritionSummaryComponent,
   NutritionSummaryValues,
-} from '../../shared/ui/nutrition-summary/nutrition-summary.component';
-import { FoodEditorComponent } from '../../shared/ui/food-editor/food-editor.component';
-import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+} from '@shared/ui/nutrition-summary/nutrition-summary.component';
+import { FoodEditorComponent } from '@shared/ui/food-editor/food-editor.component';
+import { ModalDialogComponent } from '@shared/ui/modal-dialog/modal-dialog.component';
 
 const meals: { type: MealType; label: string }[] = [
   { type: 'BREAKFAST', label: 'Breakfast' },

@@ -2,12 +2,12 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, map, merge, tap } from 'rxjs';
-import { NutritionFacts } from '../../core/models/nutrition-facts.model';
-import type { NutritionFactsValues } from '../../core/models/nutrition-facts.model';
-import { AuthService } from '../../core/services/auth.service';
-import { DailyGoalsService } from '../../core/services/daily-goals.service';
-import { BrandComponent } from '../../shared/ui/brand/brand.component';
-import { BottomNavComponent } from '../../shared/ui/bottom-nav/bottom-nav.component';
+import { NutritionFacts } from '@core/models/nutrition-facts.model';
+import type { NutritionFactsValues } from '@core/models/nutrition-facts.model';
+import { AuthService } from '@core/services/auth.service';
+import { DailyGoalsService } from '@core/services/daily-goals.service';
+import { BrandComponent } from '@shared/ui/brand/brand.component';
+import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
 import { ClearAppCacheComponent } from './clear-app-cache/clear-app-cache.component';
 
 @Component({
