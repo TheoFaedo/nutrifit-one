@@ -14,8 +14,8 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Do not exceed indentation levels inside a function, split it into multiple functions or use guard closes instead of indented code.
 
 ```typescript
-// Not conform
-function processOrder(user: User, price: number): Order | null {
+// Not conform : 3 indentation level, multiple responsability function
+function processOrder(user: User, price: number) {
   if (user?.active) {
     const order = new Order(user.id, price);
     if (order.eligible) {
@@ -25,16 +25,16 @@ function processOrder(user: User, price: number): Order | null {
   return null;
 }
 
-// Conform
-function processOrder(user: User, price: number): Order | null {
+// Conform : 2 indentation level, one responsability per function
+function processOrder(user: User, price: number) {
   if (!user?.active) {
     return null;
   }
   return createOrder(user.name, price);
 }
 
-function createOrder(username: string, price: number) {
-  const order = new Order(user.id, price);
+function createOrder(userId: string, price: number) {
+  const order = new Order(userId, price);
   if (!order.eligible) {
     return null;
   }
