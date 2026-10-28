@@ -5,11 +5,42 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use strict type checking
 - Prefer type inference when the type is obvious
 - Avoid the `any` type; use `unknown` when type is uncertain
+- Do not use nested ternary operators. Prefer clearly named functions/signals that express the decision logic and make the code easier to understand.
 
 ## Design Principles
 
 - Follow the Single Responsibility Principle (SRP): give each component, service, and class one clear responsibility, and split unrelated behavior into focused units.
 - Prefer CSS `gap` for spacing between sibling elements instead of applying `margin` to individual elements.
+- Do not exceed indentation levels inside a function, split it into multiple functions or use guard closes instead of indented code.
+
+```typescript
+// Not conform
+function processOrder(user: User, price: number): Order | null {
+  if (user?.active) {
+    const order = new Order(user.id, price);
+    if (order.eligible) {
+      return order;
+    }
+  }
+  return null;
+}
+
+// Conform
+function processOrder(user: User, price: number): Order | null {
+  if (!user?.active) {
+    return null;
+  }
+  return createOrder(user.name, price);
+}
+
+function createOrder(username: string, price: number) {
+  const order = new Order(user.id, price);
+  if (!order.eligible) {
+    return null;
+  }
+  return order;
+}
+```
 
 ## Angular Best Practices
 
