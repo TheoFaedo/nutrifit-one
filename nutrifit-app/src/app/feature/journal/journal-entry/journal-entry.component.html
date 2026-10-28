@@ -1,0 +1,59 @@
+<div class="entry-shell">
+  <div
+    class="entry-content"
+    [class.dragging]="dragOffset() !== null"
+    [style.transform]="'translateX(' + offset() + 'px)'"
+    (pointerdown)="pointerDown($event)"
+    (pointermove)="pointerMove($event)"
+    (pointerup)="pointerUp($event)"
+    (pointercancel)="cancelGesture()"
+    (lostpointercapture)="cancelGesture()"
+  >
+    <div class="entry-name">
+      <strong>{{ entry().food_name }}</strong>
+      <span
+        >{{ formatNutrition(entry().ratio) }} ×
+        {{ formatNutrition(entry().portion.quantity_number) }} {{ entry().portion.quantity_unit }} ·
+        {{ i18n.t('foodEditor', entry().kind === 'RECIPE' ? 'recipe' : 'food') }}</span
+      >
+      <span>{{ formatNutrition(energy()) }} kcal</span>
+    </div>
+    <button
+      class="entry-toggle"
+      type="button"
+      [attr.aria-label]="i18n.t('journal', 'entryActions') + ' : ' + entry().food_name"
+      [attr.aria-expanded]="open()"
+      [attr.aria-controls]="'entry-actions-' + entry().id"
+      (click)="toggle($event)"
+    >
+      <span aria-hidden="true">⋯</span>
+    </button>
+  </div>
+  <div
+    class="entry-actions"
+    [id]="'entry-actions-' + entry().id"
+    [attr.inert]="open() ? null : ''"
+    [attr.aria-hidden]="!open()"
+  >
+    <button
+      class="edit-action"
+      type="button"
+      [attr.aria-label]="i18n.t('journal', 'edit') + ' : ' + entry().food_name"
+      (click)="editRequested.emit()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z" />
+      </svg>
+    </button>
+    <button
+      class="delete-action"
+      type="button"
+      [attr.aria-label]="i18n.t('journal', 'delete') + ' : ' + entry().food_name"
+      (click)="deleteRequested.emit()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" />
+      </svg>
+    </button>
+  </div>
+</div>

@@ -165,7 +165,7 @@ describe('JournalComponent', () => {
     sortMenu.hidePopover = vi.fn();
 
     expect(search).toBeTruthy();
-    (sortMenu.querySelectorAll<HTMLButtonElement>('.sort-option')[1]).click();
+    sortMenu.querySelectorAll<HTMLButtonElement>('.sort-option')[1].click();
     fixture.detectChanges();
     expect(fixture.componentInstance.foodSort()).toBe('newest');
     expect(catalogue.journalPage).toHaveBeenCalledWith('', 'newest', 0, 20, null);
@@ -237,5 +237,125 @@ describe('JournalComponent', () => {
     expect(fixture.componentInstance.foodsRefreshing()).toBe(true);
     resolve([]);
     await refresh;
+  });
+  async function withEntries() {
+    const fixture = TestBed.createComponent(JournalComponent);
+    await fixture.whenStable();
+    TestBed.inject(JournalStore).write(fixture.componentInstance.date(), [
+      entry,
+      { ...entry, id: 'entry-2' },
+    ]);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('opens only one entry and closes actions on Escape, outside touch and date change', async () => {
+    const fixture = await withEntries();
+    const component = fixture.componentInstance;
+    const toggles = fixture.nativeElement.querySelectorAll(
+      '.entry-toggle',
+    ) as NodeListOf<HTMLButtonElement>;
+    toggles[0].click();
+    fixture.detectChanges();
+    expect(toggles[0].getAttribute('aria-expanded')).toBe('true');
+    toggles[1].click();
+    fixture.detectChanges();
+    expect(toggles[0].getAttribute('aria-expanded')).toBe('false');
+    expect(toggles[1].getAttribute('aria-expanded')).toBe('true');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    expect(component.openEntryId()).toBeNull();
+    expect(document.activeElement).toBe(toggles[1]);
+    toggles[0].click();
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(component.openEntryId()).toBeNull();
+    toggles[0].click();
+    component.setDate('2026-10-01');
+    expect(component.openEntryId()).toBeNull();
+  });
+
+  it('names the deletion confirmation and restores focus on cancellation', async () => {
+    const fixture = await withEntries();
+    const component = fixture.componentInstance;
+    component.setEntryOpen(entry.id, true);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.delete-action') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(fixture.nativeElement.querySelector('.delete-dialog').textContent).toContain(
+      entry.food_name,
+    );
+    expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1);
+    component.cancelDelete();
+    fixture.detectChanges();
+    expect(journal.remove).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('.entry-toggle'));
+  });
+
+  it('blocks duplicate deletion and focuses the next entry, then the meal add button', async () => {
+    const fixture = await withEntries();
+    const component = fixture.componentInstance;
+    let finish!: () => void;
+    journal.remove.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    component.requestDelete(entry);
+    fixture.detectChanges();
+    const pending = component.confirmDelete();
+    await component.confirmDelete();
+    component.cancelDelete();
+    expect(component.deletingEntry()).toEqual(entry);
+    expect(journal.remove).toHaveBeenCalledTimes(1);
+    finish();
+    await pending;
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(component.entries().map((item) => item.id)).toEqual(['entry-2']);
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('.entry-toggle'));
+    journal.remove.mockResolvedValueOnce(undefined);
+    component.requestDelete(component.entries()[0]);
+    fixture.detectChanges();
+    await component.confirmDelete();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(document.activeElement).toBe(
+      fixture.nativeElement.querySelector('[data-add-meal="LUNCH"]'),
+    );
+  });
+
+  it('keeps a failed deletion in the dialog for retry and prevents a second dialog', async () => {
+    const fixture = await withEntries();
+    const component = fixture.componentInstance;
+    journal.remove.mockRejectedValueOnce(new Error('offline'));
+    component.requestDelete(entry);
+    fixture.detectChanges();
+    await component.edit(entry);
+    expect(component.dialogOpen()).toBe(false);
+    await component.confirmDelete();
+    fixture.detectChanges();
+    expect(component.entries()).toHaveLength(2);
+    expect(component.deletingEntry()).toEqual(entry);
+    expect(fixture.nativeElement.querySelector('.delete-dialog [role="alert"]')).toBeTruthy();
+    journal.remove.mockResolvedValueOnce(undefined);
+    await component.confirmDelete();
+    expect(component.deletingEntry()).toBeNull();
+    expect(component.entries()).toHaveLength(1);
+  });
+
+  it('opens the existing editor from the pencil and restores focus on close', async () => {
+    const fixture = await withEntries();
+    const component = fixture.componentInstance;
+    component.setEntryOpen(entry.id, true);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.edit-action') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(component.editingId()).toBe(entry.id);
+    expect(component.selectedPortionId()).toBe(entry.quantity_id);
+    component.closeDialog();
+    fixture.detectChanges();
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('.entry-toggle'));
   });
 });

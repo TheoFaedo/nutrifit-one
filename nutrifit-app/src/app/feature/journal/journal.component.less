@@ -119,53 +119,7 @@
   margin: 18px 0 0;
 }
 .entry-list li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 12px;
-  padding: 12px 0;
-  border-top: 1px solid var(--line);
-}
-.entry-name {
-  display: grid;
-  gap: 4px;
   min-width: 0;
-}
-.entry-name strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-}
-.entry-name span,
-.entry-energy {
-  color: var(--muted);
-  font-size: 12px;
-}
-.entry-energy {
-  white-space: nowrap;
-}
-.entry-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 14px;
-}
-.link-button {
-  padding: 6px 11px;
-  border: 1px solid #dfe7d9;
-  border-radius: 999px;
-  color: var(--green-dark);
-  background: #fffefa;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 140ms ease,
-    border-color 140ms ease;
-}
-.link-button:hover {
-  border-color: #aab99d;
-  background: #f0f4e8;
 }
 .empty-meal {
   margin: 22px 0 8px;
@@ -372,4 +326,31 @@
   .entry-dialog {
     padding: 24px 18px;
   }
+}
+
+.delete-dialog {
+  display: grid;
+  gap: 16px;
+}
+.delete-dialog h2 {
+  padding-right: 36px;
+}
+.delete-dialog p {
+  overflow-wrap: anywhere;
+}
+.delete-dialog button {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  font: inherit;
+  cursor: pointer;
+}
+.delete-dialog .delete-confirm {
+  background: #b83232;
+  color: white;
+}
+.delete-dialog button:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }

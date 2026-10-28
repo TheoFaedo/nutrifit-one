@@ -1,3 +1,4 @@
+import { I18nService } from '@core/i18n/i18n.service';
 import { DOCUMENT } from '@angular/common';
 import { Component, effect, inject, input, output } from '@angular/core';
 
@@ -17,7 +18,7 @@ import { Component, effect, inject, input, output } from '@angular/core';
           <button
             class="modal-close"
             type="button"
-            aria-label="Close dialog"
+            [attr.aria-label]="i18n.t('common', 'closeDialog')"
             (click)="closed.emit()"
           >
             ×
@@ -79,6 +80,7 @@ import { Component, effect, inject, input, output } from '@angular/core';
   `,
 })
 export class ModalDialogComponent {
+  readonly i18n = inject(I18nService);
   readonly open = input(false);
   readonly labelledBy = input.required<string>();
   readonly closed = output<void>();

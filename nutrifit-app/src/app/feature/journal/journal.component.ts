@@ -1,9 +1,19 @@
+import { JournalEntryComponent } from '@feature/journal/journal-entry/journal-entry.component';
 import { DiscardedCacheResponse } from '@core/stores/keyed-cache';
 import { JournalStore } from '@core/stores/journal.store';
 import { DailyGoalsStore } from '@core/stores/daily-goals.store';
 import { FoodCatalogueStore, catalogueKey } from '@core/stores/food-catalogue.store';
 import { CacheSession } from '@core/stores/cache-session.service';
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChildren,
+  ElementRef,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
 import { DailyGoal } from '@core/services/daily-goals.service';
@@ -16,7 +26,7 @@ import {
 import { IntakeInput, IntakeRecord, MealType } from '@core/services/intake-journal.service';
 import { BrandComponent } from '@shared/ui/brand/brand.component';
 import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
-import { DailySummaryComponent } from './daily-summary/daily-summary.component';
+import { DailySummaryComponent } from '@feature/journal/daily-summary/daily-summary.component';
 import {
   FOOD_CATALOGUE_SORT_OPTIONS,
   FoodCatalogueSearchComponent,
@@ -65,6 +75,7 @@ export const parisInstant = (date: string): string => {
 @Component({
   selector: 'app-journal-page',
   imports: [
+    JournalEntryComponent,
     FormsModule,
     BrandComponent,
     LanguageSwitchComponent,
@@ -76,10 +87,57 @@ export const parisInstant = (date: string): string => {
     FoodEditorComponent,
     ModalDialogComponent,
   ],
+  host: {
+    '(document:pointerdown)': 'outsidePointer($event)',
+    '(document:keydown.escape)': 'escapeActions()',
+  },
   templateUrl: './journal.component.html',
   styleUrl: './journal.component.less',
 })
 export class JournalComponent {
+  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly entryComponents = viewChildren(JournalEntryComponent);
+  readonly openEntryId = signal<string | null>(null);
+  readonly deletingEntry = signal<IntakeRecord | null>(null);
+  readonly deleting = signal(false);
+  readonly deleteError = signal('');
+  private editingPending = false;
+
+  setEntryOpen(id: string, open: boolean): void {
+    this.openEntryId.set(open ? id : null);
+  }
+  outsidePointer(event: PointerEvent): void {
+    const row = (event.target as HTMLElement).closest?.('app-journal-entry');
+    if (row?.getAttribute('data-entry-id') !== this.openEntryId()) {
+      this.openEntryId.set(null);
+    }
+  }
+  escapeActions(): void {
+    if (this.dialogOpen() || this.deletingEntry()) {
+      return;
+    }
+    this.focusEntry(this.openEntryId());
+    this.openEntryId.set(null);
+  }
+  private focusEntry(id: string | null): void {
+    this.entryComponents()
+      .find((row) => row.entry().id === id)
+      ?.focusToggle();
+  }
+  requestDelete(entry: IntakeRecord): void {
+    if (this.dialogOpen() || this.editingPending || this.deletingEntry()) {
+      return;
+    }
+    this.focusEntry(entry.id);
+    this.openEntryId.set(null);
+    this.deleteError.set('');
+    this.deletingEntry.set(entry);
+  }
+  cancelDelete(): void {
+    if (!this.deleting()) {
+      this.deletingEntry.set(null);
+    }
+  }
   readonly ratioInputType =
     typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
       ? 'text'
@@ -181,10 +239,13 @@ export class JournalComponent {
   );
   readonly novaTotals = computed(() => {
     const entries = this.entries();
-    if (entries.some((entry) => !entry.nova_calories)) {return null;}
+    if (entries.some((entry) => !entry.nova_calories)) {
+      return null;
+    }
     const totals = [0, 0, 0, 0];
-    for (const entry of entries)
-      {entry.nova_calories?.forEach((value, index) => (totals[index] += value));}
+    for (const entry of entries) {
+      entry.nova_calories?.forEach((value, index) => (totals[index] += value));
+    }
     return totals;
   });
   readonly dailyTotals = computed(() => this.totals(this.entries()));
@@ -219,16 +280,22 @@ export class JournalComponent {
   async changeDate(delta: number): Promise<void> {
     const current = new Date(`${this.date()}T12:00:00Z`);
     current.setUTCDate(current.getUTCDate() + delta);
+    this.openEntryId.set(null);
     this.date.set(current.toISOString().slice(0, 10));
     await this.load();
   }
   setDate(value: string): void {
     if (value) {
+      this.openEntryId.set(null);
       this.date.set(value);
       void this.load();
     }
   }
   startAdd(type: MealType): void {
+    if (this.deletingEntry() || this.editingPending) {
+      return;
+    }
+    this.openEntryId.set(null);
     this.historicalFood.set(null);
     this.dialogView.set('search');
     this.creatingFood.set(false);
@@ -265,6 +332,12 @@ export class JournalComponent {
     this.creatingFood.set(false);
   }
   async edit(entry: IntakeRecord): Promise<void> {
+    if (this.dialogOpen() || this.deletingEntry() || this.editingPending) {
+      return;
+    }
+    this.editingPending = true;
+    this.focusEntry(entry.id);
+    this.openEntryId.set(null);
     this.dialogError.set('');
     try {
       const food = await this.catalogue.version(entry.food_version_id);
@@ -273,9 +346,11 @@ export class JournalComponent {
       }
       this.historicalFood.set(food);
     } catch (error) {
+      this.editingPending = false;
       this.error.set(this.message(error, 'The entry could not be edited.'));
       return;
     }
+    this.editingPending = false;
     this.dialogView.set('details');
     this.editingId.set(entry.id);
     this.mealType.set(entry.meal_type);
@@ -483,11 +558,35 @@ export class JournalComponent {
       this.saving.set(false);
     }
   }
-  async remove(entry: IntakeRecord): Promise<void> {
+  async confirmDelete(): Promise<void> {
+    const entry = this.deletingEntry();
+    if (!entry || this.deleting()) {
+      return;
+    }
+    const date = this.date();
+    const siblings = this.entries().filter((item) => item.meal_type === entry.meal_type);
+    const nextId = siblings[siblings.findIndex((item) => item.id === entry.id) + 1]?.id;
+    this.deleting.set(true);
+    this.deleteError.set('');
     try {
-      await this.journal.remove(this.date(), entry.id);
-    } catch (error) {
-      this.error.set(this.message(error, 'The entry could not be deleted.'));
+      await this.journal.remove(date, entry.id);
+      this.deletingEntry.set(null);
+      setTimeout(() => {
+        if (this.date() !== date) {
+          return;
+        }
+        if (nextId) {
+          this.focusEntry(nextId);
+        } else {
+          this.element.nativeElement
+            .querySelector<HTMLButtonElement>('[data-add-meal="' + entry.meal_type + '"]')
+            ?.focus();
+        }
+      });
+    } catch {
+      this.deleteError.set(this.i18n.t('journal', 'deleteFailed'));
+    } finally {
+      this.deleting.set(false);
     }
   }
   private toIntakeRecord(id: string, food: FoodRecord, input: IntakeInput): IntakeRecord {

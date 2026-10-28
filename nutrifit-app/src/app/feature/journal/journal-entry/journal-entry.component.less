@@ -1,0 +1,92 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.entry-shell {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--line);
+}
+.entry-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  background: #fffefa;
+  touch-action: pan-y;
+  transition: transform 160ms ease;
+}
+.entry-content.dragging {
+  transition: none;
+  user-select: none;
+}
+.entry-name {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.entry-name strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.entry-name span {
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.entry-actions {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 104px;
+  padding-right: 4px;
+}
+button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  font: inherit;
+}
+.entry-toggle {
+  background: #f0f4e8;
+  color: var(--green-dark);
+  font-size: 26px;
+  margin-right: 4px;
+}
+.edit-action {
+  background: #416b51;
+  color: white;
+}
+.delete-action {
+  background: #b83232;
+  color: white;
+}
+svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+button:focus-visible {
+  outline: 3px solid #879365;
+  outline-offset: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .entry-content {
+    transition: none;
+  }
+}

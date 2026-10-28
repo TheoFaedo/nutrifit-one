@@ -62,7 +62,12 @@
                   {{ i18n.t('journal', meal.entries.length === 1 ? 'entry' : 'entries') }}
                 </p>
               </div>
-              <button class="secondary-button" type="button" (click)="startAdd(meal.type)">
+              <button
+                class="secondary-button"
+                type="button"
+                [attr.data-add-meal]="meal.type"
+                (click)="startAdd(meal.type)"
+              >
                 {{ i18n.t('journal', 'addFood') }} <span aria-hidden="true">＋</span>
               </button>
             </header>
@@ -70,31 +75,13 @@
               <ul class="entry-list">
                 @for (entry of meal.entries; track entry.id) {
                   <li>
-                    <div class="entry-name">
-                      <strong>{{ entry.food_name }}</strong><span
-                        >{{ formatNutrition(entry.ratio) }} × {{ portionLabel(entry.portion) }} ·
-                        {{
-                          i18n.t('foodEditor', entry.kind === 'RECIPE' ? 'recipe' : 'food')
-                        }}</span
-                      >
-                    </div>
-                    <div class="entry-energy">
-                      {{
-                        formatNutrition(
-                          entry.portion.energy_kcal === null
-                            ? null
-                            : entry.portion.energy_kcal * entry.ratio
-                        )
-                      }}
-                      kcal
-                    </div>
-                    <div class="entry-actions">
-                      <button class="link-button" type="button" (click)="edit(entry)">
-                        {{ i18n.t('journal', 'edit') }}</button
-                      ><button class="link-button" type="button" (click)="remove(entry)">
-                        {{ i18n.t('journal', 'delete') }}
-                      </button>
-                    </div>
+                    <app-journal-entry
+                      [entry]="entry"
+                      [open]="openEntryId() === entry.id"
+                      (openRequested)="setEntryOpen(entry.id, $event)"
+                      (editRequested)="edit(entry)"
+                      (deleteRequested)="requestDelete(entry)"
+                    />
                   </li>
                 }
               </ul>
@@ -256,6 +243,36 @@
           </button>
         </div>
       }
+    </div>
+  }
+</app-modal-dialog>
+<app-modal-dialog
+  [open]="!!deletingEntry()"
+  labelledBy="delete-entry-title"
+  (closed)="cancelDelete()"
+>
+  @if (deletingEntry(); as entry) {
+    <div class="delete-dialog" [attr.aria-busy]="deleting()">
+      <h2 id="delete-entry-title">{{ i18n.t('journal', 'deleteTitle') }}</h2>
+      <p>
+        {{ i18n.t('journal', 'deletePrompt') }} <strong>{{ entry.food_name }}</strong> ?
+      </p>
+      @if (deleteError()) {
+        <p class="error" role="alert">{{ deleteError() }}</p>
+      }
+      <div class="dialog-actions">
+        <button type="button" [disabled]="deleting()" (click)="cancelDelete()">
+          {{ i18n.t('journal', 'cancel') }}
+        </button>
+        <button
+          class="delete-confirm"
+          type="button"
+          [disabled]="deleting()"
+          (click)="confirmDelete()"
+        >
+          {{ i18n.t('journal', deleting() ? 'deleting' : 'delete') }}
+        </button>
+      </div>
     </div>
   }
 </app-modal-dialog>
