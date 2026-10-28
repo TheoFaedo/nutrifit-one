@@ -63,6 +63,15 @@
         >{{ i18n.t('foodEditor', 'barcode') }}
         <input name="barcode" [(ngModel)]="barcode" [readonly]="!!food()" inputmode="numeric"
       /></label>
+      <label class="field"
+        >{{ i18n.t('foodEditor', 'novaGroup') }}
+        <select name="novaGroup" [(ngModel)]="novaGroup">
+          <option [ngValue]="null">{{ i18n.t('foodEditor', 'novaUnknown') }}</option>
+          @for (group of [1, 2, 3, 4]; track group) {
+            <option [ngValue]="group">NOVA {{ group }}</option>
+          }
+        </select>
+      </label>
       <section class="form-section" aria-labelledby="portions-title">
         <div class="section-heading">
           <div>

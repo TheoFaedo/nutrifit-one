@@ -1,0 +1,27 @@
+  <section class="nova-summary" aria-labelledby="transformation-title">
+    <h3 id="transformation-title">{{ i18n.t('summary', 'transformationTitle') }}</h3>
+    @if ((energy() ?? 0) <= 0) {
+      <p>{{ i18n.t('summary', 'novaEmpty') }}</p>
+    } @else if (groups(); as groups) {
+      @if (averageTransformationScore(); as score) {
+        <p class="nova-dominant">
+          <span>{{ formatValue(score) }} / 4</span>
+          <span class="transformation-comment">{{ transformationComment(score) }}</span>
+        </p>
+        <details>
+          <summary>{{ i18n.t('summary', 'transformationDetails') }}</summary>
+          @for (value of groups; track $index) {
+            <div>
+              {{ i18n.t('summary', 'transformationLevel', { level: $index + 1 }) }}:
+              {{ formatValue(value) }} kcal ·
+              {{ formatValue((value / (energy() ?? 1)) * 100) }} %
+            </div>
+          }
+        </details>
+      } @else {
+        <p>{{ i18n.t('summary', 'novaEmpty') }}</p>
+      }
+    } @else {
+      <p>{{ i18n.t('summary', 'novaMissing') }}</p>
+    }
+  </section>

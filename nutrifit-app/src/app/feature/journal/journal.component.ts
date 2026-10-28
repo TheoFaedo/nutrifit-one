@@ -133,9 +133,12 @@ export class JournalComponent {
   readonly barcode = signal('');
   readonly barcodeSearching = signal(false);
   readonly barcodeError = signal('');
-  readonly offProduct = signal<{ name: string; portions: PortionInput[]; payload: unknown } | null>(
-    null,
-  );
+  readonly offProduct = signal<{
+    name: string;
+    portions: PortionInput[];
+    payload: unknown;
+    novaGroup?: number | null;
+  } | null>(null);
   readonly selectedFoodId = signal('');
   readonly selectedPortionId = signal('');
   readonly amount = signal('1');
@@ -176,6 +179,14 @@ export class JournalComponent {
       entries: this.entries().filter((entry) => entry.meal_type === meal.type),
     })),
   );
+  readonly novaTotals = computed(() => {
+    const entries = this.entries();
+    if (entries.some((entry) => !entry.nova_calories)) {return null;}
+    const totals = [0, 0, 0, 0];
+    for (const entry of entries)
+      {entry.nova_calories?.forEach((value, index) => (totals[index] += value));}
+    return totals;
+  });
   readonly dailyTotals = computed(() => this.totals(this.entries()));
 
   constructor() {
@@ -412,6 +423,7 @@ export class JournalComponent {
     try {
       const foodId = await this.catalogue.save({
         name: product.name,
+        novaGroup: product.novaGroup,
         isPublic: true,
         barcode: this.barcode().trim(),
         portions: product.portions,
@@ -492,6 +504,7 @@ export class JournalComponent {
       consumed_at: input.consumedAt,
       food_name: food.name,
       kind: food.kind,
+      nova_group: food.nova_group ?? null,
       portion,
     };
   }

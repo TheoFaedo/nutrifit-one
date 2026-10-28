@@ -2,20 +2,22 @@ import { Component, input, inject } from '@angular/core';
 import { I18nService } from '@core/i18n/i18n.service';
 import { DailyGoal } from '@core/services/daily-goals.service';
 import { NutritionSummaryValues } from '@shared/ui/nutrition-summary/nutrition-summary.component';
+import { NovaSummaryComponent } from '@feature/journal/daily-summary/nova-summary/nova-summary.component';
 import { formatNutrition } from '@shared/ui/nutrition-summary/nutrition-format';
 
 @Component({
   selector: 'app-daily-summary',
+  imports: [NovaSummaryComponent],
   templateUrl: './daily-summary.component.html',
   styleUrl: './daily-summary.component.less',
 })
 export class DailySummaryComponent {
   readonly i18n = inject(I18nService);
   readonly totals = input.required<NutritionSummaryValues>();
+  readonly novaTotals = input<number[] | null>(null);
   readonly goal = input<DailyGoal | null>(null);
 
   readonly formatValue = formatNutrition;
-
   progressWidth(consumed: number | null, target: number | null): number {
     return consumed === null || target === null || target <= 0
       ? 0

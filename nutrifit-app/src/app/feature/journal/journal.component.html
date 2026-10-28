@@ -46,7 +46,11 @@
       @if (!entries().length) {
         <p class="muted" role="status">{{ i18n.t('journal', 'emptyDay') }}</p>
       }
-      <app-daily-summary [totals]="dailyTotals()" [goal]="dailyGoal()" />
+      <app-daily-summary
+        [totals]="dailyTotals()"
+        [goal]="dailyGoal()"
+        [novaTotals]="novaTotals()"
+      />
       <section class="meal-sections" [attr.aria-label]="i18n.t('journal', 'meals')">
         @for (meal of groupedMeals(); track meal.type) {
           <section class="meal-section" [attr.aria-labelledby]="'meal-' + meal.type">
@@ -67,7 +71,14 @@
                 @for (entry of meal.entries; track entry.id) {
                   <li>
                     <div class="entry-name">
-                      <strong>{{ entry.food_name }}</strong
+                      <strong
+                        >{{ entry.food_name }}
+                        @if (entry.kind === 'FOOD') {
+                          <small>
+                            · NOVA
+                            {{ entry.nova_group ?? i18n.t('foodEditor', 'novaUnknown') }}</small
+                          >
+                        }</strong
                       ><span
                         >{{ formatNutrition(entry.ratio) }} × {{ portionLabel(entry.portion) }} ·
                         {{
@@ -207,6 +218,9 @@
           </button>
           <p class="eyebrow">{{ i18n.t('journal', food.kind === 'RECIPE' ? 'recipe' : 'food') }}</p>
           <h2 id="entry-dialog-title">{{ food.name }}</h2>
+          @if (food.kind === 'FOOD') {
+            <p>NOVA {{ food.nova_group ?? i18n.t('foodEditor', 'novaUnknown') }}</p>
+          }
         </div>
         <label class="field"
           ><span>{{ i18n.t('journal', 'portion') }}</span

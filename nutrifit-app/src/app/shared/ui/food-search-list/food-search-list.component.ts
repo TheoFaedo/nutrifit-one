@@ -31,16 +31,21 @@ import { FoodRecord } from '@core/services/food-catalogue.service';
               [class.active]="selectedId() === food.id"
               (click)="foodSelected.emit(food)"
             >
-              <span
-                ><strong>{{ food.name }}</strong
-                ><small
-                  >{{ i18n.t('foodEditor', food.kind === 'RECIPE' ? 'recipe' : 'food') }} ·
+              <span>
+                <strong>{{ food.name }}</strong>
+                @if (
+                  food.kind === 'FOOD' &&
+                  food.nova_group !== null &&
+                  food.nova_group !== undefined
+                ) {
+                  <span>NOVA {{ food.nova_group }}</span>
+                }
+                <small>
+                  {{ i18n.t('foodEditor', food.kind === 'RECIPE' ? 'recipe' : 'food') }} ·
                   {{ food.portions.length }}
-                  {{
-                    i18n.t('catalogue', food.portions.length === 1 ? 'portion' : 'portions')
-                  }}</small
-                ></span
-              ><span aria-hidden="true">›</span>
+                  {{ i18n.t('catalogue', food.portions.length === 1 ? 'portion' : 'portions') }}
+                </small>
+              </span>
             </button>
           }
         }

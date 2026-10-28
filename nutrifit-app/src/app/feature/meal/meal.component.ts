@@ -59,9 +59,12 @@ export class MealComponent {
   private readonly queryChanges = new Subject<string>();
   private searchGeneration = 0;
   readonly barcode = signal('');
-  readonly offProduct = signal<{ name: string; portions: PortionInput[]; payload: unknown } | null>(
-    null,
-  );
+  readonly offProduct = signal<{
+    name: string;
+    portions: PortionInput[];
+    payload: unknown;
+    novaGroup?: number | null;
+  } | null>(null);
   readonly editing = signal(false);
   readonly detailsOpen = signal(false);
   readonly editorKind = signal<'FOOD' | 'RECIPE'>('FOOD');

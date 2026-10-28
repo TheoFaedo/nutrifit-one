@@ -36,6 +36,7 @@ export class FoodEditorComponent implements OnInit {
     name: string;
     portions: PortionInput[];
     payload: unknown;
+    novaGroup?: number | null;
   } | null>(null);
   readonly initialBarcode = input('');
   readonly saved = output<FoodRecord>();
@@ -55,6 +56,7 @@ export class FoodEditorComponent implements OnInit {
   parts: { versionId: string; portionId: string; ratio: string }[] = [
     { versionId: '', portionId: '', ratio: '1' },
   ];
+  novaGroup: number | null = null;
   name = '';
   isPublic = false;
   barcode = '';
@@ -74,6 +76,7 @@ export class FoodEditorComponent implements OnInit {
     if (!food) {
       if (initialProduct) {
         this.name = initialProduct.name;
+        this.novaGroup = initialProduct.novaGroup ?? null;
         this.isPublic = true;
         this.barcode = this.initialBarcode();
         this.portions = initialProduct.portions.map((portion) => ({ ...portion }));
@@ -81,6 +84,7 @@ export class FoodEditorComponent implements OnInit {
       return;
     }
     this.name = food.name;
+    this.novaGroup = food.nova_group ?? null;
     this.isPublic = food.is_public;
     this.barcode = food.barcode ?? '';
     if (food.portions.length) {
@@ -159,6 +163,7 @@ export class FoodEditorComponent implements OnInit {
       if (this.kind() === 'FOOD') {
         id = await this.catalogue.save({
           name: this.name.trim(),
+          novaGroup: this.novaGroup,
           isPublic: this.isPublic,
           barcode: current?.barcode ?? (this.barcode || null),
           portions: this.portions.map((portion, index) => ({

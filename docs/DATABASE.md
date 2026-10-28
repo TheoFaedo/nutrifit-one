@@ -31,3 +31,5 @@ Elle suppose les schémas `auth` et les rôles `anon`/`authenticated` fournis pa
 ## RLS
 
 Les profils, objectifs et journaux sont limités au propriétaire. Les clients lisent les objectifs applicables selon `valid_from <= date` et (`valid_to` est nul ou `valid_to >= date`). Les RPC d’onboarding et de mise à jour s’exécutent avec l’identité appelante et les politiques RLS ; la mise à jour verrouille le profil du propriétaire avant de modifier ses périodes. Les aliments publics sont lisibles sans session ; les aliments privés sont lisibles par leur auteur. Seul l’auteur peut créer/modifier les entités de catalogue. Le code-barres n’est pas unique. Les tables du catalogue, y compris ses versions et portions, ont RLS activée.
+
+- La migration `20261028120000_food_nova.sql` ajoute `food_versions.nova_group`, facultatif et limité aux groupes 1 à 4 pour les aliments. La donnée est immuable par version ; les anciennes versions restent inconnues et les recettes sont classées par leurs ingrédients.

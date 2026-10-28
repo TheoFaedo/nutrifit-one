@@ -1,6 +1,16 @@
 import { Service } from '@angular/core';
 import { supabase } from './supabase.client';
 
+export function validNova(value: unknown): number | null {
+  if (typeof value === 'string' && /^[1-4]$/.test(value)) {
+    return Number(value);
+  }
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 4) {
+    return null;
+  }
+  return value;
+}
+
 export interface FoodPortion {
   id: string;
   quantity_number: number;
@@ -20,6 +30,7 @@ export interface FoodRecord {
   version_number: number;
   name: string;
   kind: 'FOOD' | 'RECIPE';
+  nova_group?: number | null;
   barcode: string | null;
   source: string | null;
   portions: FoodPortion[];
@@ -28,7 +39,7 @@ export interface FoodRecord {
 
 export type FoodCatalogueSort = 'recent' | 'newest' | 'asc' | 'desc';
 const foodSelect =
-  'id,author_id,is_public,food_versions!inner(id,version_number,name,kind,product_details(barcode,source),quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g),recipe_parts!recipe_parts_recipe_version_id_fkey(id,ingredient_version_id,quantity_id,ratio,ingredient:food_versions!recipe_parts_ingredient_version_id_fkey(id,name,kind,quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))))';
+  'id,author_id,is_public,food_versions!inner(id,version_number,name,kind,nova_group,product_details(barcode,source),quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g),recipe_parts!recipe_parts_recipe_version_id_fkey(id,ingredient_version_id,quantity_id,ratio,ingredient:food_versions!recipe_parts_ingredient_version_id_fkey(id,name,kind,quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))))';
 
 export interface RecipePart {
   ingredient_version_id: string;
@@ -65,6 +76,7 @@ export interface PortionInput {
 export interface FoodInput {
   name: string;
   isPublic: boolean;
+  novaGroup?: number | null;
   barcode: string | null;
   portions: PortionInput[];
   foodId?: string;
@@ -151,6 +163,7 @@ export class FoodCatalogueService {
         version_number: Number(version['version_number']),
         name: String(version['name']),
         kind: String(version['kind'] ?? 'FOOD') as 'FOOD' | 'RECIPE',
+        nova_group: validNova(version['nova_group']),
         barcode: details?.['barcode'] ? String(details['barcode']) : null,
         source: details?.['source'] ? String(details['source']) : null,
         portions: (version['quantities'] as FoodPortion[]) ?? [],
@@ -174,6 +187,7 @@ export class FoodCatalogueService {
   async save(input: FoodInput): Promise<string> {
     const { data, error } = await supabase.rpc('save_food_snapshot', {
       p_name: input.name,
+      p_nova_group: input.novaGroup ?? null,
       p_is_public: input.isPublic,
       p_quantities: input.portions,
       p_food_id: input.foodId ?? null,
@@ -204,9 +218,14 @@ export class FoodCatalogueService {
 
   async lookupBarcode(
     barcode: string,
-  ): Promise<{ name: string; portions: PortionInput[]; payload: unknown } | null> {
+  ): Promise<{
+    name: string;
+    portions: PortionInput[];
+    payload: unknown;
+    novaGroup: number | null;
+  } | null> {
     const response = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,product_name_en,product_name_fr,nutriments,nutrition_data_per,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit`,
+      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=nova_group,product_name,product_name_en,product_name_fr,nutriments,nutrition_data_per,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit`,
     );
     // Open Food Facts returns 404 when a barcode has no matching product.
     // Treat that as an empty result; reserve the error for actual service failures.
@@ -340,6 +359,7 @@ export class FoodCatalogueService {
     }
     return {
       name: productName.trim(),
+      novaGroup: validNova(product['nova_group']),
       payload,
       portions,
     };

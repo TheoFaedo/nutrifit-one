@@ -35,7 +35,13 @@ export const JournalStore = signalStore(
           throw new Error('Session changed');
         }
         const entries = store.peek(date).data ?? [];
-        const entry = { ...record, id: savedId };
+        const novaCalories = service.distribution
+          ? await service.distribution(record.food_version_id, record.portion, record.ratio)
+          : null;
+        if (generation !== session.generation()) {
+          throw new Error('Session changed');
+        }
+        const entry = { ...record, id: savedId, nova_calories: novaCalories };
         store.write(
           date,
           id ? entries.map((item) => (item.id === id ? entry : item)) : [...entries, entry],
