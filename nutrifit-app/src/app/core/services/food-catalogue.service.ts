@@ -221,12 +221,12 @@ export class FoodCatalogueService {
       return null;
     }
     const product = (payload as { product?: Record<string, unknown>; status?: number }).product;
-    const productName = [product?.['product_name'], product?.['product_name_fr'], product?.['product_name_en']]
-      .find((name): name is string => typeof name === 'string' && name.trim().length > 0);
-    if (
-      !product ||
-      !productName
-    ) {
+    const productName = [
+      product?.['product_name'],
+      product?.['product_name_fr'],
+      product?.['product_name_en'],
+    ].find((name): name is string => typeof name === 'string' && name.trim().length > 0);
+    if (!product || !productName) {
       return null;
     }
     const nutrients = (product['nutriments'] ?? {}) as Record<string, unknown>;
@@ -313,9 +313,10 @@ export class FoodCatalogueService {
       .toLowerCase();
     const portionAmount = servingAmount ?? productAmount;
     const servingUnit = unit ?? (productUnit || (portionAmount !== null ? 'g' : null));
-    const referenceUnit = String(product['nutrition_data_per'] ?? '')
-      .match(/(?:^|[^a-z])(ml|g)\s*$/i)?.[1]
-      ?.toLowerCase() ?? 'g';
+    const referenceUnit =
+      String(product['nutrition_data_per'] ?? '')
+        .match(/(?:^|[^a-z])(ml|g)\s*$/i)?.[1]
+        ?.toLowerCase() ?? 'g';
     const reference = makePortion(100, referenceUnit, '100g');
     const portions = [reference];
     if (

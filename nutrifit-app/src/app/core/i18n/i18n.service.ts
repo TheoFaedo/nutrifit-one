@@ -18,9 +18,7 @@ export class I18nService {
   t(domain: TranslationDomain, key: string, values: Record<string, string | number> = {}): string {
     const table: Record<string, string> = translations[this.language()][domain];
     const value = table[key] ?? key;
-    return value.replace(/\{(\w+)\}/g, (token, name: string) =>
-      String(values[name] ?? token),
-    );
+    return value.replace(/\{(\w+)\}/g, (token, name: string) => String(values[name] ?? token));
   }
 
   setLanguage(language: Language): void {
@@ -94,8 +92,9 @@ export class I18nService {
 
   private applyDocumentLanguage(language: Language): void {
     document.documentElement.lang = language;
-    document.title = language === 'fr'
-      ? 'Nutrifit one — votre alimentation, à votre rythme'
-      : 'Nutrifit one — your food, your pace';
+    document.title =
+      language === 'fr'
+        ? 'Nutrifit one — votre alimentation, à votre rythme'
+        : 'Nutrifit one — your food, your pace';
   }
 }

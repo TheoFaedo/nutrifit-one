@@ -1,10 +1,6 @@
 import { Component, computed, input, output, inject } from '@angular/core';
 import { I18nService } from '@core/i18n/i18n.service';
-import {
-  FoodRecord,
-  FoodCatalogueSort,
-  PortionInput,
-} from '@core/services/food-catalogue.service';
+import { FoodRecord, FoodCatalogueSort, PortionInput } from '@core/services/food-catalogue.service';
 import {
   FoodCatalogueSearchComponent,
   FoodSortOption,

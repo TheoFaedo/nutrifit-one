@@ -6,8 +6,11 @@ import { Language } from '@core/i18n/translations';
   selector: 'app-language-switch',
   template: `<label class="language-switch">
     <span>{{ i18n.t('common', 'language') }}</span>
-    <select [value]="i18n.language()" [attr.aria-label]="i18n.t('common', 'language')"
-      (change)="select($event)">
+    <select
+      [value]="i18n.language()"
+      [attr.aria-label]="i18n.t('common', 'language')"
+      (change)="select($event)"
+    >
       <option value="fr">{{ i18n.t('common', 'french') }}</option>
       <option value="en">{{ i18n.t('common', 'english') }}</option>
     </select>
