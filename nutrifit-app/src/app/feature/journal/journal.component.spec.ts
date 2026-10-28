@@ -160,11 +160,12 @@ describe('JournalComponent', () => {
     fixture.detectChanges();
     const dialog = fixture.nativeElement.querySelector('.entry-dialog') as HTMLElement;
     const search = dialog.querySelector('app-food-catalogue-search input') as HTMLInputElement;
-    const sort = dialog.querySelector('app-food-catalogue-search select') as HTMLSelectElement;
+    const sortMenu = dialog.querySelector('.sort-menu') as HTMLElement;
+    // JSDOM does not implement the native Popover API.
+    sortMenu.hidePopover = vi.fn();
 
     expect(search).toBeTruthy();
-    sort.value = 'newest';
-    sort.dispatchEvent(new Event('change'));
+    (sortMenu.querySelectorAll<HTMLButtonElement>('.sort-option')[1]).click();
     fixture.detectChanges();
     expect(fixture.componentInstance.foodSort()).toBe('newest');
     expect(catalogue.journalPage).toHaveBeenCalledWith('', 'newest', 0, 20, null);

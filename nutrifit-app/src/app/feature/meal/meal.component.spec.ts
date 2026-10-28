@@ -50,12 +50,20 @@ describe('MealComponent', () => {
     expect(page.querySelectorAll('.create-tools button')).toHaveLength(1);
     expect(names()).toEqual(['Apple', 'Zucchini']);
 
-    const sort = page.querySelector('.sort-field select') as HTMLSelectElement;
-    sort.value = 'desc';
-    sort.dispatchEvent(new Event('change'));
+    const sortButton = page.querySelector('.sort-button') as HTMLButtonElement;
+    const sortMenu = page.querySelector('.sort-menu') as HTMLElement;
+    // JSDOM does not implement the native Popover API.
+    sortMenu.hidePopover = vi.fn();
+    sortButton.click();
+    expect(sortButton.getAttribute('popovertarget')).toBe(sortMenu.id);
+    expect(sortMenu.querySelectorAll('.sort-option')).toHaveLength(4);
+    (sortMenu.querySelectorAll<HTMLButtonElement>('.sort-option')[3]).click();
     await fixture.whenStable();
     fixture.detectChanges();
     expect(names()).toEqual(['Zucchini', 'Apple']);
+    expect(sortMenu.querySelectorAll('.sort-option')[3].getAttribute('aria-pressed')).toBe('true');
+    expect(sortMenu.hidePopover).toHaveBeenCalled();
+    expect(document.activeElement).toBe(sortButton);
   });
 
   it('opens selected food details in a dialog and keeps the row selected after closing', async () => {

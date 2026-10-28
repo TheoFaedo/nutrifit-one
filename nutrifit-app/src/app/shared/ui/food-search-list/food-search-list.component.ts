@@ -17,31 +17,34 @@ import { FoodRecord } from '@core/services/food-catalogue.service';
       /></label>
     }
     <section class="results" [attr.aria-label]="i18n.t('catalogue', 'resultsLabel')">
-      @if (loading()) {
-        <p class="muted" aria-live="polite">{{ i18n.t('catalogue', 'loading') }}</p>
-      } @else if (matches().length === 0) {
-        <p class="muted">{{ i18n.t('catalogue', 'noMatches') }}</p>
-      } @else {
-        @for (food of matches(); track food.id) {
-          <button
-            class="row"
-            type="button"
-            [class.active]="selectedId() === food.id"
-            (click)="foodSelected.emit(food)"
-          >
-            <span
-              ><strong>{{ food.name }}</strong
-              ><small
-                >{{ i18n.t('foodEditor', food.kind === 'RECIPE' ? 'recipe' : 'food') }} ·
-                {{ food.portions.length }}
-                {{
-                  i18n.t('catalogue', food.portions.length === 1 ? 'portion' : 'portions')
-                }}</small
-              ></span
-            ><span aria-hidden="true">›</span>
-          </button>
+      <h2>{{ i18n.t('catalogue', 'resultsLabel') }}</h2>
+      <div class="results-list">
+        @if (loading()) {
+          <p class="muted" aria-live="polite">{{ i18n.t('catalogue', 'loading') }}</p>
+        } @else if (matches().length === 0) {
+          <p class="muted">{{ i18n.t('catalogue', 'noMatches') }}</p>
+        } @else {
+          @for (food of matches(); track food.id) {
+            <button
+              class="row"
+              type="button"
+              [class.active]="selectedId() === food.id"
+              (click)="foodSelected.emit(food)"
+            >
+              <span
+                ><strong>{{ food.name }}</strong
+                ><small
+                  >{{ i18n.t('foodEditor', food.kind === 'RECIPE' ? 'recipe' : 'food') }} ·
+                  {{ food.portions.length }}
+                  {{
+                    i18n.t('catalogue', food.portions.length === 1 ? 'portion' : 'portions')
+                  }}</small
+                ></span
+              ><span aria-hidden="true">›</span>
+            </button>
+          }
         }
-      }
+      </div>
     </section>
   `,
   styles: [
@@ -68,9 +71,17 @@ import { FoodRecord } from '@core/services/food-catalogue.service';
         font: inherit;
       }
       .results {
-        max-height: 55vh;
+        margin-top: 16px;
+      }
+      .results h2 {
+        margin: 0 8px 10px;
+        color: var(--green-dark);
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .results-list {
+        max-height: clamp(300px, 65vh, 800px);
         overflow: auto;
-        padding: 8px;
       }
       .muted {
         padding: 10px;
@@ -85,10 +96,13 @@ import { FoodRecord } from '@core/services/food-catalogue.service';
         padding: 14px 12px;
         text-align: left;
         color: var(--ink);
-        background: transparent;
-        border: 0;
+        background: #fff;
+        border: 1px solid var(--line);
         border-radius: 11px;
         cursor: pointer;
+      }
+      .row + .row {
+        margin-top: 6px;
       }
       .row:hover,
       .row.active {

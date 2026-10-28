@@ -282,12 +282,15 @@
   font: inherit;
   font-size: 16px;
 }
+.food-results h3 {
+  margin: 0 8px 10px;
+  color: var(--green-dark);
+  font-size: 15px;
+}
 .food-options {
   display: grid;
-  max-height: 220px;
+  max-height: clamp(300px, 45vh, 600px);
   overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 8px;
 }
 .food-options button {
   display: flex;
@@ -296,10 +299,15 @@
   padding: 11px 12px;
   border: 0;
   border-bottom: 1px solid var(--line);
-  background: transparent;
+  min-height: 48px;
+  background: #fff;
   color: var(--ink);
   text-align: left;
   cursor: pointer;
+}
+.food-options button:focus-visible {
+  outline: 3px solid #879365;
+  outline-offset: -3px;
 }
 .food-options button:hover {
   background: #f5f7f0;

@@ -172,18 +172,21 @@
           @if (foodsInitialLoading()) {
             <p role="status">{{ i18n.t('journal', 'loadingFoods') }}</p>
           }
-          <div class="food-options" [attr.aria-label]="i18n.t('journal', 'foods')">
-            @for (food of foods(); track food.version_id) {
-              <button type="button" (click)="chooseFood(food)">
-                <span>{{ food.name }}</span>
-                <small>{{
-                  i18n.t('foodEditor', food.kind === 'RECIPE' ? 'recipe' : 'food')
-                }}</small>
-              </button>
-            } @empty {
-              <p>{{ i18n.t('journal', 'noFoods') }}</p>
-            }
-          </div>
+          <section class="food-results" aria-labelledby="journal-food-results-title">
+            <h3 id="journal-food-results-title">{{ i18n.t('journal', 'foods') }}</h3>
+            <div class="food-options">
+              @for (food of foods(); track food.version_id) {
+                <button type="button" (click)="chooseFood(food)">
+                  <span>{{ food.name }}</span>
+                  <small>{{
+                    i18n.t('foodEditor', food.kind === 'RECIPE' ? 'recipe' : 'food')
+                  }}</small>
+                </button>
+              } @empty {
+                <p>{{ i18n.t('journal', 'noFoods') }}</p>
+              }
+            </div>
+          </section>
           @if (foodsMore()) {
             <button
               class="secondary-button"

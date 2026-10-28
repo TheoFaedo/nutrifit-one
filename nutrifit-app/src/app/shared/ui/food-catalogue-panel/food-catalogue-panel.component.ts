@@ -23,7 +23,6 @@ import { FoodSearchListComponent } from '../food-search-list/food-search-list.co
       (sortChanged)="sortChanged.emit($event)"
       (barcodeDetected)="barcodeDetected.emit($event)"
     />
-    <hr [attr.aria-label]="i18n.t('catalogue', 'results')" />
     @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
     }
