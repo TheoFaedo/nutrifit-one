@@ -95,3 +95,20 @@ La recherche par code-barres récupère le résultat Open Food Facts et les `Foo
 ## 7. Relation avec le modèle
 
 `model.wsd` documente les concepts et associations, mais ne constitue pas encore un schéma physique. Après résolution des décisions ouvertes, il faudra préciser les types SQL, les clés primaires/étrangères, les contraintes d’unicité, les index, les suppressions autorisées et les politiques RLS. Toute règle de persistance doit préserver les invariants historiques décrits ici et dans [SPECS.md](SPECS.md).
+
+## 8. État partagé entre les pages
+
+Les lectures et écritures du journal, des objectifs et du catalogue passent par les stores
+racine de `src/app/core/stores/`. Les services conservent les accès Supabase. Chaque clé
+expose les données, `hasLoaded`, `isLoading`, `isRefreshing`, l’erreur et l’invalidation.
+Un résultat vide est conservé comme tout autre résultat ; une actualisation ne masque pas
+les données existantes. Les formulaires et filtres restent dans les composants.
+
+`AuthService` transmet les changements de compte à `CacheSession`, qui purge les stores et
+neutralise les réponses en vol. Les modifications du journal invalident le tri par utilisation
+récente ; les écritures d’aliments invalident les recherches. Les listes paginées périmées
+repartent de zéro. Les objectifs sauvegardés sont propagés à aujourd’hui et aux dates futures
+connues, puis relus sur le serveur ; les dates historiques sont préservées.
+
+La justification et les limites sont consignées dans
+[ADR-001](adr/ADR-001-memory-signal-stores.md).

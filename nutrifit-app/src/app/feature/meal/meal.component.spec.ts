@@ -21,6 +21,7 @@ const food = (id: string, name: string): FoodRecord => ({
 
 describe('MealComponent', () => {
   beforeEach(async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: false }));
     await TestBed.configureTestingModule({
       imports: [MealComponent],
       providers: [
@@ -92,5 +93,30 @@ describe('MealComponent', () => {
     fixture.detectChanges();
     expect(page.querySelector('app-food-details')).toBeTruthy();
     expect(page.querySelector('app-food-editor')).toBeNull();
+  });
+  it('shows cached catalogue results immediately on return and ignores an older search response', async () => {
+    const first = TestBed.createComponent(MealComponent);
+    await first.whenStable();
+    first.destroy();
+    const search = vi.mocked(TestBed.inject(FoodCatalogueService).search);
+    let finish!: (foods: FoodRecord[]) => void;
+    search.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const returned = TestBed.createComponent(MealComponent);
+    expect(returned.componentInstance.foods()).toHaveLength(2);
+    expect(returned.componentInstance.loading()).toBe(false);
+    returned.detectChanges();
+    expect(returned.componentInstance.refreshing()).toBe(true);
+    returned.componentInstance.query.set('Pear');
+    search.mockResolvedValueOnce([food('p', 'Pear')]);
+    await returned.componentInstance.load();
+    finish([food('o', 'Old result')]);
+    await returned.whenStable();
+    expect(returned.componentInstance.foods().map((item) => item.name)).toEqual(['Pear']);
+    expect(returned.componentInstance.error()).toBe('');
   });
 });

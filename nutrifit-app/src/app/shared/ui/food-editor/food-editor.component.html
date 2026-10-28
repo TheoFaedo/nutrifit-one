@@ -1,3 +1,15 @@
+@if (ingredientsState().isLoading) {
+  <p role="status">{{ i18n.t('journal', 'loadingFoods') }}</p>
+}
+@if (ingredientsState().error) {
+  <p role="alert">
+    {{ i18n.t('foodEditor', 'ingredientsLoadFailed') }}
+    <button type="button" (click)="loadIngredients()">{{ i18n.t('common', 'retry') }}</button>
+  </p>
+}
+@if (ingredientsRefreshing()) {
+  <p role="status">{{ i18n.t('common', 'refreshing') }}</p>
+}
 <section class="editor" aria-labelledby="food-editor-title">
   @if (!food()) {
     <div class="tabs" role="tablist" [attr.aria-label]="i18n.t('foodEditor', 'itemType')">
@@ -33,12 +45,8 @@
 
   <form (ngSubmit)="save()">
     <label class="field"
-      >{{ i18n.t('foodEditor', 'name') }} <input
-        name="name"
-        [(ngModel)]="name"
-        required
-        maxlength="160"
-        autocomplete="off"
+      >{{ i18n.t('foodEditor', 'name') }}
+      <input name="name" [(ngModel)]="name" required maxlength="160" autocomplete="off"
     /></label>
     <button
       class="check-field"
@@ -166,8 +174,7 @@
               required
           /></label>
           <label class="field"
-            >{{ i18n.t('foodEditor', 'unit') }}
-            <input name="unit" [(ngModel)]="unit" required
+            >{{ i18n.t('foodEditor', 'unit') }} <input name="unit" [(ngModel)]="unit" required
           /></label>
         </div>
       </section>

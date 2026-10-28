@@ -1,8 +1,18 @@
-import { Component, input, output, signal, inject, OnInit } from '@angular/core';
+import { FoodCatalogueStore, catalogueKey } from '@core/stores/food-catalogue.store';
+import {
+  Component,
+  input,
+  output,
+  signal,
+  inject,
+  OnInit,
+  computed,
+  effect,
+  untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { I18nService } from '@core/i18n/i18n.service';
 import {
-  FoodCatalogueService,
   FoodRecord,
   PortionInput,
   RecipeInput,
@@ -33,9 +43,15 @@ export class FoodEditorComponent implements OnInit {
   readonly kind = signal<'FOOD' | 'RECIPE'>('FOOD');
   readonly saving = signal(false);
   readonly error = signal('');
-  private readonly catalogue = inject(FoodCatalogueService);
+  private readonly catalogue = inject(FoodCatalogueStore);
   readonly i18n = inject(I18nService);
-  readonly ingredients = signal<FoodRecord[]>([]);
+  readonly ingredients = computed(
+    () => (this.catalogue.peek(catalogueKey('', 'asc', 0, 100)).data ?? []) as FoodRecord[],
+  );
+  readonly ingredientsState = computed(() => this.catalogue.peek(catalogueKey('', 'asc', 0, 100)));
+  readonly ingredientsRefreshing = computed(
+    () => this.catalogue.peek(catalogueKey('', 'asc', 0, 100)).isRefreshing,
+  );
   parts: { versionId: string; portionId: string; ratio: string }[] = [
     { versionId: '', portionId: '', ratio: '1' },
   ];
@@ -45,9 +61,13 @@ export class FoodEditorComponent implements OnInit {
   quantity = 1;
   unit = 'portion';
   portions: PortionInput[] = [this.newPortion()];
-  constructor() {}
+  constructor() {
+    effect(() => {
+      this.catalogue.revision();
+      untracked(() => void this.loadIngredients());
+    });
+  }
   ngOnInit(): void {
-    void this.loadIngredients();
     const food = this.food();
     const initialProduct = this.initialProduct();
     this.kind.set(food?.kind ?? this.initialKind());
@@ -87,15 +107,19 @@ export class FoodEditorComponent implements OnInit {
       }));
     }
   }
-  private async loadIngredients(): Promise<void> {
+  async loadIngredients(): Promise<void> {
     try {
-      this.ingredients.set(await this.catalogue.search('', 'asc'));
+      await this.catalogue.search('', 'asc');
     } catch {
-      this.error.set(this.i18n.t('foodEditor', 'ingredientsLoadFailed'));
+      // The cache exposes read failures separately from form and save errors.
     }
   }
   portionsFor(versionId: string): FoodPortion[] {
-    return this.ingredients().find((item) => item.version_id === versionId)?.portions ?? [];
+    return (
+      this.ingredients().find((item) => item.version_id === versionId)?.portions ??
+      this.food()?.parts.find((part) => part.ingredient_version_id === versionId)?.portions ??
+      []
+    );
   }
   private newPortion(): PortionInput {
     return {

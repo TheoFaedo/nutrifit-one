@@ -5,6 +5,9 @@ import { AuthService } from '@core/services/auth.service';
 import { DailyGoal, DailyGoalsService } from '@core/services/daily-goals.service';
 import { FoodCatalogueService, FoodRecord } from '@core/services/food-catalogue.service';
 import { IntakeJournalService, IntakeRecord } from '@core/services/intake-journal.service';
+import { MealComponent } from '@feature/meal/meal.component';
+import { FoodCatalogueStore } from '@core/stores/food-catalogue.store';
+import { JournalStore } from '@core/stores/journal.store';
 import { JournalComponent, parisInstant } from './journal.component';
 
 const portion = {
@@ -51,6 +54,7 @@ describe('JournalComponent', () => {
   };
   const goals = { forDate: vi.fn<(date: string) => Promise<DailyGoal | null>>() };
   const catalogue = {
+    search: vi.fn().mockResolvedValue([]),
     journalPage: vi.fn(),
     version: vi.fn(),
     lookupBarcode: vi.fn(),
@@ -59,6 +63,7 @@ describe('JournalComponent', () => {
   const auth = { user: vi.fn().mockResolvedValue({ id: 'user-1' }) };
 
   beforeEach(async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: false }));
     vi.clearAllMocks();
     journal.forDate.mockResolvedValue([]);
     goals.forDate.mockResolvedValue(null);
@@ -82,7 +87,7 @@ describe('JournalComponent', () => {
     const component = fixture.componentInstance;
     await fixture.whenStable();
     expect(component.dailyTotals()).toEqual({ energy: 0, carbs: 0, fats: 0, protein: 0 });
-    component.entries.set([entry]);
+    TestBed.inject(JournalStore).write(component.date(), [entry]);
     expect(component.dailyTotals()).toEqual({ energy: 180, carbs: null, fats: 4.5, protein: 6 });
   });
 
@@ -128,10 +133,10 @@ describe('JournalComponent', () => {
     await fixture.whenStable();
     component.startAdd('LUNCH');
     await component.loadFoods();
-    expect(catalogue.journalPage).toHaveBeenCalledWith('', 'recent', 0);
+    expect(catalogue.journalPage).toHaveBeenCalledWith('', 'recent', 0, 20, null);
     component.setFoodSort('newest');
     await component.loadFoods();
-    expect(catalogue.journalPage).toHaveBeenCalledWith('', 'newest', 0);
+    expect(catalogue.journalPage).toHaveBeenCalledWith('', 'newest', 0, 20, null);
     component.closeDialog();
     await component.edit(entry);
     expect(catalogue.version).toHaveBeenCalledWith('old-version');
@@ -162,7 +167,7 @@ describe('JournalComponent', () => {
     sort.dispatchEvent(new Event('change'));
     fixture.detectChanges();
     expect(fixture.componentInstance.foodSort()).toBe('newest');
-    expect(catalogue.journalPage).toHaveBeenCalledWith('', 'newest', 0);
+    expect(catalogue.journalPage).toHaveBeenCalledWith('', 'newest', 0, 20, null);
     fixture.componentInstance.closeDialog();
   });
 
@@ -180,5 +185,56 @@ describe('JournalComponent', () => {
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();
     expect(document.activeElement).toBe(opener);
+  });
+  it('shows cached journal data immediately after visiting the catalogue and keeps it after a refresh failure', async () => {
+    journal.forDate.mockResolvedValueOnce([entry]);
+    const first = TestBed.createComponent(JournalComponent);
+    await first.whenStable();
+    first.componentInstance.setDate('2020-01-01');
+    await first.whenStable();
+    first.destroy();
+    const meal = TestBed.createComponent(MealComponent);
+    await meal.whenStable();
+    meal.destroy();
+    let reject!: (error: Error) => void;
+    journal.forDate.mockImplementationOnce(
+      () =>
+        new Promise((_, no) => {
+          reject = no;
+        }),
+    );
+    const returned = TestBed.createComponent(JournalComponent);
+    expect(returned.componentInstance.entries()).toEqual([entry]);
+    expect(returned.componentInstance.date()).not.toBe('2020-01-01');
+    expect(returned.componentInstance.loading()).toBe(false);
+    expect(returned.componentInstance.refreshing()).toBe(true);
+    reject(new Error('offline'));
+    await returned.whenStable();
+    returned.detectChanges();
+    expect(returned.nativeElement.textContent).toContain('Old food');
+    expect(returned.nativeElement.textContent).toContain('offline');
+  });
+
+  it('restarts stale pagination at page one and preserves an empty cached result while refreshing', async () => {
+    const fixture = TestBed.createComponent(JournalComponent);
+    await fixture.whenStable();
+    fixture.componentInstance.startAdd('LUNCH');
+    await fixture.componentInstance.loadFoods();
+    const store = TestBed.inject(FoodCatalogueStore);
+    store.invalidateRecent();
+    await fixture.componentInstance.loadFoods(true);
+    expect(catalogue.journalPage).toHaveBeenLastCalledWith('', 'recent', 0, 20, null);
+    let resolve!: (foods: FoodRecord[]) => void;
+    catalogue.journalPage.mockImplementationOnce(
+      () =>
+        new Promise((yes) => {
+          resolve = yes;
+        }),
+    );
+    const refresh = fixture.componentInstance.loadFoods();
+    expect(fixture.componentInstance.foodsInitialLoading()).toBe(false);
+    expect(fixture.componentInstance.foodsRefreshing()).toBe(true);
+    resolve([]);
+    await refresh;
   });
 });

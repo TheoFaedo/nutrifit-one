@@ -1,20 +1,19 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { DiscardedCacheResponse } from '@core/stores/keyed-cache';
+import { JournalStore } from '@core/stores/journal.store';
+import { DailyGoalsStore } from '@core/stores/daily-goals.store';
+import { FoodCatalogueStore, catalogueKey } from '@core/stores/food-catalogue.store';
+import { CacheSession } from '@core/stores/cache-session.service';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
-import { DailyGoal, DailyGoalsService } from '@core/services/daily-goals.service';
+import { DailyGoal } from '@core/services/daily-goals.service';
 import {
-  FoodCatalogueService,
   FoodCatalogueSort,
   FoodPortion,
   PortionInput,
   FoodRecord,
 } from '@core/services/food-catalogue.service';
-import {
-  IntakeInput,
-  IntakeJournalService,
-  IntakeRecord,
-  MealType,
-} from '@core/services/intake-journal.service';
+import { IntakeInput, IntakeRecord, MealType } from '@core/services/intake-journal.service';
 import { BrandComponent } from '@shared/ui/brand/brand.component';
 import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
 import { DailySummaryComponent } from './daily-summary/daily-summary.component';
@@ -86,26 +85,44 @@ export class JournalComponent {
       ? 'text'
       : 'number';
   private readonly auth = inject(AuthService);
-  private readonly journal = inject(IntakeJournalService);
-  private readonly catalogue = inject(FoodCatalogueService);
-  private readonly goalsService = inject(DailyGoalsService);
+  private readonly journal = inject(JournalStore);
+  private readonly catalogue = inject(FoodCatalogueStore);
+  private readonly goalsService = inject(DailyGoalsStore);
   readonly i18n = inject(I18nService);
   readonly languageError = signal(false);
-  private dayRequest = 0;
   private foodRequest = 0;
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
   readonly date = signal(todayParis());
-  readonly entries = signal<IntakeRecord[]>([]);
-  readonly dailyGoal = signal<DailyGoal | null>(null);
+  readonly entries = computed(() => this.journal.peek(this.date()).data ?? []);
+  readonly dailyGoal = computed<DailyGoal | null>(
+    () => this.goalsService.peek(this.date()).data ?? null,
+  );
   readonly foods = signal<FoodRecord[]>([]);
   readonly historicalFood = signal<FoodRecord | null>(null);
   readonly foodSort = signal<FoodCatalogueSort>('recent');
   readonly sortOptions = FOOD_CATALOGUE_SORT_OPTIONS;
   readonly foodsLoading = signal(false);
+  readonly foodsRefreshing = computed(
+    () => this.catalogue.peek(catalogueKey(this.query().trim(), this.foodSort())).isRefreshing,
+  );
+  readonly foodsInitialLoading = computed(
+    () =>
+      this.foodsLoading() &&
+      !this.catalogue.peek(catalogueKey(this.query().trim(), this.foodSort())).hasLoaded,
+  );
   readonly foodsMore = signal(false);
   readonly foodError = signal('');
   readonly dialogError = signal('');
-  readonly loading = signal(true);
+  readonly hasLoaded = computed(() => this.journal.peek(this.date()).hasLoaded);
+  readonly loading = computed(() => this.journal.peek(this.date()).isLoading);
+  readonly refreshing = computed(
+    () =>
+      this.journal.peek(this.date()).isRefreshing ||
+      this.goalsService.peek(this.date()).isRefreshing,
+  );
+  readonly loadError = computed(
+    () => this.journal.peek(this.date()).error || this.goalsService.peek(this.date()).error,
+  );
   readonly saving = signal(false);
   readonly error = signal('');
   readonly dialogOpen = signal(false);
@@ -162,37 +179,32 @@ export class JournalComponent {
   readonly dailyTotals = computed(() => this.totals(this.entries()));
 
   constructor() {
+    const session = inject(CacheSession);
+    effect(() => {
+      session.generation();
+      untracked(() => {
+        this.foods.set([]);
+        this.barcodeFoods.set([]);
+        this.closeDialog();
+      });
+    });
+    effect(() => {
+      this.catalogue.revision();
+      untracked(() => {
+        if (this.dialogOpen() && this.dialogView() === 'search') {
+          void this.loadFoods();
+        }
+      });
+    });
     void this.load();
   }
 
   async load(): Promise<void> {
-    const request = ++this.dayRequest;
     const date = this.date();
-    this.loading.set(true);
     this.error.set('');
-    this.entries.set([]);
-    this.dailyGoal.set(null);
-    try {
-      const [entries, goal] = await Promise.all([
-        this.journal.forDate(date),
-        this.goalsService.forDate(date),
-      ]);
-      if (request !== this.dayRequest) {
-        return;
-      }
-      this.entries.set(entries);
-      this.dailyGoal.set(goal);
-    } catch (error) {
-      if (request !== this.dayRequest) {
-        return;
-      }
-      this.error.set(this.message(error, 'The journal could not be loaded.'));
-    } finally {
-      if (request === this.dayRequest) {
-        this.loading.set(false);
-      }
-    }
+    await Promise.allSettled([this.journal.forDate(date), this.goalsService.forDate(date)]);
   }
+
   async changeDate(delta: number): Promise<void> {
     const current = new Date(`${this.date()}T12:00:00Z`);
     current.setUTCDate(current.getUTCDate() + delta);
@@ -351,7 +363,14 @@ export class JournalComponent {
   }
   async loadFoods(append = false): Promise<void> {
     const request = ++this.foodRequest;
+    const first = this.catalogue.peek(catalogueKey(this.query().trim(), this.foodSort()));
+    if (first.stale) {
+      append = false;
+    }
     const offset = append ? this.foods().length : 0;
+    if (!append && first.hasLoaded) {
+      this.foods.set(first.data as FoodRecord[]);
+    }
     this.foodsLoading.set(true);
     this.foodError.set('');
     try {
@@ -362,7 +381,7 @@ export class JournalComponent {
       this.foods.set(append ? [...this.foods(), ...foods] : foods);
       this.foodsMore.set(foods.length === 20);
     } catch (error) {
-      if (request === this.foodRequest) {
+      if (request === this.foodRequest && !(error instanceof DiscardedCacheResponse)) {
         this.foodError.set(this.message(error, 'Foods could not be loaded.'));
       }
     } finally {
@@ -438,17 +457,13 @@ export class JournalComponent {
         consumedAt: parisInstant(this.date()),
       };
       const id = this.editingId();
-      if (id) {
-        await this.journal.update(id, input);
-        const entry = this.toIntakeRecord(id, food, input);
-        this.entries.update((entries) =>
-          entries.map((current) => (current.id === id ? entry : current)),
-        );
-      } else {
-        const entryId = await this.journal.add(user.id, input);
-        const entry = this.toIntakeRecord(entryId, food, input);
-        this.entries.update((entries) => [...entries, entry]);
-      }
+      await this.journal.saveEntry(
+        this.date(),
+        user.id,
+        input,
+        this.toIntakeRecord(id ?? '', food, input),
+        id,
+      );
       this.closeDialog();
     } catch (error) {
       this.dialogError.set(this.message(error, 'The entry could not be saved.'));
@@ -458,8 +473,7 @@ export class JournalComponent {
   }
   async remove(entry: IntakeRecord): Promise<void> {
     try {
-      await this.journal.remove(entry.id);
-      this.entries.update((entries) => entries.filter((item) => item.id !== entry.id));
+      await this.journal.remove(this.date(), entry.id);
     } catch (error) {
       this.error.set(this.message(error, 'The entry could not be deleted.'));
     }

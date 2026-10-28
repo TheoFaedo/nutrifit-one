@@ -1,11 +1,13 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { DiscardedCacheResponse } from '@core/stores/keyed-cache';
+import { CacheSession } from '@core/stores/cache-session.service';
+import { DailyGoalsStore } from '@core/stores/daily-goals.store';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, map, merge, tap } from 'rxjs';
 import { NutritionFacts } from '@core/models/nutrition-facts.model';
 import type { NutritionFactsValues } from '@core/models/nutrition-facts.model';
 import { AuthService } from '@core/services/auth.service';
-import { DailyGoalsService } from '@core/services/daily-goals.service';
 import { BrandComponent } from '@shared/ui/brand/brand.component';
 import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
 import { AppUpdateComponent } from './app-update/app-update.component';
@@ -26,13 +28,16 @@ import { Language } from '@core/i18n/translations';
   styleUrl: './profile.component.less',
 })
 export class ProfileComponent {
+  private readonly session = inject(CacheSession);
   private readonly auth = inject(AuthService);
-  private readonly goalsService = inject(DailyGoalsService);
+  private readonly goalsService = inject(DailyGoalsStore);
   readonly i18n = inject(I18nService);
   private readonly destroyRef = inject(DestroyRef);
   readonly name = signal('');
   readonly avatar = signal('');
-  readonly loading = signal(true);
+  readonly loading = computed(() => this.goalsService.peek(this.parisDate()).isLoading);
+  readonly refreshing = computed(() => this.goalsService.peek(this.parisDate()).isRefreshing);
+  readonly loadError = computed(() => this.goalsService.peek(this.parisDate()).error);
   readonly saving = signal(false);
   readonly signingOut = signal(false);
   readonly updatingTargets = signal(false);
@@ -63,6 +68,36 @@ export class ProfileComponent {
   private recalculationVersion = 0;
 
   constructor() {
+    let generation = this.session.generation();
+    effect(() => {
+      const next = this.session.generation();
+      if (next === generation) {
+        return;
+      }
+      generation = next;
+      this.name.set('');
+      this.avatar.set('');
+      this.savedTargets.set(null);
+      this.form.reset({ energy: 0, carbs: 0, fats: 0, protein: 0 }, { emitEvent: false });
+      this.recalculationVersion++;
+    });
+    effect(() => {
+      const goal = this.goalsService.peek(this.parisDate()).data;
+      if (!goal) {
+        return;
+      }
+      const targets = NutritionFacts.from({
+        energy: goal.energy_kcal,
+        carbs: goal.carbs_g,
+        fats: goal.fats_g,
+        protein: goal.proteins_g,
+      }).toValues();
+      this.savedTargets.set(targets);
+      if (!this.form.dirty) {
+        this.facts = NutritionFacts.from(targets);
+        this.form.setValue(targets, { emitEvent: false });
+      }
+    });
     merge(
       this.form.controls.energy.valueChanges.pipe(map(() => 'energy' as const)),
       this.form.controls.carbs.valueChanges.pipe(map(() => 'carbs' as const)),
@@ -179,9 +214,16 @@ export class ProfileComponent {
     }
   }
 
-  private async load(): Promise<void> {
+  async load(): Promise<void> {
+    this.error.set('');
+    const generation = this.session.generation();
     try {
+      const request = this.goalsService.forDate(this.parisDate());
+      void request.catch(() => undefined);
       const user = await this.auth.user();
+      if (generation !== this.session.generation()) {
+        return;
+      }
       this.name.set(
         String(
           user?.user_metadata['full_name'] ?? user?.user_metadata['name'] ?? user?.email ?? '',
@@ -190,24 +232,15 @@ export class ProfileComponent {
       this.avatar.set(
         String(user?.user_metadata['avatar_url'] ?? user?.user_metadata['picture'] ?? ''),
       );
-      const goal = await this.goalsService.forDate(this.parisDate());
+      const goal = await request;
       if (!goal) {
         throw new Error(this.i18n.t('profile', 'missingTargets'));
       }
-      this.facts = NutritionFacts.from({
-        energy: Number(goal.energy_kcal),
-        carbs: Number(goal.carbs_g),
-        fats: Number(goal.fats_g),
-        protein: Number(goal.proteins_g),
-      });
-      const targets = this.facts.toValues();
-      this.savedTargets.set(targets);
-      this.form.setValue(targets, { emitEvent: false });
-      this.form.markAsPristine();
     } catch (error) {
+      if (generation !== this.session.generation() || error instanceof DiscardedCacheResponse) {
+        return;
+      }
       this.error.set(error instanceof Error ? error.message : this.i18n.t('profile', 'loadFailed'));
-    } finally {
-      this.loading.set(false);
     }
   }
 

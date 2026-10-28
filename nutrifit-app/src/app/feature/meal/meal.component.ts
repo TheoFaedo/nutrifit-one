@@ -1,12 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { DiscardedCacheResponse } from '@core/stores/keyed-cache';
+import { FoodCatalogueStore, catalogueKey } from '@core/stores/food-catalogue.store';
+import { CacheSession } from '@core/stores/cache-session.service';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '@core/services/auth.service';
-import {
-  FoodCatalogueService,
-  FoodCatalogueSort,
-  FoodRecord,
-  PortionInput,
-} from '@core/services/food-catalogue.service';
+import { FoodCatalogueSort, FoodRecord, PortionInput } from '@core/services/food-catalogue.service';
 import { BrandComponent } from '@shared/ui/brand/brand.component';
 import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
 import { FoodDetailsComponent } from '@shared/ui/food-details/food-details.component';
@@ -34,14 +32,26 @@ import { Language } from '@core/i18n/translations';
   styleUrl: './meal.component.less',
 })
 export class MealComponent {
-  private readonly catalogue = inject(FoodCatalogueService);
+  private readonly catalogue = inject(FoodCatalogueStore);
   private readonly auth = inject(AuthService);
   readonly i18n = inject(I18nService);
   readonly languageError = signal(false);
-  readonly foods = signal<FoodRecord[]>([]);
+  private readonly listState = computed(() =>
+    this.catalogue.peek(
+      catalogueKey(
+        this.barcode() ? '' : this.query(),
+        this.sortOrder(),
+        0,
+        100,
+        this.barcode() || null,
+      ),
+    ),
+  );
+  readonly foods = computed(() => (this.listState().data ?? []) as FoodRecord[]);
+  readonly refreshing = computed(() => this.listState().isRefreshing);
   readonly selected = signal<FoodRecord | null>(null);
   readonly currentUserId = signal('');
-  readonly loading = signal(true);
+  readonly loading = computed(() => this.listState().isLoading);
   readonly error = signal('');
   readonly query = signal('');
   readonly sortOptions = FOOD_CATALOGUE_SORT_OPTIONS;
@@ -87,6 +97,30 @@ export class MealComponent {
   }
 
   constructor() {
+    const session = inject(CacheSession);
+    effect(() => {
+      session.generation();
+      untracked(() => {
+        this.searchGeneration++;
+        this.currentUserId.set('');
+        const generation = session.generation();
+        void this.auth
+          .user()
+          .then((user) => {
+            if (generation === session.generation()) {
+              this.currentUserId.set(user?.id ?? '');
+            }
+          })
+          .catch(() => undefined);
+        this.selected.set(null);
+        this.detailsOpen.set(false);
+        this.offProduct.set(null);
+      });
+    });
+    effect(() => {
+      this.catalogue.revision();
+      untracked(() => void this.load());
+    });
     this.queryChanges
       .pipe(
         debounceTime(500),
@@ -94,29 +128,20 @@ export class MealComponent {
         takeUntilDestroyed(),
       )
       .subscribe(() => void this.load());
-    void this.auth
-      .user()
-      .then((user) => this.currentUserId.set(user?.id ?? ''))
-      .catch(() => undefined);
-    void this.load();
   }
 
   async load(): Promise<void> {
     const generation = ++this.searchGeneration;
-    this.loading.set(true);
     this.error.set('');
     try {
-      const foods = await this.catalogue.search(this.query(), this.sortOrder());
-      if (generation === this.searchGeneration) {
-        this.foods.set(foods);
+      if (this.barcode()) {
+        await this.catalogue.journalPage('', this.sortOrder(), 0, 100, this.barcode());
+      } else {
+        await this.catalogue.search(this.query(), this.sortOrder());
       }
     } catch (error) {
-      if (generation === this.searchGeneration) {
+      if (generation === this.searchGeneration && !(error instanceof DiscardedCacheResponse)) {
         this.error.set(this.message(error, 'Foods could not be loaded.'));
-      }
-    } finally {
-      if (generation === this.searchGeneration) {
-        this.loading.set(false);
       }
     }
   }
@@ -187,12 +212,8 @@ export class MealComponent {
     }
     this.barcode.set(code);
     const generation = ++this.searchGeneration;
-    this.loading.set(true);
     try {
-      const foods = await this.catalogue.search('', this.sortOrder());
-      if (generation === this.searchGeneration) {
-        this.foods.set(foods);
-      }
+      await this.catalogue.journalPage('', this.sortOrder(), 0, 100, code);
     } catch {
       // The external lookup can still be useful if local search is unavailable.
     }
@@ -202,14 +223,10 @@ export class MealComponent {
         this.offProduct.set(product);
       }
     } catch (error) {
-      if (generation === this.searchGeneration) {
+      if (generation === this.searchGeneration && !(error instanceof DiscardedCacheResponse)) {
         this.error.set(
           this.message(error, 'Open Food Facts is unavailable. Local matches remain available.'),
         );
-      }
-    } finally {
-      if (generation === this.searchGeneration) {
-        this.loading.set(false);
       }
     }
   }

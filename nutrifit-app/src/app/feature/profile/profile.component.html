@@ -15,6 +15,15 @@
         </button>
       </div>
     </div>
+    @if (refreshing()) {
+      <p role="status">{{ i18n.t('common', 'refreshing') }}</p>
+    }
+    @if (loadError()) {
+      <p role="alert">
+        {{ loadError() }}
+        <button type="button" (click)="load()">{{ i18n.t('common', 'retry') }}</button>
+      </p>
+    }
     @if (loading()) {
       <p class="muted" aria-live="polite">{{ i18n.t('profile', 'loading') }}</p>
     } @else {
@@ -103,7 +112,10 @@
           </div>
         </div>
         @if (error()) {
-          <p class="error" role="alert">{{ error() }}</p>
+          <p class="error" role="alert">
+            {{ error() }}
+            <button type="button" (click)="load()">{{ i18n.t('common', 'retry') }}</button>
+          </p>
         }
         @if (saved()) {
           <p class="success" role="status">{{ i18n.t('profile', 'saved') }}</p>

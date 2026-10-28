@@ -20,6 +20,7 @@
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
     "@angular/service-worker": "^22.2.0",
+    "@ngrx/signals": "^22",
     "@supabase/supabase-js": "^2.117.3",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",

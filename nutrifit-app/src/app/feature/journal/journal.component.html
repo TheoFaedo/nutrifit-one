@@ -31,15 +31,18 @@
       </button>
       <span class="date-label">{{ formatDate(date()) }}</span>
     </div>
-    @if (error()) {
-      <p class="error" role="alert">{{ error() }}</p>
+    @if (error() || loadError()) {
+      <p class="error" role="alert">{{ error() || loadError() }}</p>
       <button class="secondary-button" type="button" (click)="load()">
         {{ i18n.t('journal', 'retry') }}
       </button>
     }
+    @if (refreshing()) {
+      <p class="muted" role="status">{{ i18n.t('common', 'refreshing') }}</p>
+    }
     @if (loading()) {
       <p class="muted" role="status">{{ i18n.t('journal', 'loading') }}</p>
-    } @else if (!error()) {
+    } @else if (hasLoaded()) {
       @if (!entries().length) {
         <p class="muted" role="status">{{ i18n.t('journal', 'emptyDay') }}</p>
       }
@@ -84,8 +87,7 @@
                     </div>
                     <div class="entry-actions">
                       <button class="link-button" type="button" (click)="edit(entry)">
-                        {{ i18n.t('journal', 'edit') }}
-                      </button
+                        {{ i18n.t('journal', 'edit') }}</button
                       ><button class="link-button" type="button" (click)="remove(entry)">
                         {{ i18n.t('journal', 'delete') }}
                       </button>
@@ -159,12 +161,15 @@
               ><span>{{ i18n.t('journal', 'choose') }}</span>
             </button>
           }
+          @if (foodsRefreshing()) {
+            <p role="status">{{ i18n.t('common', 'refreshing') }}</p>
+          }
           @if (foodError()) {
             <p class="error" role="alert">
               {{ foodError() }} <button type="button" (click)="loadFoods()">Try again</button>
             </p>
           }
-          @if (foodsLoading() && !foods().length) {
+          @if (foodsInitialLoading()) {
             <p role="status">{{ i18n.t('journal', 'loadingFoods') }}</p>
           }
           <div class="food-options" [attr.aria-label]="i18n.t('journal', 'foods')">
