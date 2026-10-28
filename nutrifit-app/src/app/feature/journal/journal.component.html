@@ -71,15 +71,7 @@
                 @for (entry of meal.entries; track entry.id) {
                   <li>
                     <div class="entry-name">
-                      <strong
-                        >{{ entry.food_name }}
-                        @if (entry.kind === 'FOOD') {
-                          <small>
-                            · NOVA
-                            {{ entry.nova_group ?? i18n.t('foodEditor', 'novaUnknown') }}</small
-                          >
-                        }</strong
-                      ><span
+                      <strong>{{ entry.food_name }}</strong><span
                         >{{ formatNutrition(entry.ratio) }} × {{ portionLabel(entry.portion) }} ·
                         {{
                           i18n.t('foodEditor', entry.kind === 'RECIPE' ? 'recipe' : 'food')
