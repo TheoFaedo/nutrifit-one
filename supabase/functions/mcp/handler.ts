@@ -35,7 +35,7 @@ export function createHandler(config: Config) {
       headers.set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
       return new Response(null, { status: 204, headers });
     }
-    const path = new URL(request.url).pathname;
+    const path = normalizePath(new URL(request.url).pathname);
     if (
       path.endsWith("/.well-known/oauth-protected-resource") &&
       request.method === "GET"
@@ -47,8 +47,9 @@ export function createHandler(config: Config) {
         bearer_methods_supported: ["header"],
       });
     }
-    const expectedPath = new URL(config.resource).pathname;
-    if (path !== expectedPath && path !== `${expectedPath}/`) {
+    const expectedPath = normalizePath(new URL(config.resource).pathname);
+    const functionPath = `/${expectedPath.split("/").filter(Boolean).at(-1)}`;
+    if (path !== expectedPath && path !== functionPath && path !== "/") {
       return respond({ error: "Not found" }, 404);
     }
     if (!["POST", "GET", "DELETE"].includes(request.method)) {
@@ -129,4 +130,9 @@ export function createHandler(config: Config) {
       );
     }
   };
+}
+
+function normalizePath(path: string): string {
+  const normalized = path.replace(/\/+$/, "");
+  return normalized || "/";
 }
