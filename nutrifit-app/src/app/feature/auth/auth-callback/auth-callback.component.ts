@@ -1,3 +1,4 @@
+import { AuthReturnService } from '@core/services/auth-return.service';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
@@ -9,6 +10,7 @@ import { supabase } from '@core/services/supabase.client';
   styleUrl: './auth-callback.component.less',
 })
 export class AuthCallbackComponent {
+  private readonly authReturn = inject(AuthReturnService);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 
@@ -30,9 +32,11 @@ export class AuthCallbackComponent {
       if (error) {
         throw error;
       }
-      await this.router.navigateByUrl(data.onboarded ? '/journal' : '/onboarding');
+      await this.router.navigateByUrl(data.onboarded ? this.authReturn.complete() : '/onboarding');
     } catch {
-      await this.router.navigateByUrl('/login');
+      await this.router.navigate(['/login'], {
+        queryParams: { next: this.authReturn.destination() },
+      });
     }
   }
 }

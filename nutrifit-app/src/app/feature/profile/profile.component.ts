@@ -1,3 +1,4 @@
+import { ConnectedAppsComponent } from '@feature/profile/connected-apps/connected-apps.component';
 import { DiscardedCacheResponse } from '@core/stores/keyed-cache';
 import { CacheSession } from '@core/stores/cache-session.service';
 import { DailyGoalsStore } from '@core/stores/daily-goals.store';
@@ -18,6 +19,7 @@ import { Language } from '@core/i18n/translations';
 @Component({
   selector: 'app-profile-page',
   imports: [
+    ConnectedAppsComponent,
     ReactiveFormsModule,
     BrandComponent,
     BottomNavComponent,

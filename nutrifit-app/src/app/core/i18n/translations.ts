@@ -1,5 +1,28 @@
 export const translations = {
   en: {
+    oauth: {
+      title: 'Connect Nutrifit',
+      loading: 'Loading authorization…',
+      account: 'Signed in as',
+      client: 'Requesting application:',
+      permissions: 'Nutrifit permissions',
+      readFoods: 'Read your private foods, public foods and recipes.',
+      readDay: 'Read your journal and daily goals.',
+      createFood: 'Create private foods in your name.',
+      scope: 'Requested identity scopes:',
+      revokeHint: 'You can revoke access from Connected applications in your profile.',
+      deny: 'Deny',
+      approve: 'Authorize',
+      invalid:
+        'This authorization could not be completed. It may be invalid or expired. Restart the connection from ChatGPT.',
+      back: 'Back to profile',
+      apps: 'Connected applications',
+      revoke: 'Revoke access for',
+      empty: 'No connected applications.',
+      revoked: 'Access revoked.',
+      loadFailed: 'Connected applications could not be loaded.',
+      revokeFailed: 'Access could not be revoked. Please try again.',
+    },
     common: {
       language: 'Language',
       french: 'Français',
@@ -228,6 +251,29 @@ export const translations = {
     errors: { languageSaveFailed: 'Language preference could not be saved. Try again.' },
   },
   fr: {
+    oauth: {
+      title: 'Connecter Nutrifit',
+      loading: 'Chargement de l’autorisation…',
+      account: 'Compte connecté :',
+      client: 'Application demandeuse :',
+      permissions: 'Permissions Nutrifit',
+      readFoods: 'Consulter vos aliments privés, les aliments publics et les recettes.',
+      readDay: 'Consulter votre journal et vos objectifs quotidiens.',
+      createFood: 'Créer des aliments privés à votre nom.',
+      scope: 'Permissions d’identité demandées :',
+      revokeHint: 'Vous pouvez révoquer cet accès dans Applications connectées sur votre profil.',
+      deny: 'Refuser',
+      approve: 'Autoriser',
+      invalid:
+        'Cette autorisation a échoué. Elle peut être invalide ou expirée. Relancez la connexion depuis ChatGPT.',
+      back: 'Retour au profil',
+      apps: 'Applications connectées',
+      revoke: 'Révoquer l’accès de',
+      empty: 'Aucune application connectée.',
+      revoked: 'Accès révoqué.',
+      loadFailed: 'Impossible de charger les applications connectées.',
+      revokeFailed: 'Impossible de révoquer cet accès. Réessayez.',
+    },
     common: {
       language: 'Langue',
       french: 'Français',

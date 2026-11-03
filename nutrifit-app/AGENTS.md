@@ -6,6 +6,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Prefer type inference when the type is obvious
 - Avoid the `any` type; use `unknown` when type is uncertain
 - Do not use nested ternary operators. Prefer clearly named functions/signals that express the decision logic and make the code easier to understand.
+- Always use braces for `if` statements; never write inline `if` statements.
 
 ## Design Principles
 

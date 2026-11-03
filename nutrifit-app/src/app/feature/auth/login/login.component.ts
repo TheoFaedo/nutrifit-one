@@ -1,3 +1,5 @@
+import { ActivatedRoute } from '@angular/router';
+import { AuthReturnService } from '@core/services/auth-return.service';
 import { Component, inject, signal } from '@angular/core';
 import { AuthService } from '@core/services/auth.service';
 import { supabaseConfigured } from '@core/services/supabase.client';
@@ -12,6 +14,8 @@ import { I18nService } from '@core/i18n/i18n.service';
   styleUrl: './login.component.less',
 })
 export class LoginComponent {
+  private readonly route = inject(ActivatedRoute);
+  private readonly authReturn = inject(AuthReturnService);
   private readonly auth = inject(AuthService);
   readonly i18n = inject(I18nService);
   readonly configured = signal(supabaseConfigured);
@@ -22,6 +26,7 @@ export class LoginComponent {
     this.busy.set(true);
     this.error.set('');
     try {
+      this.authReturn.remember(this.route.snapshot.queryParamMap.get('next'));
       await this.auth.signInWithGoogle();
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : this.i18n.t('login', 'signInError'));

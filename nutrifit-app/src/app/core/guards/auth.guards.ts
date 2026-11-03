@@ -1,7 +1,8 @@
+import { AuthReturnService } from '@core/services/auth-return.service';
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
-import { supabase } from '../services/supabase.client';
+import { AuthService } from '@core/services/auth.service';
+import { supabase } from '@core/services/supabase.client';
 
 export const signedInGuard: CanActivateFn = async (_route, state) => {
   const auth = inject(AuthService);
@@ -71,3 +72,28 @@ async function validateOnboardingInBackground(targetUrl: string): Promise<void> 
     await router.navigateByUrl(redirectUrl);
   }
 }
+
+/** Consent must wait for onboarding; a background guard could expose actions early. */
+export const oauthConsentGuard: CanActivateFn = async (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const authReturn = inject(AuthReturnService);
+  authReturn.remember(state.url);
+  try {
+    const user = await auth.user();
+    if (!user) {
+      return router.createUrlTree(['/login'], { queryParams: { next: state.url } });
+    }
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('onboarded')
+      .eq('id', user.id)
+      .single();
+    if (error) {
+      throw error;
+    }
+    return data.onboarded ? true : router.createUrlTree(['/onboarding']);
+  } catch {
+    return router.createUrlTree(['/login'], { queryParams: { next: state.url } });
+  }
+};

@@ -1,0 +1,18 @@
+project_id = "nutrifit-one"
+
+[auth]
+site_url = "http://localhost:4200"
+additional_redirect_urls = ["http://localhost:4200/auth/callback"]
+
+[auth.oauth_server]
+enabled = true
+authorization_url_path = "/oauth/consent"
+allow_dynamic_registration = false
+
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/mcp_access_token_hook"
+
+[functions.mcp]
+# The function validates signature, issuer, audience, client and live session.
+verify_jwt = false

@@ -1,0 +1,7 @@
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/format_changed_files.py\""
+timeout = 600
+statusMessage = "Formatting changed files and checking inline if statements"

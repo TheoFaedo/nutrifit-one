@@ -1,0 +1,36 @@
+<main class="consent">
+  <app-brand />
+  <h1>{{ i18n.t('oauth', 'title') }}</h1>
+  @if (loading()) {
+    <p role="status">{{ i18n.t('oauth', 'loading') }}</p>
+  }
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+    <a routerLink="/profile">{{ i18n.t('oauth', 'back') }}</a>
+  }
+  @if (details(); as request) {
+    <p>
+      {{ i18n.t('oauth', 'account') }} <strong>{{ request.user.email }}</strong>
+    </p>
+    <p>
+      {{ i18n.t('oauth', 'client') }} <strong>{{ request.client.name }}</strong>
+    </p>
+    <p class="uri">{{ request.redirect_uri }}</p>
+    <h2>{{ i18n.t('oauth', 'permissions') }}</h2>
+    <ul>
+      <li>{{ i18n.t('oauth', 'readFoods') }}</li>
+      <li>{{ i18n.t('oauth', 'readDay') }}</li>
+      <li>{{ i18n.t('oauth', 'createFood') }}</li>
+    </ul>
+    <p>{{ i18n.t('oauth', 'scope') }} {{ request.scope }}</p>
+    <p>{{ i18n.t('oauth', 'revokeHint') }}</p>
+    <div class="actions">
+      <button type="button" [disabled]="busy()" (click)="decide(false)">
+        {{ i18n.t('oauth', 'deny') }}
+      </button>
+      <button type="button" [disabled]="busy()" (click)="decide(true)">
+        {{ i18n.t('oauth', 'approve') }}
+      </button>
+    </div>
+  }
+</main>

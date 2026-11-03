@@ -7,6 +7,12 @@
 - **Authentification :** OAuth Google via Supabase Auth.
 - **Modèle conceptuel :** voir [model.wsd](model.wsd).
 
+## 1.1 Connexion MCP à ChatGPT
+
+Le serveur MCP TypeScript est hébergé dans `supabase/functions/mcp` et utilise le transport Streamable HTTP sans état. Supabase Auth fournit OAuth 2.1 avec PKCE et l’écran Angular `/oauth/consent` ; le profil permet de lister et révoquer les clients accordés. Le serveur vérifie le jeton utilisateur et transmet ce même jeton aux RPC, sous les politiques RLS. Il n’utilise pas de clé `service_role`.
+
+La migration `20261030100000_mcp_oauth.sql` maintient une liste privée des clients et ressources activés. Le hook conserve l’audience Supabase `authenticated` et y ajoute l’identifiant de ressource MCP. Les politiques restrictives refusent aux clients OAuth les écritures directes ; une seule RPC dédiée peut créer un nouvel aliment privé, de manière transactionnelle et idempotente. Les outils métier restent en mode désactivé jusqu’au test OAuth réel décrit dans [le guide ChatGPT MCP](CHATGPT-MCP.md).
+
 Le diagramme est conceptuel : les noms et cardinalités devront être traduits en tables, clés étrangères, contraintes et politiques RLS. Il ne définit pas à lui seul les choix ouverts ci-dessous.
 
 ## 2. Principes de données

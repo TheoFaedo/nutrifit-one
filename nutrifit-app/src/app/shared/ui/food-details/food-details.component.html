@@ -1,0 +1,63 @@
+<section class="detail" aria-labelledby="food-title">
+  <div class="heading">
+    <div>
+      <span class="eyebrow"
+        >{{ food().kind === 'RECIPE' ? 'Recipe' : 'Food' }} ·
+        {{ food().is_public ? 'Public' : 'Private' }} · Version {{ food().version_number }}</span
+      >
+      <h2 id="food-title">{{ food().name }}</h2>
+    </div>
+    @if (food().author_id === currentUserId()) {
+      <button class="secondary-button" type="button" (click)="edit.emit(food())">Edit</button>
+    }
+  </div>
+  @if (food().barcode) {
+    <p class="meta">Barcode {{ food().barcode }}</p>
+  }
+  @if (food().source; as source) {
+    <p class="meta">Source: {{ source }}</p>
+    @if (assumptions().length) {
+      <ul class="note">
+        @for (assumption of assumptions(); track $index) {
+          <li>{{ assumption }}</li>
+        }
+      </ul>
+    }
+  }
+  <div class="amount-controls">
+    <label class="amount"
+      ><span>Calculate per</span
+      ><app-portion-selector
+        [portions]="food().portions"
+        [selection]="selection()"
+        (selectionChange)="selectPortion($event)"
+    /></label>
+    <label class="amount"
+      ><span>Ratio</span
+      ><input
+        [type]="ratioInputType"
+        inputmode="decimal"
+        [value]="ratioInput()"
+        (input)="ratioInput.set($any($event.target).value)"
+      />× {{ baseQuantity() }} {{ selectedPortion().quantity_unit }}</label
+    >
+  </div>
+  <div class="portion-list">
+    <h3>Nutrition for {{ effectiveQuantity() }} {{ selectedPortion().quantity_unit }}</h3>
+    <article class="portion-card">
+      <app-nutrition-summary [values]="scaledNutrition(selectedPortion())" />
+    </article>
+  </div>
+  @if (food().kind === 'RECIPE') {
+    <div class="portion-list">
+      <h3>Ingredients in this version</h3>
+      @for (part of food().parts; track part.quantity_id) {
+        <article class="portion-card">
+          <strong>{{ portionLabel(part) }} {{ part.ingredient_name }}</strong>
+          <p class="note">{{ part.ingredient_kind === 'RECIPE' ? 'Recipe' : 'Food' }} snapshot</p>
+        </article>
+      }
+    </div>
+  }
+  <p class="note">Values are scaled proportionally from each portion. Units are kept as entered.</p>
+</section>

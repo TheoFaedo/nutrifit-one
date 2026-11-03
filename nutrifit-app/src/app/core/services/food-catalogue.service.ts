@@ -33,13 +33,14 @@ export interface FoodRecord {
   nova_group?: number | null;
   barcode: string | null;
   source: string | null;
+  source_payload?: unknown;
   portions: FoodPortion[];
   parts: RecipePart[];
 }
 
 export type FoodCatalogueSort = 'recent' | 'newest' | 'asc' | 'desc';
 const foodSelect =
-  'id,author_id,is_public,food_versions!inner(id,version_number,name,kind,nova_group,product_details(barcode,source),quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g),recipe_parts!recipe_parts_recipe_version_id_fkey(id,ingredient_version_id,quantity_id,ratio,ingredient:food_versions!recipe_parts_ingredient_version_id_fkey(id,name,kind,quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))))';
+  'id,author_id,is_public,food_versions!inner(id,version_number,name,kind,nova_group,product_details(barcode,source,source_payload),quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g),recipe_parts!recipe_parts_recipe_version_id_fkey(id,ingredient_version_id,quantity_id,ratio,ingredient:food_versions!recipe_parts_ingredient_version_id_fkey(id,name,kind,quantities(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))))';
 
 export interface RecipePart {
   ingredient_version_id: string;
@@ -166,6 +167,7 @@ export class FoodCatalogueService {
         nova_group: validNova(version['nova_group']),
         barcode: details?.['barcode'] ? String(details['barcode']) : null,
         source: details?.['source'] ? String(details['source']) : null,
+        source_payload: details?.['source_payload'] ?? null,
         portions: (version['quantities'] as FoodPortion[]) ?? [],
         parts: ((version['recipe_parts'] as Record<string, unknown>[] | undefined) ?? []).map(
           (part) => {
@@ -216,9 +218,7 @@ export class FoodCatalogueService {
     return String(data);
   }
 
-  async lookupBarcode(
-    barcode: string,
-  ): Promise<{
+  async lookupBarcode(barcode: string): Promise<{
     name: string;
     portions: PortionInput[];
     payload: unknown;

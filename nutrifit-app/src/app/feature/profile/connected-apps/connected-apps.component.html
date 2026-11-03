@@ -1,0 +1,28 @@
+<section aria-labelledby="connected-apps-title">
+  <h2 id="connected-apps-title">{{ i18n.t('oauth', 'apps') }}</h2>
+  @if (loading()) {
+    <p role="status">{{ i18n.t('oauth', 'loading') }}</p>
+  }
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+    <button type="button" (click)="load()">{{ i18n.t('common', 'retry') }}</button>
+  }
+  @for (grant of grants(); track grant.client.id) {
+    <article>
+      <div>
+        <h3>{{ grant.client.name }}</h3>
+        <p>{{ grant.scopes.join(', ') }}</p>
+      </div>
+      <button type="button" [disabled]="revoking() !== null" (click)="revoke(grant.client.id)">
+        {{ i18n.t('oauth', 'revoke') }} {{ grant.client.name }}
+      </button>
+    </article>
+  } @empty {
+    @if (!loading() && !error()) {
+      <p>{{ i18n.t('oauth', 'empty') }}</p>
+    }
+  }
+  @if (revoked()) {
+    <p role="status">{{ i18n.t('oauth', 'revoked') }}</p>
+  }
+</section>

@@ -1,3 +1,4 @@
+import { AuthReturnService } from '@core/services/auth-return.service';
 import { CacheSession } from '@core/stores/cache-session.service';
 import { Service, inject } from '@angular/core';
 import { Router } from '@angular/router';
@@ -8,6 +9,7 @@ import { I18nService } from '@core/i18n/i18n.service';
 
 @Service()
 export class AuthService {
+  private readonly authReturn = inject(AuthReturnService);
   private readonly cacheSession = inject(CacheSession);
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
@@ -71,6 +73,7 @@ export class AuthService {
     if (error) {
       throw error;
     }
+    this.authReturn.complete();
     this.cacheSession.setAccount(null);
     this.sessionState.next(null);
     this.restoredUserId = null;

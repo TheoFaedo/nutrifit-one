@@ -1,0 +1,92 @@
+.detail {
+  padding: 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+h2 {
+  margin: 5px 0 16px;
+  font:
+    400 27px Georgia,
+    serif;
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+.eyebrow {
+  color: #68714c;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.amount-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 20px 0;
+}
+.amount {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+input,
+select {
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: #fbfaf7;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font: inherit;
+}
+input {
+  width: 92px;
+}
+h3 {
+  margin: 16px 0 10px;
+  font-size: 15px;
+}
+.portion-card {
+  padding: 14px;
+  margin-top: 10px;
+  background: #f8f8f3;
+  border-radius: 12px;
+}
+.meta,
+.note {
+  color: var(--muted);
+  font-size: 12px;
+}
+.note {
+  margin: 18px 0 0;
+}
+.secondary-button {
+  min-height: 42px;
+  padding: 0 16px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid #879365;
+  outline-offset: 2px;
+}
+@media (max-width: 540px) {
+  .detail {
+    padding: 17px;
+  }
+}

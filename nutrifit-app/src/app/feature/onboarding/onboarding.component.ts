@@ -1,3 +1,4 @@
+import { AuthReturnService } from '@core/services/auth-return.service';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -23,6 +24,7 @@ const presets: Record<GoalPreset, NutritionFacts> = {
   styleUrl: './onboarding.component.less',
 })
 export class OnboardingComponent {
+  private readonly authReturn = inject(AuthReturnService);
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
   private readonly destroyRef = inject(DestroyRef);
@@ -130,7 +132,7 @@ export class OnboardingComponent {
       if (saveError) {
         throw saveError;
       }
-      await this.router.navigateByUrl('/journal');
+      await this.router.navigateByUrl(this.authReturn.complete());
     } catch (error) {
       this.error.set(
         error instanceof Error ? error.message : this.i18n.t('onboarding', 'saveFailed'),
