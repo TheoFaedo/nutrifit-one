@@ -43,15 +43,54 @@ describe('JournalEntryComponent', () => {
     return { fixture, content, opened };
   }
 
-  it('follows the pointer and opens only after a left swipe of 40px', async () => {
+  it.each(['.entry-content', '.entry-name strong', '.entry-toggle', '.entry-toggle span'])(
+    'follows a swipe starting from %s and opens once without toggling back on click',
+    async (selector) => {
+      const { fixture, content, opened } = await setup();
+      const origin = fixture.nativeElement.querySelector(selector) as HTMLElement;
+      origin.dispatchEvent(pointer('pointerdown', 150));
+      content.dispatchEvent(pointer('pointermove', 90));
+      await fixture.whenStable();
+      expect(content.style.transform).toBe('translateX(-60px)');
+      expect(opened).not.toHaveBeenCalled();
+      content.dispatchEvent(pointer('pointerup', 90));
+      fixture.componentRef.setInput('open', true);
+      await fixture.whenStable();
+      origin.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }));
+      expect(opened).toHaveBeenCalledOnce();
+      expect(opened).toHaveBeenCalledWith(true);
+      expect(content.style.transform).toBe('translateX(-112px)');
+    },
+  );
+
+  it('toggles on successive simple pointer clicks from the button icon', async () => {
+    const { fixture, opened } = await setup();
+    const icon = fixture.nativeElement.querySelector('.entry-toggle span') as HTMLElement;
+    for (const open of [false, true]) {
+      fixture.componentRef.setInput('open', open);
+      await fixture.whenStable();
+      icon.dispatchEvent(pointer('pointerdown', 100));
+      icon.dispatchEvent(pointer('pointerup', 100));
+      icon.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+      expect(opened).toHaveBeenLastCalledWith(!open);
+    }
+    expect(opened).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps keyboard activation available after a swipe without a follow-up pointer click', async () => {
     const { fixture, content, opened } = await setup();
-    content.dispatchEvent(pointer('pointerdown', 150));
-    content.dispatchEvent(pointer('pointermove', 90));
-    fixture.detectChanges();
-    expect(content.style.transform).toBe('translateX(-60px)');
-    expect(opened).not.toHaveBeenCalled();
-    content.dispatchEvent(pointer('pointerup', 90));
+    content.dispatchEvent(pointer('pointerdown', 100));
+    content.dispatchEvent(pointer('pointermove', 60));
+    content.dispatchEvent(pointer('pointerup', 60));
     expect(opened).toHaveBeenCalledWith(true);
+    fixture.componentRef.setInput('open', true);
+    await fixture.whenStable();
+    fixture.componentInstance.focusToggle();
+    const toggle = fixture.nativeElement.querySelector('.entry-toggle') as HTMLButtonElement;
+    expect(document.activeElement).toBe(toggle);
+    toggle.click();
+    expect(opened).toHaveBeenLastCalledWith(false);
+    expect(opened).toHaveBeenCalledTimes(2);
   });
 
   it('closes with a reverse swipe and retains state for a short swipe', async () => {
@@ -82,6 +121,24 @@ describe('JournalEntryComponent', () => {
     expect(fixture.componentInstance.dragOffset()).toBeNull();
   });
 
+  it.each([4, 30])(
+    'keeps actions closed after a short %ipx drag from the toggle',
+    async (distance) => {
+      const { fixture, content, opened } = await setup();
+      const toggle = fixture.nativeElement.querySelector('.entry-toggle') as HTMLButtonElement;
+      toggle.dispatchEvent(pointer('pointerdown', 100));
+      content.dispatchEvent(pointer('pointermove', 100 - distance));
+      content.dispatchEvent(pointer('pointerup', 100 - distance));
+      if (distance >= 8) {
+        toggle.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+        expect(opened).toHaveBeenCalledExactlyOnceWith(false);
+      } else {
+        expect(opened).not.toHaveBeenCalled();
+      }
+      expect(fixture.componentInstance.dragOffset()).toBeNull();
+    },
+  );
+
   it.each(['pointercancel', 'lostpointercapture'])(
     'resets an interrupted gesture on %s',
     async (type) => {
@@ -105,7 +162,7 @@ describe('JournalEntryComponent', () => {
     toggle.click();
     expect(opened).toHaveBeenCalledWith(true);
     fixture.componentRef.setInput('open', true);
-    fixture.detectChanges();
+    await fixture.whenStable();
     expect(actions.hasAttribute('inert')).toBe(false);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     for (const button of actions.querySelectorAll('button')) {

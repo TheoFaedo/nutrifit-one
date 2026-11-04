@@ -38,7 +38,7 @@ export class JournalEntryComponent {
 
   pointerDown(event: PointerEvent): void {
     this.suppressClick = false;
-    if (!event.isPrimary || event.button !== 0 || (event.target as HTMLElement).closest('button')) {
+    if (!event.isPrimary || event.button !== 0) {
       return;
     }
     this.gesture = {
@@ -90,11 +90,12 @@ export class JournalEntryComponent {
   }
 
   toggle(event: MouseEvent): void {
-    if (this.suppressClick) {
+    if (this.suppressClick && event.detail !== 0) {
       event.preventDefault();
       this.suppressClick = false;
       return;
     }
+    this.suppressClick = false;
     this.openRequested.emit(!this.open());
   }
 

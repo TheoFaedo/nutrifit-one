@@ -14,12 +14,14 @@
       @if (entry().kind === 'FOOD' && entry().brand?.trim()) {
         <span>{{ entry().brand }}</span>
       }
-      <span
-        >{{ formatNutrition(entry().ratio) }} ×
-        {{ formatNutrition(entry().portion.quantity_number) }} {{ entry().portion.quantity_unit }} ·
-        {{ i18n.t('foodEditor', entry().kind === 'RECIPE' ? 'recipe' : 'food') }}</span
-      >
-      <span>{{ formatNutrition(energy()) }} kcal</span>
+      <div class="entry-details">
+        <span>
+          {{ formatNutrition(entry().ratio) }} ×
+          {{ formatNutrition(entry().portion.quantity_number) }} {{ entry().portion.quantity_unit }}
+        </span>
+        <span aria-hidden="true">·</span>
+        <span>{{ formatNutrition(energy()) }} kcal</span>
+      </div>
     </div>
     <button
       class="entry-toggle"

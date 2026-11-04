@@ -16,11 +16,12 @@
   padding: 12px 0;
   background: #fffefa;
   touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
   transition: transform 160ms ease;
 }
 .entry-content.dragging {
   transition: none;
-  user-select: none;
 }
 .entry-name {
   flex: 1;
@@ -36,6 +37,14 @@
   color: var(--muted);
   font-size: 12px;
   overflow-wrap: anywhere;
+}
+.entry-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.entry-details > span {
+  min-width: 0;
 }
 .entry-actions {
   position: absolute;
