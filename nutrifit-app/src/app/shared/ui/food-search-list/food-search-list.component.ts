@@ -33,10 +33,11 @@ import { FoodRecord } from '@core/services/food-catalogue.service';
             >
               <span>
                 <strong>{{ food.name }}</strong>
+                @if (food.kind === 'FOOD' && food.brand?.trim()) {
+                  <small>{{ food.brand }}</small>
+                }
                 @if (
-                  food.kind === 'FOOD' &&
-                  food.nova_group !== null &&
-                  food.nova_group !== undefined
+                  food.kind === 'FOOD' && food.nova_group !== null && food.nova_group !== undefined
                 ) {
                   <span>NOVA {{ food.nova_group }}</span>
                 }

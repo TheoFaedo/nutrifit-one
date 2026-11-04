@@ -1,6 +1,12 @@
 import { Service, inject } from '@angular/core';
 import { supabase } from './supabase.client';
-import { FoodCatalogueService, FoodPortion, RecipePart, validNova } from '@core/services/food-catalogue.service';
+import {
+  FoodCatalogueService,
+  FoodPortion,
+  RecipePart,
+  validNova,
+  normalizeBrand,
+} from '@core/services/food-catalogue.service';
 
 export type MealType = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACKS';
 export interface IntakeRecord {
@@ -11,6 +17,7 @@ export interface IntakeRecord {
   meal_type: MealType;
   consumed_at: string;
   food_name: string;
+  brand: string | null;
   kind: 'FOOD' | 'RECIPE';
   portion: FoodPortion;
   nova_group?: number | null;
@@ -99,7 +106,7 @@ export class IntakeJournalService {
     const { data, error } = await supabase
       .from('intakes')
       .select(
-        'id,food_version_id,quantity_id,ratio,meal_type,consumed_at,food_versions!inner(name,kind,nova_group,quantities!inner(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))',
+        'id,food_version_id,quantity_id,ratio,meal_type,consumed_at,food_versions!inner(name,kind,nova_group,product_details(brand),quantities!inner(id,quantity_number,quantity_unit,is_reference,energy_kcal,carbs_g,fats_g,proteins_g))',
       )
       .eq('consumed_on', date)
       .order('created_at');
@@ -115,6 +122,7 @@ export class IntakeJournalService {
         if (!version) {
           throw new Error('The food details for this journal entry could not be loaded.');
         }
+        const details = version['product_details'] as Record<string, unknown> | null;
         const quantities = version['quantities'];
         const portions = Array.isArray(quantities)
           ? (quantities as FoodPortion[])
@@ -133,6 +141,7 @@ export class IntakeJournalService {
           meal_type: String(row['meal_type']) as MealType,
           consumed_at: String(row['consumed_at']),
           food_name: String(version['name']),
+          brand: version['kind'] === 'FOOD' ? normalizeBrand(details?.['brand']) : null,
           kind: String(version['kind']) as 'FOOD' | 'RECIPE',
           portion,
           nova_group: validNova(version['nova_group']),

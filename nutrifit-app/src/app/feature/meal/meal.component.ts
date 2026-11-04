@@ -1,10 +1,11 @@
+import { OffProduct } from '@core/services/food-catalogue.service';
 import { DiscardedCacheResponse } from '@core/stores/keyed-cache';
 import { FoodCatalogueStore, catalogueKey } from '@core/stores/food-catalogue.store';
 import { CacheSession } from '@core/stores/cache-session.service';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '@core/services/auth.service';
-import { FoodCatalogueSort, FoodRecord, PortionInput } from '@core/services/food-catalogue.service';
+import { FoodCatalogueSort, FoodRecord } from '@core/services/food-catalogue.service';
 import { BrandComponent } from '@shared/ui/brand/brand.component';
 import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
 import { FoodDetailsComponent } from '@shared/ui/food-details/food-details.component';
@@ -59,12 +60,7 @@ export class MealComponent {
   private readonly queryChanges = new Subject<string>();
   private searchGeneration = 0;
   readonly barcode = signal('');
-  readonly offProduct = signal<{
-    name: string;
-    portions: PortionInput[];
-    payload: unknown;
-    novaGroup?: number | null;
-  } | null>(null);
+  readonly offProduct = signal<OffProduct | null>(null);
   readonly editing = signal(false);
   readonly detailsOpen = signal(false);
   readonly editorKind = signal<'FOOD' | 'RECIPE'>('FOOD');

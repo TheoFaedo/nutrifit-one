@@ -13,6 +13,7 @@ const food = (id: string, name: string): FoodRecord => ({
   version_id: id,
   version_number: 1,
   kind: 'FOOD',
+  brand: null,
   barcode: null,
   source: null,
   portions: [],
@@ -37,6 +38,28 @@ describe('MealComponent', () => {
     }).compileComponents();
   });
 
+  it('prefills editable OFF brand in the catalogue form without saving on cancel', async () => {
+    const fixture = TestBed.createComponent(MealComponent);
+    await fixture.whenStable();
+    fixture.componentInstance.barcode.set('123');
+    fixture.componentInstance.offProduct.set({
+      name: 'OFF food',
+      brand: 'OFF brand',
+      portions: [],
+      payload: {},
+    });
+    fixture.componentInstance.importOff();
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    expect((page.querySelector('[name="brand"]') as HTMLInputElement).value).toBe('OFF brand');
+    const cancel = Array.from(page.querySelectorAll('app-food-editor button')).find(
+      (button) => button.textContent?.trim() === 'Cancel',
+    ) as HTMLButtonElement;
+    cancel.click();
+    await fixture.whenStable();
+    expect(page.querySelector('app-food-editor')).toBeNull();
+  });
+
   it('uses one catalogue search field and sorts its results from the top controls', async () => {
     const fixture = TestBed.createComponent(MealComponent);
     await fixture.whenStable();
@@ -57,7 +80,7 @@ describe('MealComponent', () => {
     sortButton.click();
     expect(sortButton.getAttribute('popovertarget')).toBe(sortMenu.id);
     expect(sortMenu.querySelectorAll('.sort-option')).toHaveLength(4);
-    (sortMenu.querySelectorAll<HTMLButtonElement>('.sort-option')[3]).click();
+    sortMenu.querySelectorAll<HTMLButtonElement>('.sort-option')[3].click();
     await fixture.whenStable();
     fixture.detectChanges();
     expect(names()).toEqual(['Zucchini', 'Apple']);

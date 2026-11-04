@@ -26,6 +26,7 @@ const food: FoodRecord = {
   is_public: false,
   name: 'Apple',
   kind: 'FOOD',
+  brand: null,
   barcode: null,
   source: null,
   portions: [],

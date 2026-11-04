@@ -1,3 +1,4 @@
+import { OffProduct } from '@core/services/food-catalogue.service';
 import { JournalEntryComponent } from '@feature/journal/journal-entry/journal-entry.component';
 import { DiscardedCacheResponse } from '@core/stores/keyed-cache';
 import { JournalStore } from '@core/stores/journal.store';
@@ -17,12 +18,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
 import { DailyGoal } from '@core/services/daily-goals.service';
-import {
-  FoodCatalogueSort,
-  FoodPortion,
-  PortionInput,
-  FoodRecord,
-} from '@core/services/food-catalogue.service';
+import { FoodCatalogueSort, FoodPortion, FoodRecord } from '@core/services/food-catalogue.service';
 import { IntakeInput, IntakeRecord, MealType } from '@core/services/intake-journal.service';
 import { BrandComponent } from '@shared/ui/brand/brand.component';
 import { BottomNavComponent } from '@shared/ui/bottom-nav/bottom-nav.component';
@@ -186,17 +182,13 @@ export class JournalComponent {
   readonly dialogOpen = signal(false);
   readonly dialogView = signal<'search' | 'details'>('search');
   readonly creatingFood = signal(false);
+  readonly importingProduct = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly query = signal('');
   readonly barcode = signal('');
   readonly barcodeSearching = signal(false);
   readonly barcodeError = signal('');
-  readonly offProduct = signal<{
-    name: string;
-    portions: PortionInput[];
-    payload: unknown;
-    novaGroup?: number | null;
-  } | null>(null);
+  readonly offProduct = signal<OffProduct | null>(null);
   readonly selectedFoodId = signal('');
   readonly selectedPortionId = signal('');
   readonly amount = signal('1');
@@ -315,6 +307,7 @@ export class JournalComponent {
   startCreateFood(): void {
     this.dialogOpen.set(true);
     this.dialogView.set('search');
+    this.importingProduct.set(false);
     this.creatingFood.set(true);
     this.dialogError.set('');
   }
@@ -488,34 +481,12 @@ export class JournalComponent {
       clearTimeout(this.searchTimer);
     }
   }
-  async chooseOffProduct(): Promise<void> {
-    const product = this.offProduct();
-    if (!product) {
+  chooseOffProduct(): void {
+    if (!this.offProduct()) {
       return;
     }
-    this.saving.set(true);
-    this.dialogError.set('');
-    try {
-      const foodId = await this.catalogue.save({
-        name: product.name,
-        novaGroup: product.novaGroup,
-        isPublic: true,
-        barcode: this.barcode().trim(),
-        portions: product.portions,
-        source: 'Open Food Facts',
-        sourcePayload: product.payload,
-      });
-      const food = await this.catalogue.current(foodId);
-      if (!food) {
-        throw new Error('The imported product could not be loaded.');
-      }
-      this.chooseFood(food);
-      this.offProduct.set(null);
-    } catch (error) {
-      this.dialogError.set(this.message(error, 'The product could not be imported.'));
-    } finally {
-      this.saving.set(false);
-    }
+    this.startCreateFood();
+    this.importingProduct.set(true);
   }
   backToFoods(): void {
     this.dialogView.set('search');
@@ -602,6 +573,7 @@ export class JournalComponent {
       meal_type: input.mealType,
       consumed_at: input.consumedAt,
       food_name: food.name,
+      brand: food.kind === 'FOOD' ? food.brand : null,
       kind: food.kind,
       nova_group: food.nova_group ?? null,
       portion,

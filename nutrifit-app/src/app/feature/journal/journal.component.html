@@ -101,6 +101,8 @@
         @if (creatingFood()) {
           <app-food-editor
             [initialKind]="'FOOD'"
+            [initialProduct]="importingProduct() ? offProduct() : null"
+            [initialBarcode]="importingProduct() ? barcode().trim() : ''"
             (saved)="createdFood($event)"
             (dismissed)="cancelCreateFood()"
           />
@@ -133,16 +135,22 @@
               [disabled]="saving()"
             >
               <span
-                ><strong>{{ product.name }}</strong
-                ><small>{{ i18n.t('journal', 'openFoodFacts') }}</small></span
+                ><strong>{{ product.name }}</strong>
+                @if (product.brand?.trim()) {
+                  <small>{{ product.brand }}</small>
+                }
+                <small>{{ i18n.t('journal', 'openFoodFacts') }}</small></span
               ><span>{{ i18n.t('journal', 'useProduct') }}</span>
             </button>
           }
           @for (food of barcodeFoods(); track food.version_id) {
             <button class="barcode-result" type="button" (click)="chooseFood(food)">
               <span
-                ><strong>{{ food.name }}</strong
-                ><small
+                ><strong>{{ food.name }}</strong>
+                @if (food.kind === 'FOOD' && food.brand?.trim()) {
+                  <small>{{ food.brand }}</small>
+                }
+                <small
                   >Public catalogue food ·
                   {{
                     food.version_number === 1 ? 'version 1' : 'version ' + food.version_number
@@ -167,7 +175,12 @@
             <div class="food-options">
               @for (food of foods(); track food.version_id) {
                 <button type="button" (click)="chooseFood(food)">
-                  <span>{{ food.name }}</span>
+                  <span class="food-option-name">
+                    <span>{{ food.name }}</span>
+                    @if (food.kind === 'FOOD' && food.brand?.trim()) {
+                      <small>{{ food.brand }}</small>
+                    }
+                  </span>
                   <small>{{
                     i18n.t('foodEditor', food.kind === 'RECIPE' ? 'recipe' : 'food')
                   }}</small>
@@ -197,6 +210,9 @@
           </button>
           <p class="eyebrow">{{ i18n.t('journal', food.kind === 'RECIPE' ? 'recipe' : 'food') }}</p>
           <h2 id="entry-dialog-title">{{ food.name }}</h2>
+          @if (food.kind === 'FOOD' && food.brand?.trim()) {
+            <small>{{ food.brand }}</small>
+          }
           @if (food.kind === 'FOOD') {
             <p>NOVA {{ food.nova_group ?? i18n.t('foodEditor', 'novaUnknown') }}</p>
           }

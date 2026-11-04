@@ -1,6 +1,7 @@
+import { OffProduct } from '@core/services/food-catalogue.service';
 import { Component, computed, input, output, inject } from '@angular/core';
 import { I18nService } from '@core/i18n/i18n.service';
-import { FoodRecord, FoodCatalogueSort, PortionInput } from '@core/services/food-catalogue.service';
+import { FoodRecord, FoodCatalogueSort } from '@core/services/food-catalogue.service';
 import {
   FoodCatalogueSearchComponent,
   FoodSortOption,
@@ -31,6 +32,9 @@ import { FoodSearchListComponent } from '../food-search-list/food-search-list.co
         <div>
           <span class="eyebrow">Open Food Facts</span>
           <h2>{{ product.name }}</h2>
+          @if (product.brand?.trim()) {
+            <p>{{ product.brand }}</p>
+          }
           <p>
             {{ product.portions.length }} portion{{ product.portions.length === 1 ? '' : 's' }}
             with nutrition data when available · External product data
@@ -146,11 +150,7 @@ export class FoodCataloguePanelComponent {
   readonly loading = input(false);
   readonly error = input('');
   readonly selectedId = input<string | null>(null);
-  readonly offProduct = input<{
-    name: string;
-    portions: PortionInput[];
-    payload: unknown;
-  } | null>(null);
+  readonly offProduct = input<OffProduct | null>(null);
   readonly queryChanged = output<string>();
   readonly sortChanged = output<string>();
   readonly barcodeDetected = output<string>();

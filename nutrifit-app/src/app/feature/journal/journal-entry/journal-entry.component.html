@@ -11,6 +11,9 @@
   >
     <div class="entry-name">
       <strong>{{ entry().food_name }}</strong>
+      @if (entry().kind === 'FOOD' && entry().brand?.trim()) {
+        <span>{{ entry().brand }}</span>
+      }
       <span
         >{{ formatNutrition(entry().ratio) }} ×
         {{ formatNutrition(entry().portion.quantity_number) }} {{ entry().portion.quantity_unit }} ·

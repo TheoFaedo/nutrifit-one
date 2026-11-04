@@ -28,6 +28,7 @@ const entry: IntakeRecord = {
   meal_type: 'LUNCH',
   consumed_at: '2026-10-08T10:00:00Z',
   food_name: 'Old food',
+  brand: null,
   kind: 'FOOD',
   portion,
 };
@@ -39,6 +40,7 @@ const oldFood: FoodRecord = {
   version_number: 1,
   name: 'Old food',
   kind: 'FOOD',
+  brand: null,
   barcode: null,
   source: null,
   portions: [portion],
@@ -59,6 +61,7 @@ describe('JournalComponent', () => {
     version: vi.fn(),
     lookupBarcode: vi.fn(),
     save: vi.fn(),
+    current: vi.fn().mockResolvedValue(oldFood),
   };
   const auth = { user: vi.fn().mockResolvedValue({ id: 'user-1' }) };
 
@@ -80,6 +83,45 @@ describe('JournalComponent', () => {
         { provide: AuthService, useValue: auth },
       ],
     }).compileComponents();
+  });
+
+  it('edits OFF data before saving, resumes portion selection and cancels without writes', async () => {
+    const fixture = TestBed.createComponent(JournalComponent);
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.dialogOpen.set(true);
+    component.barcode.set('123');
+    component.offProduct.set({
+      name: 'OFF food',
+      brand: 'OFF brand',
+      portions: [portion],
+      payload: {},
+    });
+    component.chooseOffProduct();
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    expect((page.querySelector('[name="brand"]') as HTMLInputElement).value).toBe('OFF brand');
+    expect((page.querySelector('[name="barcode"]') as HTMLInputElement).value).toBe('123');
+    expect(catalogue.save).not.toHaveBeenCalled();
+    component.cancelCreateFood();
+    await fixture.whenStable();
+    expect(page.querySelector('app-food-editor')).toBeNull();
+    expect(catalogue.save).not.toHaveBeenCalled();
+    component.chooseOffProduct();
+    await fixture.whenStable();
+    const input = page.querySelector('[name="brand"]') as HTMLInputElement;
+    input.value = 'Corrected';
+    input.dispatchEvent(new Event('input'));
+    catalogue.save.mockResolvedValueOnce(oldFood.id);
+    (page.querySelector('app-food-editor form') as HTMLFormElement).dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    );
+    await fixture.whenStable();
+    expect(catalogue.save).toHaveBeenCalledWith(
+      expect.objectContaining({ brand: 'Corrected', barcode: '123' }),
+    );
+    expect(component.dialogView()).toBe('details');
+    expect(component.selectedPortionId()).toBe(portion.id);
   });
 
   it('shows zero for an empty day and an unknown value for a missing nutrient', async () => {

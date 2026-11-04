@@ -5,6 +5,7 @@ import { IntakeRecord } from '@core/services/intake-journal.service';
 
 const entry: IntakeRecord = {
   id: 'one',
+  brand: null,
   food_name: 'A very long food name',
   food_version_id: 'v1',
   quantity_id: 'p1',

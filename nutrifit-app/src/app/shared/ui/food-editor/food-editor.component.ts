@@ -1,3 +1,4 @@
+import { OffProduct } from '@core/services/food-catalogue.service';
 import { FoodCatalogueStore, catalogueKey } from '@core/stores/food-catalogue.store';
 import {
   Component,
@@ -32,12 +33,7 @@ export class FoodEditorComponent implements OnInit {
       : 'number';
   readonly food = input<FoodRecord | null>(null);
   readonly initialKind = input<'FOOD' | 'RECIPE'>('FOOD');
-  readonly initialProduct = input<{
-    name: string;
-    portions: PortionInput[];
-    payload: unknown;
-    novaGroup?: number | null;
-  } | null>(null);
+  readonly initialProduct = input<OffProduct | null>(null);
   readonly initialBarcode = input('');
   readonly saved = output<FoodRecord>();
   readonly dismissed = output<void>();
@@ -58,6 +54,7 @@ export class FoodEditorComponent implements OnInit {
   ];
   novaGroup: number | null = null;
   name = '';
+  brand = '';
   isPublic = false;
   barcode = '';
   quantity = 1;
@@ -76,6 +73,7 @@ export class FoodEditorComponent implements OnInit {
     if (!food) {
       if (initialProduct) {
         this.name = initialProduct.name;
+        this.brand = initialProduct.brand ?? '';
         this.novaGroup = initialProduct.novaGroup ?? null;
         this.isPublic = true;
         this.barcode = this.initialBarcode();
@@ -84,6 +82,7 @@ export class FoodEditorComponent implements OnInit {
       return;
     }
     this.name = food.name;
+    this.brand = food.brand ?? '';
     this.novaGroup = food.nova_group ?? null;
     this.isPublic = food.is_public;
     this.barcode = food.barcode ?? '';
@@ -163,6 +162,7 @@ export class FoodEditorComponent implements OnInit {
       if (this.kind() === 'FOOD') {
         id = await this.catalogue.save({
           name: this.name.trim(),
+          brand: this.brand.trim() || null,
           novaGroup: this.novaGroup,
           isPublic: this.isPublic,
           barcode: current?.barcode ?? (this.barcode || null),

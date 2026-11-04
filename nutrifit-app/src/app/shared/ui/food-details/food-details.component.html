@@ -6,6 +6,9 @@
         {{ food().is_public ? 'Public' : 'Private' }} · Version {{ food().version_number }}</span
       >
       <h2 id="food-title">{{ food().name }}</h2>
+      @if (food().kind === 'FOOD' && food().brand?.trim()) {
+        <p class="meta">{{ food().brand }}</p>
+      }
     </div>
     @if (food().author_id === currentUserId()) {
       <button class="secondary-button" type="button" (click)="edit.emit(food())">Edit</button>
